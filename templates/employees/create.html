@@ -1,0 +1,211 @@
+[[extend 'layout.html']]
+
+[[block header]]
+[[icon='fa fa-chart-line']]
+[[breadcamp = 'Employee']]
+
+[[end]]
+
+[[block content]]
+<div class="container-section">
+    <div class="d-flex justify-content-between align-items-center border-bottom">
+        <span class="icon-text icon-text-bold">
+            <i class="fa-solid fa-plus"></i>
+            <span>Create</span>
+        </span>
+
+        <div class="d-flex justify-content-end">
+            <div class="p-1">
+                <a href="[[=URL('employees/index')]]" class="btn btn-sm btn-light">
+                    <i class="fa-solid fa-arrow-left"></i> <span class="ms-2">Back</span>
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="container py-2">
+
+        <form action="[[=URL('employees','submit')]]" method="POST">
+
+        <div id="custom_form">        
+            <div class="row">                
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label for="emp_id" class="form-label">Employee ID</label>
+                        <input type="text" id="emp_id" name="emp_id" class="form-control form-control-sm">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label for="emp_name" class="form-label">Employee Name</label>
+                        <input type="text" id="emp_name" name="emp_name" class="form-control form-control-sm">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label for="designation" class="form-label">Designation<span class="is_required">*</span></label>
+                        <select class="form-select form-select-sm select_custom" name="designation" style="width: 200px;" placeholder="Select Designation">
+                            <option value="">Select Designation</option>
+                            [[for designation in designations:]]
+                            <option value="[[=designation.id]]||[[=designation.desg_name]]">[[=designation.desg_name]]</option>
+                            [[pass]]
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="text" id="email" name="email" class="form-control form-control-sm">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label for="mobile" class="form-label">Mobile</label>                        
+                            <input type="text" id="mobile" name="mobile" value="+8801" class="form-control form-control-sm ">                        
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label for="emp_type" class="form-label">Employee Type<span class="is_required">*</span></label>
+                        <select class="form-select form-select-sm select_custom" name="emp_type" style="width: 200px;" placeholder="Employee Type">
+                            <option value="">Select Employee Type</option>
+                            [[for emp_type in emp_types:]]
+                            <option value="[[=emp_type]]">[[=emp_type]]</option>
+                            [[pass]]
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-4 d-none" id="general_manager">
+                    <div class="mb-3" >
+                        <label for="general_manager" class="form-label">General Manager</label>
+                        <select class="form-select form-select-sm select_custom " name="general_manager" style="width: 200px;" placeholder="Select General Manager">
+                            <option value="">Select General Manager</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-4 d-none" id="manager">
+                    <div class="mb-3">
+                        <label for="mobile" class="form-label">Manager</label>
+                        <select class="form-select form-select-sm select_custom" name="manager" style="width: 200px;" placeholder="Select Manager">
+                            <option value="">Select Manager</option>
+                        </select>
+                    </div>
+                </div>
+                
+                
+           
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label for="status" class="form-label">Status</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" value="1" checked id="status" name="status">
+                            <label class="form-check-label" for="status">
+                              Active
+                            </label>
+                        </div>
+                    </div>
+                    
+                </div>
+              
+            </div>
+            <div class="row">
+                <div class="col-12">
+                    <div class="d-flex justify-content-start">
+                        <div class="me-2">
+                            <button type="submit" class="btn btn-sm btn-primary">
+                                <i class="fa-regular fa-floppy-disk"></i> <span class="ms-2">Save</span>
+                            </button>
+                        </div>
+                        <div class="">
+                            <button type="reset" class="btn btn-sm btn-light">
+                                <i class="fa-solid fa-retweet"></i> <span class="ms-2">Reset</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        </form>
+    </div>
+
+</div>
+[[end]]
+[[block scripts]]
+<!-- individual pages can add scripts here -->
+<script>
+    $(document).ready(function() {        
+        // employee type wise gm or manager selection
+        $("[name='emp_type']").on('change', function(e) { 
+            var emp_type = $("[name='emp_type']").val();
+            if (emp_type=="Manager"){
+                $("#general_manager").removeClass('d-none')
+                $("#manager").addClass('d-none')
+                
+                $.ajax({
+                url: '[[=URL("default","get_general_manager")]]', // Replace with your endpoint
+                method: 'GET',
+                data: { req_value : emp_type},
+                dataType: 'json',
+                success: function(data) {  
+                    $("[name='general_manager']").empty().select2({
+                    data: data['results'],
+                    placeholder: "Select General Manager",
+                    allowClear: true
+                    }).select2();
+                }
+                });
+            }
+            else if (emp_type=="Regional Manager"){
+                $("#general_manager").removeClass('d-none')
+                $("#manager").removeClass('d-none')
+                $.ajax({
+                url: '[[=URL("default","get_general_manager")]]', // Replace with your endpoint
+                method: 'GET',
+                data: { req_value : emp_type},
+                dataType: 'json',
+                success: function(data) {  
+                    $("[name='general_manager']").empty().select2({
+                    data: data['results'],
+                    placeholder: "Select General Manager",
+                    allowClear: true
+                    }).select2().trigger('change');
+                }
+                });
+
+            }
+            else if (emp_type=="General Manager"){
+                $("#general_manager").addClass('d-none')
+                $("#manager").addClass('d-none') 
+            }
+
+        });
+
+        // employee type wise gm or manager selection
+
+// gm wise manager selection
+        $("[name='general_manager']").on('change', function(e) { 
+            var gm_id = $("[name='general_manager']").val();
+            var emp_type = $("[name='emp_type']").val();
+            if (emp_type=="Regional Manager"){
+                $.ajax({
+                url: '[[=URL("default","get_gm_wise_manager")]]', // Replace with your endpoint
+                method: 'GET',
+                data: { req_value : gm_id},
+                dataType: 'json',
+                success: function(data) {  
+                    $("[name='manager']").empty().select2({
+                    data: data['results'],
+                    placeholder: "Select  Manager",
+                    allowClear: true
+                    }).select2();
+                }
+                });
+            }
+        });
+        // gm wise manager selection
+
+
+
+    });
+</script>
+[[end]]

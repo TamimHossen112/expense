@@ -1,0 +1,310 @@
+[[extend 'layout.html']]
+
+[[block header]]
+[[icon='fa fa-chart-line']]
+[[breadcamp = 'Employee']]
+[[end]]
+
+
+[[block content]]
+
+<div class="container-section" >
+    <div class="row">
+
+        <div class="col-md-1 mt-2 mb-2">            
+            <span class="icon-text icon-text-bold">
+                <i class="fa-solid fa-table-list"></i>
+                <span>Table</span>
+            </span>
+        </div>
+
+        <div class="col-md-9 mt-2">
+            <div class="row" id="custom_form" style="display: none;">
+                <!-- Filter  Section  start -->
+                
+                
+                <div class="col-md-2 mb-2">
+                    <div class="">
+                        <select class="form-select form-select-sm select_custom" name="emp_name" style="width: 200px;" placeholder="Select Employee">
+                            <option value="">Select Employee</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-2 mb-2">
+                    <div class="">
+                        <select class="form-select form-select-sm select_custom" name="emp_type" style="width: 200px;" placeholder="Employee Type">
+                            <option value="">Select Employee Type</option>
+                            [[for emp_type in emp_types:]]
+                            <option value="[[=emp_type]]">[[=emp_type]]</option>
+                            [[pass]]
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-2 mb-2">
+                    <div class="">
+                        <select class="form-select form-select-sm select_custom" name="desg_name" style="width: 200px;" placeholder="Select Designation">
+                            <option value="">Select Designation</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="col-md-2 mb-2">
+                    <div  class="">
+                        <select class="form-select form-select-sm select_custom" name="status" style="width: 200px;" placeholder="Select Status">
+                            <option value="">Select Status</option>
+                            <option value="1">Active</option>
+                            <option value="0">Inactive</option>
+                        </select>
+                    </div>
+                </div>
+
+
+
+                
+                <!-- Filter Section  if you need more then add after below section-->
+
+
+
+
+
+                <!-- Keep this fixed for first row last 4 column -->
+                <div class="col-md-4 mb-2 d-flex justify-content-end">
+                    <div class="me-2">
+                        <button type="submit" id="submit" class="btn btn-sm btn-primary" style="width:90px;">
+                            <i class="fa-solid fa-magnifying-glass"></i> <span class="ms-2">Search</span>
+                        </button>
+                    </div>
+                    <div class="">
+                        <button type="reset" id="reset" class="btn btn-sm btn-light" style="width:90px;">
+                            <i class="fa-solid fa-retweet"></i> <span class="ms-2">Reset</span>
+                        </button>
+                    </div>
+                </div>
+                <!-- Keep this fixed for first row last 4 column -->
+
+
+
+
+                <!-- If you need more than 4 filter than add this section -->                
+            
+
+
+
+                <!-- If you need more than 4 filter than add this section -->
+
+
+            </div>       
+        </div>
+
+        <div class="col-md-2 mt-2 mb-2">
+            <div class="d-flex justify-content-end" >                
+                <div class="me-2">
+                    <button type="submit" id="filter" class="btn btn-sm btn-light" style="width:90px;">
+                        <i class="fa-solid fa-filter"></i> <span class="ms-2">Filter</span>
+                    </button>
+                </div>
+
+                <div class="dropdown">
+                    <button class="btn btn-primary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown"
+                        aria-expanded="false" style="width:90px;">
+                        Action
+                    </button>
+                    <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                        <a class="dropdown-item" href="[[=URL('employees/create')]]"><i class="fas fa-add me-1"></i>
+                            Add</a>
+                        <button class="dropdown-item" id="ExportExcel"><i class="fas fa-cog me-1"></i> Excel</button>
+
+                    </div> 
+                </div>
+            </div>
+        
+        </div>
+
+    </div>
+
+    
+    <div class="table-responsive">
+        <table class="table table-bordered compact" style="width:100%" id="myTable">
+            <thead>
+        
+            </thead>
+            <tbody>
+                
+            </tbody>
+    
+        </table>
+
+    </div>
+    
+</div>
+[[end]]
+[[block scripts]]
+<!-- individual pages can add scripts here -->
+
+<script>
+    $(document).ready(function() {        
+        
+            $("[name='emp_name']").one('select2:open', function(e) {              
+                $.ajax({
+                    url: '[[=URL("default","get_employees")]]', // Replace with your endpoint
+                    method: 'GET',
+                    data: { q:''},
+                    dataType: 'json',
+                    success: function(data) {                    
+
+                        $("[name='emp_name']").empty();
+                        $("[name='emp_name']").select2({
+                            //dropdownParent: $("#custom_form"),
+                            data: data['results'],
+                            placeholder: "Select Employee",
+                            allowClear: true
+                        }).select2('open');
+                    }
+                });    
+            });
+
+            $("[name='desg_name']").one('select2:open', function(e) {              
+                $.ajax({
+                    url: '[[=URL("default","get_designation")]]', // Replace with your endpoint
+                    method: 'GET',
+                    data: { q:''},
+                    dataType: 'json',
+                    success: function(data) {                    
+
+                        $("[name='desg_name']").empty();
+                        $("[name='desg_name']").select2({
+                            //dropdownParent: $("#custom_form"),
+                            data: data['results'],
+                            placeholder: "Select Designation",
+                            allowClear: true
+                        }).select2('open');
+                    }
+                });    
+            });
+    });
+    $("#filter").click(function(e){
+        // $("#custom_form").toggleClass("d-none");
+        $("#custom_form").fadeToggle("slow");
+    });
+
+// Datatable ############################################################
+    
+    var table = $('#myTable').DataTable({
+        dom: "Bfrt<'d-flex justify-content-between'<l><i><p>>",
+        buttons: [
+            {
+                extend: 'excel',
+                title: 'Pages Data',
+                filename: 'page_Data',
+                exportOptions: {
+                    columns: [ 0,1,2]
+                },
+            }
+        ],
+        order: [0, 'asc'],
+        searching:false,
+        paging: true,
+        serverSide: true,
+        scrollCollapse: false,
+        scrollX: true,
+        scrollY: "413px",
+        fixedHeader: true,
+        fixedColumns: {
+            left: 1, // No left columns fixed
+            right: 1 // Fix the last column
+        },    
+        lengthMenu: [
+        [15, 50, 100, -1],
+        [15, 50, 100, 'All']
+        ],
+        ajax: {
+            async: true,
+            type: 'GET',
+            url: '[[=URL("employees","get_data")]]',
+            data: function (d) {
+                d.emp_name = $("select[name='emp_name']").val();
+                d.emp_type = $("select[name='emp_type']").val();
+                d.desg_name = $("select[name='desg_name']").val();
+                d.status = $("select[name='status']").val();
+            },
+            dataSrc: 'data'
+        },
+        columns: [
+            {
+                title: 'SL No.',
+                data: null,
+                render: function (data, type, row, meta) {
+                    return meta.row + 1;
+                }
+            },
+            {
+                title: 'Employee',
+                data: 'emp_id',
+                render: function (data, type, row) {
+                    return `<div class="">${data} | ${row.emp_name}</div>`
+
+                }
+            },
+            {
+                title: 'Designation',
+                data: 'desg_name'
+            },
+            {
+                title: 'Employee Type',
+                data: 'emp_type'
+            },
+            {
+                title: 'Genaral Manager',
+                data: 'gm_name'
+            },
+            {
+                title: 'Manager',
+                data: 'mng_name'
+            },
+            
+            {
+                title: 'Status',
+                data: 'status',
+                render: function (data, type, row) {
+                    return `<div class='badge ${data == 1 ? 'bg-success' : 'bg-secondary'} fw-bold'>${data == 1 ? 'ACTIVE' : 'INACTIVE'}</div>`
+
+                }
+            },
+            {
+                title: '',
+                data: 'id',
+                render: function (data, type, row) {
+                    return `<a class="text-secondary" href="[[=URL('employees/edit')]]?id=${data}"><i class="fas fa-edit"></i></a>`;
+
+                }
+            },
+        ]
+    });
+    
+
+    $("#submit").click(function(e){
+      e.preventDefault();
+      table
+    .clear()
+    .draw();
+    });
+
+    $("#reset").click(function(e){
+        e.preventDefault();
+        $("input,select").val(null);
+        $('.select_custom').each(function() {
+            var placeholder = $(this).attr('placeholder');
+            $(this).select2({
+                // dropdownParent: $("#custom_form"),
+                placeholder: placeholder,
+                allowClear: true,
+            });
+        });
+        table.clear().draw();
+    });
+    // Datatable ############################################################
+
+
+    
+</script>
+[[end]]

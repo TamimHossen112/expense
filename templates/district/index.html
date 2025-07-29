@@ -1,0 +1,285 @@
+[[extend 'layout.html']]
+
+[[block header]]
+[[icon='fa fa-chart-line']]
+[[breadcamp = 'District']]
+[[end]]
+
+
+[[block content]]
+
+<div class="container-section" >
+    <div class="row">
+
+        <div class="col-md-1 mt-2 mb-2">            
+            <span class="icon-text icon-text-bold">
+                <i class="fa-solid fa-table-list"></i>
+                <span>Table</span>
+            </span>
+        </div>
+
+        <div class="col-md-9 mt-2">
+            <div class="row" id="custom_form" style="display: none;">
+                <!-- Filter  Section  start -->
+                <div class="col-md-2 mb-2">
+                </div>
+                <div class="col-md-2 mb-2">
+                    <div class="">
+                        <select class="form-select form-select-sm select_custom" name="district" style="width: 200px;" placeholder="Select District">
+                            <option value="">Select District</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-2 mb-2">
+                    <div class="">
+                        <select class="form-select form-select-sm select_custom" name="division" style="width: 200px;" placeholder="Select Division">
+                            <option value="">Select Division</option>
+                        </select>
+                    </div>
+                </div>
+               
+                
+                <div class="col-md-2 mb-2">
+                    <div  class="">
+                        <select class="form-select form-select-sm select_custom" name="status" style="width: 200px;" placeholder="Select Status">
+                            <option value="">Select Status</option>
+                            <option value="1">Active</option>
+                            <option value="0">Inactive</option>
+                        </select>
+                    </div>
+                </div>
+
+
+
+                
+                <!-- Filter Section  if you need more then add after below section-->
+
+
+
+
+
+                <!-- Keep this fixed for first row last 4 column -->
+                <div class="col-md-4 mb-2 d-flex justify-content-end">
+                    <div class="me-2">
+                        <button type="submit" id="submit" class="btn btn-sm btn-primary" style="width:90px;">
+                            <i class="fa-solid fa-magnifying-glass"></i> <span class="ms-2">Search</span>
+                        </button>
+                    </div>
+                    <div class="">
+                        <button type="reset" id="reset" class="btn btn-sm btn-light" style="width:90px;">
+                            <i class="fa-solid fa-retweet"></i> <span class="ms-2">Reset</span>
+                        </button>
+                    </div>
+                </div>
+                <!-- Keep this fixed for first row last 4 column -->
+
+
+
+
+                <!-- If you need more than 4 filter than add this section -->                
+            
+
+
+
+                <!-- If you need more than 4 filter than add this section -->
+
+
+            </div>       
+        </div>
+
+        <div class="col-md-2 mt-2 mb-2">
+            <div class="d-flex justify-content-end" >                
+                <div class="me-2">
+                    <button type="submit" id="filter" class="btn btn-sm btn-light" style="width:90px;">
+                        <i class="fa-solid fa-filter"></i> <span class="ms-2">Filter</span>
+                    </button>
+                </div>
+
+                <div class="dropdown">
+                    <button class="btn btn-primary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown"
+                        aria-expanded="false" style="width:90px;">
+                        Action
+                    </button>
+                    <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                        <a class="dropdown-item" href="[[=URL('district/create')]]"><i class="fas fa-add me-1"></i>
+                            Add</a>
+                        <button class="dropdown-item" id="ExportExcel"><i class="fas fa-cog me-1"></i> Excel</button>
+
+                    </div> 
+                </div>
+            </div>
+        
+        </div>
+
+    </div>
+
+    
+    <div class="table-responsive">
+        <table class="table table-bordered compact" style="width:100%" id="myTable">
+            <thead>
+        
+            </thead>
+            <tbody>
+                
+            </tbody>
+    
+        </table>
+
+    </div>
+    
+</div>
+[[end]]
+[[block scripts]]
+<!-- individual pages can add scripts here -->
+
+<script>
+    $(document).ready(function() {        
+        
+            $("[name='division']").one('select2:open', function(e) {              
+                $.ajax({
+                    url: '[[=URL("default","get_division")]]', // Replace with your endpoint
+                    method: 'GET',
+                    data: { q:''},
+                    dataType: 'json',
+                    success: function(data) {                    
+
+                        $("[name='division']").empty();
+                        $("[name='division']").select2({
+                            // dropdownParent: $("#custom_form"),
+                            data: data['results'],
+                            placeholder: "Select Division",
+                            allowClear: true
+                        }).select2('open');
+                    }
+                });    
+            });
+
+            $("[name='district']").one('select2:open', function(e) {    
+                $.ajax({
+                    url: '[[=URL("default","get_district")]]', // Replace with your endpoint
+                    method: 'GET',
+                    data: { q:''},
+                    dataType: 'json',
+                    success: function(data) {                    
+
+                        $("[name='district']").empty();
+                        $("[name='district']").select2({
+                            // dropdownParent: $("#custom_form"),
+                            data: data['results'],
+                            placeholder: "Select District",
+                            allowClear: true
+                        }).select2('open');
+                    }
+                });    
+            });
+    });
+    $("#filter").click(function(e){
+        // $("#custom_form").toggleClass("d-none");
+        $("#custom_form").fadeToggle("slow");
+    });
+
+// Datatable ############################################################
+    
+    var table = $('#myTable').DataTable({
+        dom: "Bfrt<'d-flex justify-content-between'<l><i><p>>",
+        buttons: [
+            {
+                extend: 'excel',
+                title: 'District Data',
+                filename: 'District_Data',
+                exportOptions: {
+                    columns: [ 0,1,2,3]
+                },
+            }
+        ],
+        order: [0, 'desc'],
+        searching:false,
+        paging: true,
+        serverSide: true,
+        scrollCollapse: false,
+        scrollX: true,
+        scrollY: "413px",
+        fixedHeader: true,
+        fixedColumns: {
+            left: 1, // No left columns fixed
+            right: 1 // Fix the last column
+        },    
+        lengthMenu: [
+        [15, 50, 100, -1],
+        [15, 50, 100, 'All']
+        ],
+        ajax: {
+            async: true,
+            type: 'GET',
+            url: '[[=URL("district","get_data")]]',
+            data: function (d) {
+                d.district = $("select[name='district']").val();
+                d.division = $("select[name='division']").val();
+                d.status = $("select[name='status']").val();
+            },
+            dataSrc: 'data'
+        },
+        columns: [
+           
+            {
+                title: 'SL No.',
+                data: null,
+                render: function (data, type, row, meta) {
+                    return meta.row + 1;
+                }
+            },
+            {
+                title: 'District',
+                data: 'district'
+            },
+            {
+                title: 'Divison',
+                data: 'division'
+            },
+            
+            {
+                title: 'Status',
+                data: 'status',
+                render: function (data, type, row) {
+                    return `<div class='badge ${data == 1 ? 'bg-success' : 'bg-secondary'} fw-bold'>${data == 1 ? 'ACTIVE' : 'INACTIVE'}</div>`
+
+                }
+            },
+            {
+                title: '',
+                data: 'id',
+                render: function (data, type, row) {
+                    return `<a class="text-secondary" href="[[=URL('district/edit')]]?id=${data}"><i class="fas fa-edit"></i></a>`;
+
+                }
+            },
+        ]
+    });
+    
+
+    $("#submit").click(function(e){
+      e.preventDefault();
+      table
+    .clear()
+    .draw();
+    });
+
+    $("#reset").click(function(e){
+        e.preventDefault();
+        $("input,select").val(null);
+        $('.select_custom').each(function() {
+            var placeholder = $(this).attr('placeholder');
+            $(this).select2({
+                // dropdownParent: $("#custom_form"),
+                placeholder: placeholder,
+                allowClear: true,
+            });
+        });
+        table.clear().draw();
+    });
+    // Datatable ############################################################
+
+
+    
+</script>
+[[end]]

@@ -1,0 +1,199 @@
+[[
+if len(request.path.split('/'))>2:
+_controller_name = request.path.split('/')[2]
+else:
+_controller_name = ''
+pass
+]]
+<aside id="sidebar" class="sidebar break-point-sm has-bg-image">
+  <a id="btn-collapse" class="sidebar-collapser"><i class="fa-solid fa-angle-left"></i></a>
+  <div class="image-wrapper">
+    <img src="#" alt="sidebar background" />
+  </div>
+
+  <div class="sidebar-layout">
+
+    <div class="sidebar-header">
+      <a href="[[=URL('dashboard','index')]]" style="color: inherit;">
+        <div class="pro-sidebar-logo" style="padding-top: 5px;">
+          <div style="background-color:inherit; padding-bottom: 5px;">
+            <img src="[[=URL('static','tsmall.png')]]" height="25" alt="circulation logo">
+          </div>
+          <h5 class="fw-bold">EXPENSE</h5>
+        </div>
+      </a>
+    </div>
+
+    <div class="sidebar-content">
+      <nav class="menu open-current-submenu">
+        <ul>
+
+          <li class="menu-header">
+            <span> Home </span>
+          </li>
+
+          <li class="menu-item">
+            <div class="sub-menu-list">
+              <ul>
+                <li class="menu-item [[if _controller_name=='dashboard':]]active_link[[pass]]">
+                  <a href="[[=URL('dashboard/index')]]">
+                    <span class="menu-icon"><i class="fa-solid fa-chart-area"></i></span>
+                    <span class="menu-title">Dashboard</span>
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </li> 
+
+
+          <li class="menu-header">
+            <span> Master Setup </span>
+          </li>
+
+          <li class="menu-item sub-menu [[if _controller_name in ['category','page_setup','press_setup','ctp_setup']:]]open[[pass]]">
+            <a href="#">
+              <span class="menu-icon">
+                <i class="fa-solid fa-network-wired"></i>
+              </span>
+              <span class="menu-title">Page Setup</span>
+            </a>
+            <div class="sub-menu-list">
+              <ul>
+                <li class="menu-item [[if _controller_name=='page_setup':]]active_link[[pass]]">
+                  <a href="[[=URL('page_setup/index')]]">
+                    <span class="menu-icon"><i class="fas fa-ad"></i></span>
+                    <span class="menu-title">Pages</span>
+                  </a>
+                </li>               
+              </ul>
+            </div>
+          </li>
+
+          <li class="menu-item sub-menu [[if _controller_name in ['sales_area','agent','employees','designation']:]]open[[pass]]">
+            <a href="#">
+              <span class="menu-icon">
+                <i class="fa-solid fa-network-wired"></i>
+              </span>
+              <span class="menu-title">Agent & Employee</span>
+            </a>
+            <div class="sub-menu-list">
+              <ul>
+                
+                <li class="menu-item [[if _controller_name=='employees':]]active_link[[pass]]">
+                  <a href="[[=URL('employees/index')]]">
+                    <span class="menu-icon"><i class="fa-solid fa-warehouse"></i></span>
+                    <span class="menu-title">Employee Information</span>
+                  </a>
+                </li>
+                
+                
+              </ul>
+            </div>
+          </li>
+      
+          <li class="menu-item sub-menu [[if _controller_name in ['division','district','police_station','post_office','union','station','route','sub_route']:]]open[[pass]]">
+            <a href="#">
+              <span class="menu-icon">
+                <i class="fa-solid fa-route"></i>
+              </span>
+              <span class="menu-title"> Route Setup </span>
+            </a>
+            <div class="sub-menu-list">
+              <ul>
+                
+                <li class="menu-item [[if _controller_name=='district':]]active_link[[pass]]">
+                  <a href="[[=URL('district/index')]]">
+                    <span class="menu-icon"><i class="fa-solid fa-warehouse"></i></span>
+                    <span class="menu-title">District</span>
+                  </a>
+                </li>
+                
+              </ul>
+            </div>
+          </li>
+
+          
+          
+          <li class="menu-item sub-menu [[if _controller_name in ['unsold_reason','paper_list','population']:]]open[[pass]]">
+            <a href="#">
+              <span class="menu-icon">
+                <i class="fa-solid fa-gear"></i>
+              </span>
+              <span class="menu-title">Extra</span>
+            </a>
+            <div class="sub-menu-list">
+              <ul>
+                <li class="menu-item [[if _controller_name=='unsold_reason':]]active_link[[pass]]">
+                  <a href="[[=URL('unsold_reason/index')]]">
+                    <span class="menu-icon"><i class="fa-solid fa-warehouse"></i></span>
+                    <span class="menu-title">Reason Of Unsold</span>
+                  </a>
+                </li>
+                
+              </ul>
+            </div>
+          </li>
+
+
+          <li class="menu-header">
+            <span> Transaction </span>
+          </li>
+          <li class="menu-item sub-menu [[if _controller_name in ['order_entry','classified']:]]open[[pass]]">
+            <a href="#">
+              <span class="menu-icon">
+                <i class="fa-solid fa-bag-shopping"></i>
+              </span>
+              <span class="menu-title">Order</span>
+            </a>
+            <div class="sub-menu-list">
+              <ul>   
+                <li class="menu-item [[if _controller_name=='order_entry':]]active_link[[pass]]">
+                  <a href="[[=URL('order_entry/index')]]">
+                    <span class="menu-icon"><i class="fa-solid fa-warehouse"></i></span>
+                    <span class="menu-title">Order</span>
+                  </a>
+                </li>
+          
+                
+              </ul>
+            </div>
+          </li>
+
+          
+          <li class="menu-header">
+            <span> Report </span>
+          </li>
+          <li class="menu-item">
+            <div class="sub-menu-list">
+              <ul>
+                <li class="menu-item [[if _controller_name=='supplement_discount':]]active_link[[pass]]">
+                  <a href="[[=URL('supplement_discount/index')]]">
+                    <span class="menu-icon"><i class="fa-solid fa-percentage"></i></span>
+                    <span class="menu-title">Report 1</span>
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </li> 
+
+        </ul>
+      </nav>
+    </div>
+
+    <div class="sidebar-footer d-flex justify-content-between">
+      <a href="#">
+        <i class="fa fa-bell"></i>
+      </a>
+      <a href="#">
+        <i class="fa fa-envelope"></i>
+      </a>
+      <a href="#">
+        <i class="fa fa-cog"></i>
+      </a>
+      <a href="[[=URL('logout')]]">
+        <i class="fa fa-power-off"></i>
+      </a>
+    </div>
+
+  </div>
+</aside>

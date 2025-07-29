@@ -1,0 +1,389 @@
+[[extend 'layout.html']]
+
+[[block header]]
+[[icon='fa fa-chart-line']]
+[[breadcamp = 'Order Entry']]
+[[end]]
+
+[[block content]]
+<div class="container-section">
+    <div class="d-flex justify-content-between align-items-center border-bottom">
+        <span class="icon-text icon-text-bold">
+            <i class="fa-solid fa-plus"></i>
+            <span>Edit</span>
+        </span>
+
+        <div class="d-flex justify-content-end">
+            <div class="p-1">
+                <button type="button" class="btn btn-sm btn-light d-none" id="btn_view">
+                    <i class="fa-regular fa-eye"></i> <span class="ms-2">View</span>
+                </button>
+                <button type="button" class="btn btn-sm btn-light" id="btn_edit">
+                    <i class="fa-regular fa-pen-to-square"></i> <span class="ms-2">Edit</span>
+                </button>
+            </div>
+            <div class="p-1">
+                <a href="[[=URL('order_entry/index')]]" class="btn btn-sm btn-light">
+                    <i class="fa-solid fa-arrow-left"></i> <span class="ms-2">Back</span>
+                </a>
+            </div>
+            <div class="p-1">
+                <div class="btn-group">
+                    <button class="btn btn-primary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown"
+                        aria-expanded="false">
+                        Action
+                    </button>
+                    <!-- <ul class="dropdown-menu"> -->
+                    <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                        <!--<a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#staticBackdrop"><i class="fas fa-add me-1"></i> Add</a>-->
+                        <a class="dropdown-item" href="delete?id=[[=request.query.get('id')]]" id="delete_btn">
+                            <i class="fa-solid fa-trash-can"></i><span class="ms-2">Delete</span></a>
+                    </div>
+                    <!-- </ul> -->
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="container py-2">
+
+        <form action="[[=URL('order_entry','update')]]?id=[[=record.id]]" method="POST">
+
+        <div id="custom_form">  
+            <div class="row">                
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label for="order_id" class="form-label">Order ID<span class="is_required">*</span></label>
+                        <input type="text" id="order_id" name="order_id" value="[[=order_id]]" class="form-control form-control-sm" readonly>
+                    </div>
+                </div>
+                
+                
+                <div class="col-md-4">
+                    <div class="mb-3 custom_input">
+                        <label for="order_date" class="form-label">Order Date <span class="is_required">*</span></label>
+                        <div class="flatpickr-wrapper">
+                            <input type="text" class="date-picker" value="[[=record.order_date]]" name="order_date" placeholder="Select Order Date">
+                            <i class="fa fa-calendar calendar-icon text-secondary calendar-toggle"></i>                            
+                        </div>
+                    </div>
+                </div>
+                
+
+                <div class="col-md-4">
+                    <div class="mb-3 custom_input">
+                        <label for="station" class="form-label">Agent<span class="is_required">*</span></label>
+                        <select class="form-select form-select-sm select_custom" name="agent"  placeholder="Select Agent">
+                            <option value="">Select Agent</option>
+                            [[for agent in agents:]]
+                            <option value="[[=agent.id]]||[[=agent.agent_name]]" [[if str(agent.id)==str(record.agent_id): ]] selected[[pass]]>[[=agent.agent_id]] | [[=agent.agent_name]]</option>
+                            [[pass]]
+                        </select>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="mb-3 custom_input">
+                        <label for="station" class="form-label">Category<span class="is_required">*</span></label>
+                        <select class="form-select form-select-sm select_custom" name="category"  placeholder="Select Category">
+                            <option value="">Select Category</option>
+                            [[for category in categories:]]
+                            <option value="[[=category.id]]||[[=category.category_name]]" [[if str(category.id)==str(record.category_id): ]] selected[[pass]]>[[=category.category_name]]</option>
+                            [[pass]]
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3 custom_input">
+                        <label for="rate" class="form-label">Rate (TK)<span class="is_required">*</span></label>
+                        <input type="number" id="rate" name="rate" value="[[=record.rate]]" class="form-control form-control-sm">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="d-flex justify-content-start">
+
+                        <div class="mb-3 me-3 custom_input" style="width: 30%;">
+                            <label for="sales_type" class="form-label">Sales Type<span class="is_required">*</span></label>
+                            <select class="form-select form-select-sm select_custom" name="sales_type" style="width: 200px;" placeholder="Select Sales Type">
+                                <option value="">Select Sales Type</option>
+                                [[for sales_type in sales_types:]]
+                                <option value="[[=sales_type]]" [[if str(sales_type)==str(record.sales_type): ]] selected[[pass]]>[[=sales_type]]</option>
+                                [[pass]]
+                            </select>
+                        </div>
+                        
+                            <div class="d-flex mt-2 d-none" id="sales_type_cash">
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input me-2" type="radio" name="sales_type_option" id="floating_street" value="Floating Street" [[if record.sales_type_option=="Floating Street":]] checked [[pass]]>
+                                    <label class="form-check-label" for="floating_street">Floating Street</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input me-2" type="radio" name="sales_type_option" id="floating_outlet" value="Floating Outlet" [[if record.sales_type_option=="Floating Outlet":]] checked [[pass]]>
+                                    <label class="form-check-label" for="floating_outlet">Floating Outlet</label>
+                                </div>
+                            </div>
+
+                            <div class="d-none" id="sales_type_credit">
+                                <!-- First Line -->
+                                <div class="d-flex mt-4" id="line_wise_corporate">
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input me-2" type="radio" name="sales_type_option" id="line_wise" value="Line Wise" [[if record.sales_type_option=="Line Wise":]] checked [[pass]]>
+                                        <label class="form-check-label" for="line_wise">Line wise</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input me-2" type="radio" name="sales_type_option" id="corporate" value="Corporate" [[if record.sales_type_option=="Corporate":]] checked [[pass]]>
+                                        <label class="form-check-label" for="corporate">Corporate</label>
+                                    </div>
+                                </div>
+                                <!-- Second Line (Initially Hidden) -->
+                                <div class="d-flex mt-2 d-none" id="corporate_line">
+                                    <div class="form-check form-check-inline"> 
+                                        <input class="form-check-input me-2" type="radio" name="payment_type" id="post_paid" value="Post Paid" [[if record.payment_type=="Post Paid":]] checked [[pass]]>
+                                        <label class="form-check-label" for="post_paid">Post Paid</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input me-2" type="radio" name="payment_type" id="pre_paid" value="Pre-Paid" [[if record.payment_type=="Pre-Paid":]] checked [[pass]]>
+                                        <label class="form-check-label" for="pre_paid">Pre-Paid</label>
+                                    </div>
+                                </div>
+                            
+                                
+                            </div>
+                            
+
+                    </div>              
+                </div>
+
+                <div class="col-md-4">
+                    <div class="mb-3 custom_input">
+                        <label for="sub_route" class="form-label">Sub Route<span class="is_required">*</span></label>
+                        <select class="form-select form-select-sm select_custom" name="sub_route"  placeholder="Select Sub Route">
+                            <option value="">Select Sub Route</option>
+                            [[for sub_route in sub_routes:]]
+                            <option value="[[=sub_route.id]]||[[=sub_route.sub_route_name]]" [[if str(sub_route.id)==str(record.sub_route_id): ]] selected[[pass]]>[[=sub_route.sub_route_code]] | [[=sub_route.sub_route_name]]</option>
+                            [[pass]]
+                        </select>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="mb-3 custom_input">
+                        <label for="vehicle" class="form-label">Vehicle<span class="is_required">*</span></label>
+                        <select class="form-select form-select-sm select_custom" name="vehicle"  placeholder="Select Vehicle">
+                            <option value="">Select Vehicle</option>
+                            [[for vehicle in vehicles:]]
+                            <option value="[[=vehicle.id]]||[[=vehicle.vehicle_name]]"  [[if str(vehicle.id)==str(record.vehicle_id): ]] selected[[pass]]>[[=vehicle.vehicle_code]] | [[=vehicle.vehicle_name]]</option>
+                            [[pass]]
+                        </select>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="mb-3 custom_input">
+                        <label for="sales_type" class="form-label">Edition<span class="is_required">*</span></label>
+                        <select class="form-select form-select-sm select_custom" name="edition" style="width: 200px;" placeholder="Select Edition">
+                            <option value="">Select Edition</option>
+                            [[for edition in editions:]]
+                            <option value="[[=edition]]" [[if str(edition)==str(record.edition): ]] selected[[pass]]>[[=edition]]</option>
+                            [[pass]]
+                        </select>
+                    </div>
+                </div>
+
+                <div class="col-sm-12 col-md-12">
+                    <div class="mb-3 custom_input">
+                        <div class="table-responsive">
+                            <table class="table table-bordered compact">
+                                <thead>
+                                    <tr class="text-center bg-light text-nowrap ">
+                                        <th>SL</th>
+                                        <th>Station</th>
+                                        <th>Quantity</th>
+                                        <th>Bonus Copy</th>
+                                        <th>Complementary Copy</th>
+                                        <th>Pack Type</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbody">
+                                    [[sl = 1]]
+                                    [[for data in details_record:]]
+                                    <tr>
+                                        <th class="text-start bg-light text-center" style="width: 7%;">[[=sl]]</th>
+                                        <th class="text-start " style="width: 33%;">[[=data['station.station_code']]] | [[=data['order_details.station_name']]]</th>
+                                        <input type="hidden" name="station" value="[[=data['order_details.station_id']]]||[[=data['order_details.station_name']]]" class="form-control form-control-sm ">
+                                        <td style="width: 15%;" class="my-0" >                       
+                                            <input type="number" name="quantity_[[=data['order_details.station_id']]]" value="[[=data['order_details.quantity']]]" class="form-control form-control-sm">
+                                        </td>
+                                        <td style="width: 15%;">                       
+                                            <input type="number" name="bonus_qty_[[=data['order_details.station_id']]]" value="[[=data['order_details.bonus_qty']]]" class="form-control form-control-sm">
+                                        </td>
+                                        <td style="width: 15%;">                       
+                                            <input type="number" name="complementary_qty_[[=data['order_details.station_id']]]" value="[[=data['order_details.complementary_qty']]]" class="form-control form-control-sm">
+                                        </td>
+                                        <td style="width: 15%;">                       
+                                            <select class="form-select form-select-sm selectChange select_custom" name="pack_type_[[=data['order_details.station_id']]]" style="width: 200px;" placeholder="Select Pack Type">
+                                                <option value="">Select Pack Type</option>
+                                                [[for pack_type in pack_types:]]
+                                                    <option value="[[=pack_type]]" [[if str(pack_type)==str(data['order_details.pack_type']):]] selected [[pass]]>[[=pack_type]]</option>;
+                                                [[pass]]
+                                            </select>
+                                        </td>
+                                    </tr>
+                                    [[sl = sl + 1]]
+                                    [[pass]]
+                                    
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>                    
+                </div>
+
+            
+            </div>
+            <div class="row d-none" id="edit_view_section">
+                <div class="col-12">
+                    <div class="d-flex justify-content-start">
+                        <div class="me-2">
+                            <button type="submit" class="btn btn-sm btn-primary">
+                                <i class="fa-regular fa-floppy-disk"></i> <span class="ms-2">Update</span>
+                            </button>
+                        </div>
+                        <div class="">
+                            <button type="reset" class="btn btn-sm btn-light">
+                                <i class="fa-solid fa-retweet"></i> <span class="ms-2">Reset</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        </form>
+    </div>
+
+</div>
+[[end]]
+[[block scripts]]
+
+<script>
+   $(document).ready(function() {
+
+// category wise rate
+$("[name='category']").on('change', function(e) { 
+    var category_id = $("[name='category']").val().split('||')[0];
+    var order_date = $("[name='order_date']").val();
+    var dayName = moment(order_date).format('dddd');
+    $.ajax({
+        url: '[[=URL("default","get_category_id_wise")]]', // Replace with your endpoint
+        method: 'GET',
+        data: { req_value : category_id},
+        dataType: 'json',
+        success: function(data) {
+            $("[name='rate']").val(data['results'][dayName.toLowerCase()]);
+        }
+    });
+});
+$("[name='order_date']").on('change', function(e) { 
+    $("[name='category']").trigger('change');
+});
+// category wise rate
+
+// sales type wise option
+$("[name='sales_type']").on('change', function(e) { 
+    var sales_type = $("[name='sales_type']").val().toLowerCase();
+    if (sales_type == 'cash') {
+        $('#sales_type_cash').removeClass('d-none');
+        $('#sales_type_credit').addClass('d-none');
+        $('#corporate_line').addClass('d-none');
+        $('#line_wise_corporate').addClass('mt-4');                
+    }
+    if (sales_type == 'credit') {
+        $('#sales_type_cash').addClass('d-none');
+        $('#sales_type_credit').removeClass('d-none');
+
+        $("#corporate").on('change', function(e) { 
+            $('#corporate_line').removeClass('d-none');
+            $('#line_wise_corporate').removeClass('mt-4');
+        });
+        $("#line_wise").on('change', function(e) { 
+            $('#corporate_line').addClass('d-none');
+            $('#line_wise_corporate').addClass('mt-4');
+        });
+    }
+   
+});
+
+// sales type wise option
+$("[name='sales_type']").trigger('change');
+
+if ($("[name='sales_type_option']:checked").val() == 'Corporate') {
+    $('#corporate').trigger('change');
+}
+
+// agent wise station
+$("[name='agent']").on('change', function(e) { 
+    var agent_id = $("[name='agent']").val().split('||')[0];            
+    $.ajax({
+        url: '[[=URL("default","get_agent_wise_station")]]', // Replace with your endpoint
+        method: 'GET',
+        data: { req_value : agent_id},
+        dataType: 'json',
+        success: function(data) {   
+            var tbody = $('#tbody');
+            tbody.empty();
+            
+            if (data['results'].length === 0) {
+                var emptyRow = `<tr>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>`;
+                tbody.append(emptyRow);
+            }else{
+                var sl = 1;
+                $.each(data['results'], function(index, station) { 
+                    var newRow = `<tr>
+                        <th class="text-start bg-light text-center" style="width: 7%;">${sl}</th>
+                        <th class="text-start " style="width: 33%;">${station.station_code} | ${station.station_name}</th>
+                        <input type="hidden" name="station" value="${station.station_id}||${station.station_name}" class="form-control form-control-sm">
+                        <td style="width: 15%;" class="my-0" >                       
+                            <input type="number" name="quantity_${station.station_id}" value="${station.def_copy}" class="form-control form-control-sm">
+                        </td>
+                        <td style="width: 15%;">                       
+                            <input type="number" name="bonus_qty_${station.station_id}" value=0 class="form-control form-control-sm">
+                        </td>
+                        <td style="width: 15%;">                       
+                            <input type="number" name="complementary_qty_${station.station_id}" value=0 class="form-control form-control-sm">
+                        </td>
+                        <td style="width: 15%;">                       
+                            <select class="form-select form-select-sm selectChange select_custom" name="pack_type_${station.station_id}" style="width: 200px;" placeholder="Select Pack Type">
+                                <option value="">Select Pack Type</option>
+                                [[for pack_type in pack_types:]]
+                                    <option value="[[=pack_type]]" ${station.pack_type == '[[=pack_type]]' ? 'selected' : ''}>[[=pack_type]]</option>;
+                                [[pass]]
+                            </select>
+                        </td>
+                    </tr>`;
+                    tbody.append(newRow);
+                    $(".selectChange").each(function() {
+                        $(this).select2({
+                        } );
+                    });
+                    sl++;
+                });
+            }
+        }
+    });    
+    
+});
+// agent wise station
+
+
+
+
+
+
+});
+</script>
+[[end]]

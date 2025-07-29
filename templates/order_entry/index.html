@@ -1,0 +1,362 @@
+[[extend 'layout.html']]
+
+[[block header]]
+[[icon='fa fa-chart-line']]
+[[breadcamp = 'Order Entry']]
+[[end]]
+
+
+[[block content]]
+
+<div class="container-section" >
+    <div class="row">
+
+        <div class="col-md-1 mt-2 mb-2">            
+            <span class="icon-text icon-text-bold">
+                <i class="fa-solid fa-table-list"></i>
+                <span>Table</span>
+            </span>
+        </div>
+
+        <div class="col-md-9 mt-2">
+            <div class="row" id="custom_form" style="display: none;">
+                <!-- Filter  Section  start -->
+            
+                <div class="col-md-2 mb-2">
+                    <div class="flatpickr-wrapper">
+                        <input type="text" class="date-picker" name="order_date" placeholder="Select Date">
+                        <i class="fa fa-calendar calendar-icon text-secondary calendar-toggle"></i>                            
+                    </div>
+                </div>
+                <div class="col-md-2 mb-2">
+                    <div class="">
+                        <select class="form-select form-select-sm select_custom" name="agent_name" style="width: 200px;" placeholder="Select Agent">
+                            <option value="">Select Agent</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-2 mb-2">
+                    <div class="">
+                        <select class="form-select form-select-sm select_custom" name="vehicle_name" style="width: 200px;" placeholder="Select Vehicle">
+                            <option value="">Select Vehicle</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-2 mb-2">
+                    <div class="">
+                        <select class="form-select form-select-sm select_custom" name="category_name" style="width: 200px;" placeholder="Select Category">
+                            <option value="">Select Category</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- <div class="col-md-2 mb-2">
+                    <div  class="">
+                        <select class="form-select form-select-sm select_custom" name="status" style="width: 200px;" placeholder="Select Status">
+                            <option value="">Select Status</option>
+                            <option value="1">Active</option>
+                            <option value="0">Inactive</option>
+                        </select>
+                    </div>
+                </div> -->
+
+
+
+                
+                <!-- Filter Section  if you need more then add after below section-->
+
+
+
+
+
+                <!-- Keep this fixed for first row last 4 column -->
+                <div class="col-md-4 mb-2 d-flex justify-content-end">
+                    <div class="me-2">
+                        <button type="submit" id="submit" class="btn btn-sm btn-primary" style="width:90px;">
+                            <i class="fa-solid fa-magnifying-glass"></i> <span class="ms-2">Search</span>
+                        </button>
+                    </div>
+                    <div class="">
+                        <button type="reset" id="reset" class="btn btn-sm btn-light" style="width:90px;">
+                            <i class="fa-solid fa-retweet"></i> <span class="ms-2">Reset</span>
+                        </button>
+                    </div>
+                </div>
+                <!-- Keep this fixed for first row last 4 column -->
+
+
+
+
+                <!-- If you need more than 4 filter than add this section -->                
+            
+
+
+
+                <!-- If you need more than 4 filter than add this section -->
+
+
+            </div>       
+        </div>
+
+        <div class="col-md-2 mt-2 mb-2">
+            <div class="d-flex justify-content-end" >                
+                <div class="me-2">
+                    <button type="submit" id="filter" class="btn btn-sm btn-light" style="width:90px;">
+                        <i class="fa-solid fa-filter"></i> <span class="ms-2">Filter</span>
+                    </button>
+                </div>
+
+                <div class="dropdown">
+                    <button class="btn btn-primary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown"
+                        aria-expanded="false" style="width:90px;">
+                        Action
+                    </button>
+                    <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                        <a class="dropdown-item" href="[[=URL('order_entry/create')]]"><i class="fas fa-add me-1"></i>
+                            Add</a>
+                        <button class="dropdown-item" id="ExportExcel"><i class="fas fa-cog me-1"></i> Excel</button>
+
+                    </div> 
+                </div>
+            </div>
+        
+        </div>
+
+    </div>
+
+    
+    <div class="table-responsive">
+        <table class="table table-bordered compact" style="width:100%" id="myTable">
+            <thead>
+        
+            </thead>
+            <tbody>
+                
+            </tbody>
+    
+        </table>
+
+    </div>
+    
+</div>
+[[end]]
+[[block scripts]]
+<!-- individual pages can add scripts here -->
+
+<script>
+    $(document).ready(function() {   
+        
+        $("[name='agent_name']").one('select2:open', function(e) {              
+                $.ajax({
+                    url: '[[=URL("default","get_agents")]]', // Replace with your endpoint
+                    method: 'GET',
+                    data: { q:''},
+                    dataType: 'json',
+                    success: function(data) {                
+                        $("[name='agent_name']").empty().select2({
+                            data: data['results'],
+                            placeholder: "Select Agent",
+                            allowClear: true
+                        }).select2('open');
+                    }
+                });    
+            });
+
+        $("[name='vehicle_name']").one('select2:open', function(e) {              
+            $.ajax({
+                url: '[[=URL("default","get_vehicles")]]', // Replace with your endpoint
+                method: 'GET',
+                data: { q:''},
+                dataType: 'json',
+                success: function(data) {                
+                    $("[name='vehicle_name']").empty().select2({
+                        data: data['results'],
+                        placeholder: "Select Vehicle",
+                        allowClear: true
+                    }).select2('open');
+                }
+            });    
+        });
+        $("[name='category_name']").one('select2:open', function(e) {              
+                $.ajax({
+                    url: '[[=URL("default","get_category")]]', // Replace with your endpoint
+                    method: 'GET',
+                    data: { q:''},
+                    dataType: 'json',
+                    success: function(data) {                  
+                        $("[name='category_name']").empty().select2({
+                            //dropdownParent: $("#custom_form"),
+                            data: data['results'],
+                            placeholder: "Select Category",
+                            allowClear: true
+                        }).select2('open');
+                    }
+                });    
+            });
+
+    $("#filter").click(function(e){
+        // $("#custom_form").toggleClass("d-none");
+        $("#custom_form").fadeToggle("slow");
+    });
+
+// Datatable ############################################################
+    
+    var table = $('#myTable').DataTable({
+        dom: "Bfrt<'d-flex justify-content-between'<l><i><p>>",
+        buttons: [
+            {
+                extend: 'excel',
+                title: 'Order Data',
+                filename: 'order_data',
+                exportOptions: {
+                    columns: [ 0,1,2]
+                },
+            }
+        ],
+        order: [0, 'asc'],
+        searching:false,
+        paging: true,
+        serverSide: true,
+        scrollCollapse: false,
+        scrollX: true,
+        scrollY: "413px",
+        fixedHeader: true,
+        fixedColumns: {
+            left: 1, // No left columns fixed
+            right: 1 // Fix the last column
+        },    
+        lengthMenu: [
+        [15, 50, 100, -1],
+        [15, 50, 100, 'All']
+        ],
+        ajax: {
+            async: true,
+            type: 'GET',
+            url: '[[=URL("order_entry","get_data")]]',
+            data: function (d) {
+                d.agent_name = $("select[name='agent_name']").val();
+                d.vehicle_name = $("select[name='vehicle_name']").val();
+                d.category_name = $("select[name='category_name']").val();
+                d.order_date = $("input[name='order_date']").val();
+                // d.status = $("select[name='status']").val();
+            },
+            dataSrc: 'data'
+        },
+        columns: [
+            {
+                title: 'SL No.',
+                data: null,
+                render: function (data, type, row, meta) {
+                    return meta.row + 1;
+                }
+            },
+            {
+                title: 'Order ID',
+                data: 'order_id',
+                render: function (data, type, row) {
+                    return `<div class="">${data}</div>`
+
+                }
+            },
+            {
+                title: 'Order Date',
+                data: 'order_date',
+                render: function (data, type, row) {
+                    if (!data) {
+                        return '-';
+                    }
+                    return moment(data).format('MMMM D, YYYY');
+                }
+            },
+           
+            {
+                title: 'Agent',
+                data: 'agent_id',
+                render: function (data, type, row) {
+                    return `<div class="">${row.agent_code} | ${row.agent_name}</div>`
+                }
+            },
+
+            {
+                title: 'Category',
+                data: 'category_id',
+                render: function (data, type, row) {
+                    return `<div class="">${row.category_name} | Rate: ${row.rate}</div>`
+                }
+            },
+            {
+                title: 'Sub Route',
+                data: 'sub_route_id',
+                render: function (data, type, row) {
+                    return `<div class="">${row.sub_route_code} | ${row.sub_route_name}</div>`
+                }
+            },
+            {
+                title: 'Vehicle',
+                data: 'vehicle_id',
+                render: function (data, type, row) {
+                    return `<div class="">${row.vehicle_code} | ${row.vehicle_name}</div>`
+                }
+            },
+           
+            {
+                title: 'Sales Type',
+                data: 'sales_type'
+            },
+            {
+                title: 'Edition',
+                data: 'edition'
+            },
+           
+            
+            {
+                title: 'Status',
+                data: 'status',
+                render: function (data, type, row) {
+                    return `<div class='badge ${data == 1 ? 'bg-success' : 'bg-secondary'} fw-bold'>${data == 1 ? 'Posted' : 'Pending'}</div>`
+
+                }
+            },
+            {
+                title: '',
+                data: 'id',
+                render: function (data, type, row) {
+                    return `
+                        <a class="text-secondary" href="[[=URL('order_entry/edit')]]?id=${data}" data-bs-toggle="tooltip" data-bs-placement="top" title="Update"><i class="fas fa-edit"></i></a>
+                    `;
+
+                }
+            },
+        ],
+        drawCallback: function (settings) {
+            $('[data-bs-toggle="tooltip"]').tooltip();
+    }
+    });
+    
+
+    $("#submit").click(function(e){
+      e.preventDefault();
+      table
+    .clear()
+    .draw();
+    });
+
+    $("#reset").click(function(e){
+        e.preventDefault();
+        $("input,select").val(null);
+        $('.select_custom').each(function() {
+            var placeholder = $(this).attr('placeholder');
+            $(this).select2({
+                // dropdownParent: $("#custom_form"),
+                placeholder: placeholder,
+                allowClear: true,
+            });
+        });
+        table.clear().draw();
+    });
+    // Datatable ############################################################
+
+});
+    
+</script>
+[[end]]

@@ -1,0 +1,74 @@
+[[extend 'layout.html']]
+
+[[block header]]
+[[icon='fa fa-users']]
+[[breadcamp = 'Home/Users']]
+[[end]]
+
+[[block content]]
+<div class="container-section">
+    <div class="d-flex justify-content-between align-items-center">
+      
+         <span class="icon-text icon-text-bold" >
+             <i class="fa-solid fa-table-list"></i>
+             <span>Table</span>
+         </span>
+     
+        <div class="d-flex justify-content-end">
+            <div class="p-1">
+                <button type="button" class="btn btn-sm btn-secondary">
+                    <i class="fa-solid fa-filter"></i> <span class="ms-2">Filter</span>
+                </button>
+            </div>
+            <div class="p-1">
+                <div class="btn-group">
+                    <button class="btn btn-primary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                      Action
+                    </button>
+                    <!-- <ul class="dropdown-menu"> -->
+                        <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                            <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#staticBackdrop"><i class="fas fa-add me-1"></i> Add</a>
+                            <a class="dropdown-item" href="#"><i class="fas fa-cog me-1"></i> Import</a>
+                            <a class="dropdown-item" href="#"><i class="fas fa-cog me-1"></i> Export</a>
+                            <div class="dropdown-divider"></div>
+                            <a class="dropdown-item" href="#"><i class="fas fa-sign-out-alt me-1"></i> Logout</a>
+                          </div>
+                    <!-- </ul> -->
+                  </div>
+            </div>
+        </div>
+    </div>
+    <div class="table-responsive">
+      <table id="example" class="table table-bordered compact" style="width:100%">
+        <thead>
+          <tr>
+            <th scope="col" class="text-center">#</th>
+            <th scope="col">Username</th>
+            <th scope="col">Email</th>
+            <th scope="col">Status</th>
+            <th scope="col">Username</th>
+            <th scope="col">Email</th>
+            <th scope="col">Status</th>
+           
+          </tr>
+        </thead>
+        <tbody>
+          [[for user in users:]]
+          <tr>
+            <td>#</th>
+            <td class="custom-td">[[=user['username']]]</td>
+            <td>[[=user['email']]]</td>
+            <td>[[if user['status'] == 1:]]active [[else:]]inactive[[pass]]</td>
+            <td class="custom-td">[[=user['username']]]</td>
+            <td>[[=user['email']]]</td>
+            <td>[[if user['status'] == 1:]]active [[else:]]inactive[[pass]]</td>
+          
+          </tr>
+          [[pass]]
+        </tbody>
+      </table>
+    </div>
+   
+ </div>
+[[end]]
+[[block scripts]]<!-- individual pages can add scripts here -->[[end]]

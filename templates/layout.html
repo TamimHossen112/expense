@@ -1,0 +1,449 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <!-- Required meta tags -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>EXPENSE</title>
+  <link rel="icon" type="image/x-icon" href="[[=URL('static','tsmall.png')]]">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
+    rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap"
+    rel="stylesheet">
+
+  <!-- CSS CDN -->
+  <link rel="stylesheet" href="[[=URL('static','fontawesome/css/all.min.css')]]" />
+
+  <!-- Boostrap -->
+  <link rel="stylesheet" href="[[=URL('static','css/boostrap.css')]]" />
+  <!-- Boostrap -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <!-- Datatable -->
+  <link rel="stylesheet" href="[[=URL('static','css/datatable/datatable.css')]]" />
+  <link href="[[=URL('static','css/datatable/buttons.dataTables.css')]]" rel="stylesheet">
+
+  <!-- fixed colmn -->
+  <link href="[[=URL('static','css/datatable/fixedColumns.dataTables.css')]]" rel="stylesheet">
+  <link href="https://cdn.datatables.net/rowreorder/1.5.0/css/rowReorder.dataTables.css" rel="stylesheet">
+  <link href="https://cdn.datatables.net/responsive/3.0.3/css/responsive.dataTables.css" rel="stylesheet">
+  
+
+  <!-- fixed colmn -->
+  <!-- Datatable end-->
+
+  <!-- select 2 -->
+  <link href="[[=URL('static','css/select2.min.css')]]" rel="stylesheet" />
+  <!-- select 2 -->
+
+  <!-- Common CSS  -->
+  <link rel="stylesheet" href="[[=URL('static','css/sidebar.css')]]" />
+  <link rel="stylesheet" href="[[=URL('static','css/style.css')]]" />
+  <link rel="stylesheet" href="[[=URL('static','css/custom_forms.css')]]" />
+  <!-- Common CSS  -->
+
+  <!-- multi select  CSS  -->
+  <link rel="stylesheet" href="[[=URL('static','css/multi-select.css')]]" />
+  <link rel="stylesheet" href="[[=URL('static','css/multi-select.dev.css')]]" />
+  <link rel="stylesheet" href="[[=URL('static','css/multi-select.dist.css')]]" />
+  <!-- multi select CSS  -->
+  <!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css"> -->
+  <style>
+    /* .offcanvas-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1rem;
+    } */
+
+
+    .badge{
+        display: inherit;
+        text-transform: uppercase;
+        font-size: .575rem;
+        padding: 3px 3px;
+        border-radius: 3px;
+        letter-spacing: .2px;
+    }
+    table td, table th {
+    vertical-align: middle;
+  }
+    .offcanvas {
+      
+      visibility: visible;
+     
+      border-top-left-radius: 1%;
+    }
+    .offcanvas-backdrop.show {
+      opacity: .5;
+      
+    }
+    .offcanvas-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 1040;
+      width: 100vw;
+      height: 100vh;
+      background-color: #000;
+
+    }
+    .offcanvas-end {
+    top: 0;
+    right: 0;
+    width: 800px;
+    border-left: 1px solid rgba(0, 0, 0, 0.2);
+    transform: translateX(100%);
+    }
+    :root {
+
+      --master-primary: rgb(123, 104, 238);
+      --master-primary-active: rgb(84, 77, 201);
+      --master-primary-light: rgba(204, 201, 250);
+
+      --master-text-color: rgb(42, 46, 52);
+      --master-text-color-active: rgb(79, 87, 98);
+      --master-placeholder-color: rgb(79, 87, 98);
+
+      --master-border: rgb(232, 234, 237);
+      --master-border-active: rgb(214, 217, 222);
+
+      --master-input-border: rgb(214, 217, 222);
+      --master-input-border-active: rgb(173, 179, 189);
+
+      --master-background: rgb(247, 248, 249);
+      /* --master-font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbo"; */
+      /* --master-font: "Poppins", sans-serif; */
+      --master-font: "Open Sans", sans-serif;
+      ;
+
+    }
+  </style>
+  <style>
+    :focus-visible {
+      outline: -webkit-focus-ring-color auto 0px;
+    }
+
+    textarea::placeholder {
+      color: var(--master-placeholder-color) !important;
+      font-family: var(--master-font) !important;
+      font-weight: 400 !important;
+
+    }
+
+    ::placeholder {
+      font-family: var(--master-font) !important;
+      color: var(--master-placeholder-color) !important;
+      font-size: 0.775rem !important;
+      font-weight: 400 !important;
+    }
+
+    input:-webkit-autofill,
+    input:-webkit-autofill:hover,
+    input:-webkit-autofill:focus,
+    input:-webkit-autofill:active {
+      -webkit-text-fill-color: var(--master-text-color);
+      -webkit-box-shadow: 0 0 0px 1000px #fff inset;
+      transition: background-color 5000s ease-in-out 0s;
+    }
+
+    .form-control {
+      font-size: .775rem;
+    }
+    .btn-circle {
+      border-radius: 20% !important;
+    }
+
+.sidebar-header,.header-menu-right{
+    top: 40px !important;
+  }
+  .fixed-header{
+    top: 40px;
+  }
+  .layout{
+    min-height: 93%;
+  }
+  .layout.fixed-sidebar {
+    height: 93%;
+  }
+
+  .row{
+    margin-left: 0px;
+    margin-right: 0px;
+  }
+
+  .form-check-input[type="radio"] {
+    transform: scale(1.3); /* Adjust the size as needed */
+  } 
+  </style>
+
+</head>
+
+<body>
+  <div style="height: 40px;background: #323452;position: fixed; width: 100%; z-index: 1000;">
+    <div class="d-flex align-items-center justify-content-between mx-3" style="height: 100%;">
+      <div class="ms-1">
+        <img src="[[=URL('static','Transcom_logo.png')]]" height="20" alt="">
+      </div>
+      <div class="fs-7 text-white d-none d-md-block" style="letter-spacing: 1px;">EXPENSE MANAGEMENT SYSTEM</div>
+      <div class="fs-7 text-white d-block d-md-none" style="letter-spacing: 1px;">EMS</div>
+      <div>
+        <div class="btn-group">
+          <button class="btn btn-primary btn-sm btn-circle" type="button" aria-haspopup="true" data-bs-toggle="dropdown"
+              aria-expanded="false">             
+              [[=str('E').upper()]]
+          </button>
+          <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+              <a class="dropdown-item" href="#"><i class="fa-solid fa-user me-1"></i>user 1 </a>
+              <a class="dropdown-item" href="#"><i class="fa-solid fa-user-gear me-1"></i>system admin</a>
+              <a class="dropdown-item" href="#"><i class="fa-solid fa-envelope me-1"></i> EXPENSE@transcombd.com</a>
+              <div class="dropdown-divider"></div>
+              <a class="dropdown-item" href="[[=URL('logout')]]"><i class="fas fa-sign-out-alt me-1"></i> Logout</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="layout has-sidebar fixed-sidebar fixed-header">
+    [[include 'sidebar.html']]
+
+    <div id="overlay" class="overlay"></div>
+    <div class="layout">
+      <main class="content">
+
+        
+        [[block header]]
+        
+        [[icon='fa fa-home']]
+        [[breadcamp='']]
+        
+        [[end]]
+        [[include 'header.html']]
+
+
+        <!--  -->
+        <div class="content-body">
+
+          [[block content]]
+
+          [[end]]
+        </div>
+
+        [[block footer]]
+
+
+        [[end]]
+        [[include 'footer.html']]
+
+        <!--  -->
+
+      </main>
+      <div class="overlay"></div>
+      <!-- Modal -->
+    </div>
+  </div>
+
+  <!--  -->
+  [[block drawer]]
+  [[end]]
+
+  [[block modal]]
+  [[end]]
+  <div class="modal" id="staticBackdrop" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header border-0">
+          <h5 class="modal-title fs-6">Modal title</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="container">
+            <div class="mb-3 row">
+              <label for="staticEmail" class="col-sm-2 col-form-label">Name</label>
+              <div class="col-sm-10">
+                <input type="text" class="form-control form-control-sm" id="staticEmail" value="nameexample">
+              </div>
+            </div>
+            <div class="mb-3 row">
+              <label for="staticEmail" class="col-sm-2 col-form-label">Email</label>
+              <div class="col-sm-10">
+                <input type="text" class="form-control form-control-sm" id="staticEmail" value="email@example.com">
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary">Save changes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Script CDN -->
+
+  <!-- common js -->
+  <script src="[[=URL('static','js/popper.min.js')]]"></script>
+  <script src="[[=URL('static','js/bootstrap.min.js')]]"></script>
+  <script src="[[=URL('static','js/jquery-3.7.1.min.js')]]"></script>
+  <!-- common js -->
+
+  <!-- multi select js -->
+  <script src="[[=URL('static','js/jquery.multi-select.js')]]"></script>
+  <!-- multi select js -->
+
+  <!-- sweet alert js -->
+  <script src="[[=URL('static','js/sweetalert2@11.js')]]"></script>
+  <!-- sweet alert js -->
+
+  <!-- selct2 -->
+  <script src="[[=URL('static','js/select2.min.js')]]"></script>
+  <!-- selct2 -->
+
+  <!-- Datatable -->
+  <script src="[[=URL('static','js/datatable/datatable.js')]]"></script>
+
+  <!-- fixed colmn -->
+  <script src="[[=URL('static','js/datatable/dataTables.fixedColumns.js')]]"></script>
+  <script src="[[=URL('static','js/datatable/fixedColumns.dataTables.js')]]"></script>
+  <!-- fixed colmn -->
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>   
+
+  <!-- Export all-->
+  <script src="[[=URL('static','js/datatable/dataTables.buttons.js')]]"></script>
+  <script src="[[=URL('static','js/datatable/buttons.dataTables.js')]]"></script>
+  <script src="[[=URL('static','js/datatable/jszip.min.js')]]"></script>
+  <script src="[[=URL('static','js/datatable/pdfmake.min.js')]]"></script>
+  <script src="[[=URL('static','js/datatable/vfs_fonts.js')]]"></script>
+  <script src="[[=URL('static','js/datatable/buttons.html5.min.js')]]"></script>
+  <script src="[[=URL('static','js/datatable/buttons.print.min.js')]]"></script>
+
+
+  <script src="https://cdn.datatables.net/rowreorder/1.5.0/js/dataTables.rowReorder.js"></script>
+  <script src="https://cdn.datatables.net/rowreorder/1.5.0/js/rowReorder.dataTables.js"></script>
+  <script src="https://cdn.datatables.net/responsive/3.0.3/js/dataTables.responsive.js"></script>
+  <script src="https://cdn.datatables.net/responsive/3.0.3/js/responsive.dataTables.js"></script>
+  
+  <!-- Export all-->
+  <!-- Datatable -->
+
+  <script src="[[=URL('static','js/moment.js')]]"></script>
+
+
+  <!-- flatpicker -->
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+  <script src="[[=URL('static','js/script.js')]]"></script>
+  <script src="[[=URL('static','js/common.js')]]"></script>
+
+  <style>
+    .flatpickr-input.form-control:disabled, .flatpickr-input.form-control[readonly] {
+        background-color: #fff;
+        opacity: 1;
+    }
+    .flatpickr-wrapper {
+        position: relative;
+        display: inline-block;
+    }
+
+    .calendar-icon {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        cursor: pointer;
+        color: #555;
+    }
+  </style>
+
+  <script>
+    $(document).ready(function () {
+      
+
+      // select2 start
+      $('.select_custom').each(function() {
+        var placeholder = $(this).attr('placeholder') || "Select an option";
+        $(this).select2({
+          placeholder: placeholder,
+          allowClear: true,
+        });
+      });
+      // select2 end
+
+      // select2 start
+      $('.select_custom_modal').select2({
+        dropdownParent: $("#staticBackdrop"),
+        placeholder: "Select an option",
+        allowClear: true,
+      });
+      // select2 end
+
+      $("#ExportExcel").on("click", function () {
+        $('.dt-buttons .buttons-excel').click();
+      });
+      $('[data-bs-toggle="tooltip"]').tooltip();
+
+      // flatpicker
+      $(".date-picker").each(function () {
+            var $input = $(this);
+            var fp = $input.flatpickr({
+                disableMobile: true,
+                allowInput: true,
+                monthSelectorType: "dropdown",
+                dateFormat: "Y-m-d",
+                altInput: true,
+                altFormat: "F d, Y",
+            });
+            $input.closest(".flatpickr-wrapper").find(".calendar-toggle").on("click", function () {
+                fp.open();
+            });
+        });
+    // flatpicker
+
+    $('input[type="time"]').attr("onclick", "this.showPicker()");
+
+    });
+  </script>
+
+
+  [[block scripts]]<!-- individual pages can add scripts here -->[[end]]
+
+
+  <!-- Flash Message -->
+  [[if globals().get('flash'):]]
+  [[message_text=str(flash['message']).replace('rdrdrd', '<br>')]]
+  <script>
+
+     
+    const Toast = Swal.mixin({
+      toast: true,
+      position: "top-end",
+      showConfirmButton: false,
+      customClass: {
+        popup: "customPopup",
+      },
+      timer: 3000,
+      timerProgressBar: true,
+      didOpen: (toast) => {
+        toast.onmouseenter = Swal.stopTimer;
+        toast.onmouseleave = Swal.resumeTimer;
+      }
+    });
+    Toast.fire({
+      icon: "[[=XML(flash['class'])]]",
+      title: "[[=XML(message_text)]]"
+    });
+  </script>
+  [[pass]]
+  <!-- Flash Message -->
+  <script>
+    cellEditable();
+  </script>
+
+</body>
+
+</html>

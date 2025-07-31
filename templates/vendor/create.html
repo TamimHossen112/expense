@@ -1,0 +1,85 @@
+[[extend 'layout.html']]
+
+[[block header]]
+[[icon='fa fa-shop']]
+[[breadcamp = 'Vendor']]
+[[end]]
+
+[[block content]]
+<div class="container-section">
+    <div class="d-flex justify-content-between align-items-center border-bottom">
+        <span class="icon-text icon-text-bold">
+            <i class="fa-solid fa-plus"></i>
+            <span>Create</span>
+        </span>
+
+        <div class="d-flex justify-content-end">
+            <div class="p-1">
+                <a href="[[=URL('vendor/index')]]" class="btn btn-sm btn-light">
+                    <i class="fa-solid fa-arrow-left"></i> <span class="ms-2">Back</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="container py-2">
+        <form action="[[=URL('vendor','submit')]]" method="POST">
+            <div id="custom_form">        
+                <div class="row">
+
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label for="vendor_name" class="form-label">Vendor Name <span class="is_required">*</span></label>
+                            <input type="text" id="vendor_name" name="vendor_name" class="form-control form-control-sm" required>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label for="contact" class="form-label">Contact <span class="is_required">*</span></label>
+                            <input type="text" id="contact" name="contact" class="form-control form-control-sm" required>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label for="vendor_address" class="form-label">Vendor Address <span class="is_required">*</span> </label>
+                            <input type="text" id="vendor_address" name="vendor_address" class="form-control form-control-sm">
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label for="trade_license_no" class="form-label">Trade License No <span class="is_required">*</span> </label>
+                            <input type="text" id="trade_license_no" name="trade_license_no" class="form-control form-control-sm">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-12">
+                        <div class="d-flex justify-content-start">
+                            <div class="me-2">
+                                <button type="submit" class="btn btn-sm btn-primary">
+                                    <i class="fa-regular fa-floppy-disk"></i> <span class="ms-2">Save</span>
+                                </button>
+                            </div>
+                            <div>
+                                <button type="reset" class="btn btn-sm btn-light">
+                                    <i class="fa-solid fa-retweet"></i> <span class="ms-2">Reset</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+[[end]]
+
+[[block scripts]]
+<script>
+
+</script>
+[[end]]

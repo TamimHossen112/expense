@@ -1,0 +1,176 @@
+[[extend 'layout.html']]
+
+[[block header]]
+[[icon='fa fa-shop']]
+[[breadcamp = 'Vendor']]
+[[end]]
+
+[[block content]]
+
+<div class="container-section">
+    <div class="row">
+
+        <div class="col-md-1 mt-2 mb-2">
+            <span class="icon-text icon-text-bold">
+                <i class="fa-solid fa-table-list"></i>
+                <span>Table</span>
+            </span>
+        </div>
+
+        <div class="col-md-9 mt-2">
+            <div class="row" id="custom_form" style="display: none;">
+                
+                <div class="col-md-3 mb-2">
+                    <div class="">
+                        <select class="form-select form-select-sm select_custom" name="vendor_name" style="width: 200px;" placeholder="Select Vendor">
+                            <option value="">Select Vendor</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="col-md-3 mb-2">
+                    <input type="text" name="address" class="form-control form-control-sm" placeholder="Search Address">
+                </div>
+
+                <div class="col-md-6 mb-2 d-flex justify-content-end">
+                    <div class="me-2">
+                        <button type="submit" id="submit" class="btn btn-sm btn-primary" style="width:90px;">
+                            <i class="fa-solid fa-magnifying-glass"></i> <span class="ms-2">Search</span>
+                        </button>
+                    </div>
+                    <div style="margin-right:15px;">
+                        <button type="reset" id="reset" class="btn btn-sm btn-light" style="width:90px;">
+                            <i class="fa-solid fa-retweet"></i> <span class="ms-2">Reset</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-2 mt-2 mb-2">
+            <div class="d-flex justify-content-end">
+                <div class="me-2">
+                    <button type="button" id="filter" class="btn btn-sm btn-light" style="width:90px;">
+                        <i class="fa-solid fa-filter"></i> <span class="ms-2">Filter</span>
+                    </button>
+                </div>
+                <div class="dropdown">
+                    <button class="btn btn-primary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown"
+                        aria-expanded="false" style="width:90px;">
+                        Action
+                    </button>
+                    <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                        <a class="dropdown-item" href="[[=URL('vendor/create')]]"><i class="fas fa-add me-1"></i> Add</a>
+                        <button class="dropdown-item" id="ExportExcel"><i class="fas fa-cog me-1"></i> Excel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table id="myTable" class="table table-bordered compact" style="width:100%">
+            <thead class="text-truncate"></thead>
+            <tbody></tbody>
+        </table>
+    </div>
+</div>
+[[end]]
+
+[[block scripts]]
+<script>
+    $(document).ready(function() {
+        $("[name='vendor_name']").one('select2:open', function(e) {
+        $.ajax({
+            url: '[[=URL("default","get_vendors")]]',
+            method: 'GET',
+            data: { q: '' },
+            dataType: 'json',
+            success: function(data) {
+                var $select = $("[name='vendor_name']");
+                $select.empty();
+                $select.select2({
+                    data: data['results'],
+                    placeholder: "Select Vendor",
+                    allowClear: true
+                }).select2('open');
+            }
+        });
+    });
+
+
+        $("#filter").click(function(e) {
+            $("#custom_form").fadeToggle("slow");
+        });
+
+        var table = $('#myTable').DataTable({
+            dom: "Bfrt<'d-flex justify-content-between'<l><i><p>>",
+            buttons: [
+                {
+                    extend: 'excel',
+                    title: 'Vendor Data',
+                    filename: 'Vendor_Data',
+                    exportOptions: {
+                        columns: [0,1,2,3]
+                    },
+                }
+            ],
+            order: [6, 'desc'],
+            searching: false,
+            paging: true,
+            serverSide: true,
+            scrollCollapse: false,
+            scrollX: true,
+            scrollY: "413px",
+            fixedHeader: true,
+            fixedColumns: {
+                left: 1,
+                right: 1
+            },
+            lengthMenu: [
+                [15, 50, 100, -1],
+                [15, 50, 100, 'All']
+            ],
+            ajax: {
+                async: true,
+                type: 'GET',
+                url: '[[=URL("vendor","get_data")]]',
+                data: function (d) {
+                    d.vendor_name = $("select[name='vendor_name']").val();
+                    d.address = $("input[name='address']").val();
+                },
+                dataSrc: 'data'
+            },
+            columns: [
+                { title: 'SL No.', data: null, render: function(data, type, row, meta) {
+                    return meta.row + 1;
+                }},
+                { title: 'CID', data: 'cid', render: function(data){ return data ?? '-'; }},
+                { title: 'Vendor Name', data: 'vendor_name', render: function(data){ return data ?? '-'; }},
+                { title: 'Contact', data: 'contact', render: function(data){ return data ?? '-'; }},
+                { title: 'Address', data: 'vendor_address', render: function(data){ return data ?? '-'; }},
+                { title: 'Trade License', data: 'trade_license_no', render: function(data){ return data ?? '-'; }},
+                { title: '', data: 'id', render: function(data, type, row) {
+                    return `
+                        <a class="text-secondary" href="[[=URL('vendor/edit')]]?id=${data}"
+                           data-bs-toggle="tooltip" data-bs-placement="top" title="Update">
+                            <i class="fas fa-edit"></i>
+                        </a>`;
+                }}
+            ]
+        });
+
+        $("#submit").click(function(e){
+            e.preventDefault();
+            table.ajax.reload();
+        });
+
+        $("#reset").click(function(e){
+            e.preventDefault();
+            $("select[name='vendor_name']").val(null).trigger('change');
+            $("input[name='address']").val('');
+            table.ajax.reload();
+        });
+    });
+</script>
+[[end]]

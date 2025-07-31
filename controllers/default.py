@@ -11,6 +11,26 @@ def index():
     return dict(redirect(URL('dashboard', 'index')))
 
 
+
+@action("default/get_vendors")
+@action.uses(db)
+def get_vendors():
+    vendors = db(db.vendor.vendor_name != None).select(db.vendor.vendor_name, distinct=True).as_list()
+    results = [{"id": a["vendor_name"], "text": a["vendor_name"]} for a in vendors if a["vendor_name"]]
+    return dict(results = results)
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Category data
 @action("default/get_category", method=['GET', 'POST'])
 @action.uses(db)

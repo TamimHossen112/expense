@@ -1,0 +1,344 @@
+[[extend 'layout.html']]
+
+[[block header]]
+[[icon='fa fa-file-pen']]
+[[breadcamp = 'Create Requisition']]
+[[end]]
+
+[[block content]]
+<div class="container-section">
+    <div class="d-flex justify-content-between align-items-center border-bottom mx-2">
+        <span class="icon-text icon-text-bold">
+            <i class="fa-solid fa-plus"></i>
+            <span>Create</span>
+        </span>
+        <div class="d-flex justify-content-end">
+            <div class="p-1">
+                <a href="[[=URL('requisition/index')]]" class="btn btn-sm btn-light">
+                    <i class="fa-solid fa-arrow-left"></i> <span class="ms-2">Back</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="container py-2">
+        <form id="uploadForm" action="[[=URL('requisition','submit')]]" method="post" enctype="multipart/form-data">
+            <div id="custom_form">
+                <div class="row">
+                    <div class="col-md-4 col-sm-12">
+                        <div class="row">
+                            <div class="mb-2">
+                                <label for="emp_id" class="form-label">Select Employee <span class="is_required">*</span></label>
+                                <select class="form-select form-select-sm select_custom" id="emp_id" name="emp_id" required>
+                                    <option value="">Select Employee </option>
+                                </select>
+                            </div>
+
+                            <div class="mb-2">
+                                <label for="emp_name" class="form-label">Employee Name</label>
+                                <input type="text" class="form-control form-control-sm" id="emp_name" name="emp_name" readonly>
+                            </div>
+
+                            <div class="mb-2">
+                                <label for="designation" class="form-label">Designation</label>
+                                <input type="text" class="form-control form-control-sm" id="designation" name="designation" readonly>
+                            </div>
+
+                            <div class="mb-2">
+                                <label for="tr_code" class="form-label">Territory Code</label>
+                                <input type="text" class="form-control form-control-sm" id="tr_code" name="tr_code" readonly>
+                            </div>
+
+                            <div class="mb-2">
+                                <label for="head_office" class="form-label">Head Office</label>
+                                <input type="text" class="form-control form-control-sm" id="head_office" name="head_office" readonly>
+                            </div>
+
+                            <div class="mb-2">
+                                <label for="joining_date_display" class="form-label">Joining Date <span class="is_required">*</span></label>
+                                <input type="text" class="form-control form-control-sm" id="joining_date_display" readonly>
+                                <input type="hidden" id="joining_date" name="joining_date">
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <div class="col-md-8 col-sm-12">
+                        <div class="row">
+                            <div class="col-md-6 col-sm-12">
+                                <div class="mb-2">
+                                    <label for="asset_type" class="form-label">Asset Type <span class="is_required">*</span></label>
+                                    <select class="form-select form-select-sm select_custom" id="asset_type" name="asset_type" required>
+                                        <option value="">Select Asset Type</option>
+                                    </select>
+                                </div>
+
+                                <div class="mb-2">
+                                    <label for="license_number" class="form-label">Driving License No</label>
+                                    <input type="text" class="form-control form-control-sm" id="license_number" name="license_number">
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 col-sm-12">
+                                <div class="mb-2">
+                                    <label for="license_issue_date" class="form-label">Driving License Issue Date <span class="is_required">*</span></label>
+                                    <div class="flatpickr-wrapper">
+                                        <input type="text" class="date-picker" id="license_issue_date" name="license_issue_date" placeholder=" License Issue Date" required>
+                                        <i class="fa fa-calendar calendar-icon text-secondary calendar-toggle"></i>                            
+                                    </div>
+                                </div>
+
+                                <div class="mb-2">
+                                    <label for="license_expire_date" class="form-label">License Expire Date <span class="is_required">*</span></label>
+                                    <div class="flatpickr-wrapper">
+                                        <input type="text" class="date-picker" id="license_expire_date" name="license_expire_date" placeholder="License Expire Date" required>
+                                        <i class="fa fa-calendar calendar-icon text-secondary calendar-toggle"></i>                            
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-12 col-sm-12">
+                                <div class="mb-2">
+                                    <strong>File Attachment Section</strong>    
+                                </div>
+                                <div class="border border-primary p-2 rounded">
+                                    <div class="row">
+                                        <div class="col-md-4 col-sm-12 mb-2">
+                                            <label for="doc_type" class="form-label">Doc Type <span class="is_required">*</span></label>
+                                            <select class="form-select form-select-sm select_custom" id="doc_type" name="doc_type">
+                                                <option value="">Select Document Type</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="col-md-6 col-sm-12 mb-2">
+                                            <label for="formFile" class="form-label">Choose File <span class="is_required">*</span></label>
+                                            <input type="file" class="form-control form-control-sm" id="formFile" name="upload_file">
+                                        </div>
+
+                                        <div class="col-md-2 col-sm-12 d-flex align-items-end mb-2">
+                                            <button id="uploadBtn" type="button" class="btn btn-sm btn-primary w-100" title="Upload">
+                                                <i class="fa-solid fa-upload"></i>
+                                                <span class="d-lg-inline d-sm-inline d-md-none"> Upload</span>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div id="uploadStatus"></div>
+                                    
+                                    <div style="margin-bottom: 0; padding-bottom: 0;">
+                                        <div class="mb-1" style="margin-bottom: 4px;">Uploaded Files</div>
+                                        <div class="table-responsive" style="margin-bottom: 0 !important; padding-bottom: 0 !important;">
+                                            <table class="table table-bordered table-sm mb-0" id="uploadedFilesTable" style="margin-bottom: 0 !important;">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Doc Type</th>
+                                                        <th>File Name</th>
+                                                        <th>Action</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody></tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="uploadedFilesData"></div>
+
+            <div class="mt-2 mb-3">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fa-solid fa-floppy-disk"></i> <span class="ms-2">Save</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+[[end]]
+
+[[block scripts]]
+<script>
+    const uploadedFiles = [];
+    const IMAGE_UPLOAD_API = "[[=IMAGE_UPLOAD_API]]";
+    const IMAGE_DOWNLOAD_API = "[[=IMAGE_DOWNLOAD_API]]";
+    const EMPLOYEE_DETAILS_API = "[[=URL('default', 'get_employee_details')]]";
+    const ASSET_META_API = "[[=URL('default', 'get_asset_type_brand_models')]]";
+    const COMBO_VALUES_API = "[[=URL('default', 'get_combo_values')]]?key=requisition";
+
+    document.addEventListener('DOMContentLoaded', async () => {
+        // Load doc types
+        try {
+            const res = await fetch(COMBO_VALUES_API);
+            if (!res.ok) throw new Error(`API failed: ${res.status}`);
+            const data = await res.json();
+            const docTypeSelect = document.getElementById('doc_type');
+            data.results.forEach(item => {
+                const option = document.createElement('option');
+                option.value = item.id;
+                option.textContent = item.text;
+                docTypeSelect.appendChild(option);
+            });
+        } catch (err) {
+            console.error('Doc type load error:', err);
+        }
+
+        // Load employee list
+        try {
+            const res = await fetch(EMPLOYEE_DETAILS_API);
+            if (!res.ok) throw new Error(`Employee API failed: ${res.status}`);
+            const employees = await res.json();
+            const empSelect = document.getElementById('emp_id');
+            employees.forEach(emp => {
+                const option = document.createElement('option');
+                option.value = emp.employee_id;
+                option.textContent = `${emp.employee_id} | ${emp.employee_name} | ${emp.designation} | ${emp.head_office}`;
+                option.dataset.empName = emp.employee_name;
+                option.dataset.designation = emp.designation;
+                option.dataset.territoryCode = emp.territory_code;
+                option.dataset.headOffice = emp.head_office;
+                option.dataset.joiningDate = emp.joining_date;
+                empSelect.appendChild(option);
+            });
+
+            $('#emp_id').on('change', function () {
+                const selectedOption = $(this).find('option:selected');
+                $('#emp_name').val(selectedOption.data('empName') || '');
+                $('#designation').val(selectedOption.data('designation') || '');
+                $('#tr_code').val(selectedOption.data('territoryCode') || '');
+                $('#head_office').val(selectedOption.data('headOffice') || '');
+
+                const rawDate = selectedOption.data('joiningDate');
+                const displayInput = document.getElementById('joining_date_display');
+                const hiddenInput = document.getElementById('joining_date');
+
+                if (rawDate) {
+                    const date = new Date(rawDate);
+                    const formatted = date.toLocaleDateString('en-US', {
+                    month: 'long', 
+                    day: '2-digit',  
+                    year: 'numeric'  
+                    });
+                    displayInput.value = rawDate;
+                    hiddenInput.value = rawDate;
+                } else {
+                    displayInput.value = '';
+                    hiddenInput.value = '';
+                }
+
+            });
+        } catch (err) {
+            console.error("Employee load error:", err);
+        }
+
+        // Load asset type
+        try {
+            const res = await fetch(ASSET_META_API);
+            if (!res.ok) throw new Error(`Asset fetch failed: ${res.status}`);
+            const assets = await res.json();
+            const dropdown = document.getElementById('asset_type');
+            assets.results.forEach(item => {
+                const opt = document.createElement('option');
+                opt.value = `${item.asset_type}`;
+                opt.textContent = `${item.asset_type}`;
+                dropdown.appendChild(opt);
+            });
+        } catch (err) {
+            console.error("Asset load error:", err);
+        }
+
+            document.querySelectorAll('input.date-picker').forEach(input => {
+                flatpickr(input, { dateFormat: "Y-m-d" });
+            });
+    });
+
+    document.getElementById('uploadForm')?.addEventListener('submit', function () {
+        const container = document.getElementById('uploadedFilesData');
+        container.innerHTML = '';
+        uploadedFiles.forEach((fileData, index) => {
+            ['doc_type', 'file_name', 'file_path'].forEach(key => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = `uploaded_files[${index}][${key}]`;
+                input.value = fileData[key];
+                container.appendChild(input);
+            });
+        });
+    });
+
+
+    document.getElementById('uploadBtn')?.addEventListener('click', async () => {
+        const fileInput = document.getElementById('formFile');
+        const docTypeSelect = document.getElementById('doc_type');
+        const docType = docTypeSelect.value;
+        const docTypeText = docTypeSelect.options[docTypeSelect.selectedIndex]?.text;
+        const uploadStatus = document.getElementById('uploadStatus');
+        const tableBody = document.querySelector('#uploadedFilesTable tbody');
+
+        uploadStatus.textContent = '';
+        uploadStatus.classList.remove('text-danger', 'text-success');
+
+        if (!docType || fileInput.files.length === 0) {
+            alert(!docType ? 'Select a document type.' : 'Choose a file.');
+            return;
+        }
+
+        const file = fileInput.files[0];
+        const formData = new FormData();
+        formData.append('upload_file', file);
+
+        try {
+            const res = await fetch(IMAGE_UPLOAD_API, { method: 'POST', body: formData });
+            const data = await res.json();
+
+            if (res.ok && data.res_data) {
+                const uploadedFileData = {
+                    doc_type: docTypeText,
+                    file_name: file.name,
+                    file_path: data.res_data.ret_str
+                };
+                uploadedFiles.push(uploadedFileData);
+
+                const newRow = tableBody.insertRow();
+                newRow.insertCell(0).textContent = uploadedFileData.doc_type;
+                newRow.insertCell(1).textContent = uploadedFileData.file_name;
+
+                const actionCell = newRow.insertCell(2);
+                const downloadButton = document.createElement('button');
+                downloadButton.classList.add('btn', 'btn-sm', 'btn-info', 'me-1');
+                downloadButton.innerHTML = '<i class="fa-solid fa-download"></i>';
+                downloadButton.addEventListener('click', () => {
+                    const url = `${IMAGE_DOWNLOAD_API}?company=expense&filename=${uploadedFileData.file_path}`;
+                    window.open(url, '_blank');
+                });
+
+                const removeButton = document.createElement('button');
+                removeButton.classList.add('btn', 'btn-sm', 'btn-danger');
+                removeButton.innerHTML = '<i class="fa-solid fa-trash"></i>';
+                removeButton.addEventListener('click', () => {
+                    const index = uploadedFiles.indexOf(uploadedFileData);
+                    if (index > -1) uploadedFiles.splice(index, 1);
+                    newRow.remove();
+                });
+
+                actionCell.appendChild(downloadButton);
+                actionCell.appendChild(removeButton);
+
+                fileInput.value = '';
+                docTypeSelect.value = '';
+                $(docTypeSelect).trigger('change');
+
+
+            } else {
+                uploadStatus.textContent = 'Upload failed: ' + (data.detail || 'Unknown error');
+                uploadStatus.classList.add('text-danger');
+            }
+        } catch (err) {
+            uploadStatus.textContent = 'Upload error: ' + err.message;
+            uploadStatus.classList.add('text-danger');
+        }
+    });
+</script>
+[[end]]

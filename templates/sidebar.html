@@ -50,25 +50,6 @@ pass
             <span> Master Setup </span>
           </li>
 
-          <!-- <li class="menu-item sub-menu [[if _controller_name in ['category','page_setup','press_setup','ctp_setup']:]]open[[pass]]">
-            <a href="#">
-              <span class="menu-icon">
-                <i class="fa-solid fa-network-wired"></i>
-              </span>
-              <span class="menu-title">Page Setup</span>
-            </a>
-            <div class="sub-menu-list">
-              <ul>
-                <li class="menu-item [[if _controller_name=='page_setup':]]active_link[[pass]]">
-                  <a href="[[=URL('page_setup/index')]]">
-                    <span class="menu-icon"><i class="fas fa-ad"></i></span>
-                    <span class="menu-title">Pages</span>
-                  </a>
-                </li>               
-              </ul>
-            </div>
-          </li> -->
-
           <li class="menu-item [[if _controller_name=='vendor':]]active_link[[pass]]">
               <a href="[[=URL('vendor/index')]]">
                   <span class="menu-icon">
@@ -78,10 +59,24 @@ pass
               </a>
           </li>
 
+          <li class="menu-item [[if _controller_name=='asset_master':]]active_link[[pass]]">
+              <a href="[[=URL('asset_master/index')]]">
+                  <span class="menu-icon">
+                      <i class="fa-solid fa-tags"></i>
+                  </span>
+                  <span class="menu-title">Asset Type</span>
+              </a>
+          </li>
+
+
+          <li class="menu-header">
+            <span> Operations </span>
+          </li>
+
           <li class="menu-item [[if _controller_name=='requisition':]]active_link[[pass]]">
               <a href="[[=URL('requisition/index')]]">
                   <span class="menu-icon">
-                      <i class="fa-solid fa-file-signature"></i>
+                      <i class="fa-solid fa-file-pen"></i>
                   </span>
                   <span class="menu-title">Requisition</span>
               </a>
@@ -103,6 +98,10 @@ pass
                   </span>
                   <span class="menu-title">Asset</span>
               </a>
+          </li>
+
+          <li class="menu-header">
+            <span> Transaction </span>
           </li>
 
 

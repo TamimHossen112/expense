@@ -4,31 +4,135 @@ from yatl.helpers import A
 from ..common import db, session, T, auth, flash
 import json
 
+
 @action("index")
-@action.uses("index.html", session, flash,db)
+@action.uses("index.html", session, flash, db)
 def index():
-    # return dict(redirect(URL('login', 'index')))
     return dict(redirect(URL('dashboard', 'index')))
 
 
-
+# Vendors
 @action("default/get_vendors")
 @action.uses(db)
 def get_vendors():
     vendors = db(db.vendor.vendor_name != None).select(db.vendor.vendor_name, distinct=True).as_list()
     results = [{"id": a["vendor_name"], "text": a["vendor_name"]} for a in vendors if a["vendor_name"]]
-    return dict(results = results)
+    return dict(results=results)
+
+
+@action("default/get_asset_master_types")
+@action.uses(db)
+def get_asset_master_types():
+    types = db(db.asset_master.asset_type != None).select(db.asset_master.asset_type, distinct=True).as_list()
+    results = [{"id": row["asset_type"], "text": row["asset_type"]} for row in types if row["asset_type"]]
+    return dict(results=results)
+
+@action("default/get_asset_master_status")
+@action.uses(db)
+def get_asset_master_status():
+    status = db(db.asset_master.asset_status != None).select(db.asset_master.asset_status, distinct=True).as_list()
+    results = [{"id": row["asset_status"], "text": row["asset_status"]} for row in status if row["asset_status"]]
+    return dict(results=results)
+
+
+@action("default/get_asset_type_brand_models")
+@action.uses(db)
+def get_asset_type_brand_models():
+    rows = db().select(
+        db.asset_master.asset_type,
+        # db.asset_master.asset_brand,
+        # db.asset_master.asset_model,
+        distinct=True
+    )
+
+    results = []
+    for row in rows:
+        results.append({
+            "asset_type": row.asset_type,
+            # "asset_brand": row.asset_brand,
+            # "asset_model": row.asset_model
+        })
+
+    return dict(results=results)
 
 
 
+# Dropdown: asset brands
+@action("default/get_asset_master_brands")
+@action.uses(db)
+def get_asset_master_brands():
+    brands = db(db.asset_master.asset_brand != None).select(db.asset_master.asset_brand, distinct=True).as_list()
+    results = [{"id": row["asset_brand"], "text": row["asset_brand"]} for row in brands if row["asset_brand"]]
+    return dict(results=results)
+
+
+@action("default/get_combo_values")
+@action.uses(db)
+def get_combo_values():
+    key = request.query.get("key")
+
+    if not key:
+        return dict(results=[])
+
+    row = db(db.combo_settings.key == key).select(db.combo_settings.value).first()
+
+    if not row or not row.value:
+        return dict(results=[])
+
+    values = [item.strip() for item in row.value.split(",") if item.strip()]
+    results = [{"id": val, "text": val} for val in values]
+
+    return dict(results=results)
 
 
 
-
-
-
-
-
+# Employee details (static data)
+@action("default/get_employee_details")
+def get_employee_details():
+    employee_data = [
+        {
+            "employee_id": 1234,
+            "employee_name" : "HelloKitty",
+            "designation": "Sales Manager",
+            "territory_code": "T-102",
+            "head_office": "Dhaka",
+            "joining_date": "2022-05-10"
+        },
+        {
+            "employee_id": 1235,
+            "employee_name" : "Supaman",
+            "designation": "Marketing Executive",
+            "territory_code": "T-103",
+            "head_office": "Chittagong",
+            "joining_date": "2021-08-15"
+        },
+        {
+            "employee_id": 1236,
+            "employee_name" : "Botman",
+            "designation": "HR Officer",
+            "territory_code": "T-104",
+            "head_office": "Khulna",
+            "joining_date": "2020-02-01"
+        },
+        {
+            "employee_id": 1237,
+            "employee_name" : "Onana",
+            "designation": "Finance Analyst",
+            "territory_code": "T-105",
+            "head_office": "Sylhet",
+            "joining_date": "2023-01-20"
+        },
+        {
+            "employee_id": 1239,
+            "employee_name" : "Valentina",
+            "designation": "Project Coordinator",
+            "territory_code": "T-107",
+            "head_office": "Barishal",
+            "joining_date": "2022-07-30"
+        }
+    ]
+    response.headers['Content-Type'] = 'application/json'
+    return json.dumps(employee_data)
 
 
 # Category data

@@ -46,6 +46,25 @@ db.define_table('vendor',
     migrate=False
 )
 
+db.define_table('asset_master',
+    Field('cid', 'string', length=20, default=cid),
+    Field('asset_type', 'string',length=100),
+    Field('asset_brand', 'string',length=100),
+    Field('asset_model', 'string',length=100),
+    Field('asset_status', 'string',length=100),
+    Field('asset_desc','string', length=1000),
+    signature,
+    migrate=False
+)
+
+db.define_table('combo_settings',
+    Field('cid', 'string', length=20, default=cid),
+    Field('key', 'string',length=100),
+    Field('value', 'string',length=1000),
+    signature,
+    migrate=False
+)
+
 # Requisition Table
 db.define_table('requisition',
     Field('cid', 'string', length=20, default=cid),
@@ -59,8 +78,6 @@ db.define_table('requisition',
     Field('license_issue_date', 'date'),
     Field('license_expire_date', 'date'),
     Field('license_number', 'string', length=100),
-    Field('license_attach', 'string', length=255),
-    Field('photo_attach', 'string', length=255),
     Field('fm_approval', 'string', default='no',requires=IS_IN_SET(['yes', 'no'])),
     Field('rsm_approval', 'string', default='no',requires=IS_IN_SET(['yes', 'no'])),
     Field('sm_approval', 'string', default='no',requires=IS_IN_SET(['yes', 'no'])),
@@ -148,12 +165,27 @@ db.define_table('asset',
 #     migrate=False
 # )
 
-# Asset Document Table
-db.define_table('asset_doc',
+# # Asset Document Table
+# db.define_table('asset_doc',
+#     Field('cid', 'string', length=20, default=cid),
+#     Field('asset_id', 'integer',length=11, default=0),
+#     Field('doc_id', 'integer', length=11, default=0),
+#     Field('doc_type', 'string', length=100),
+#     Field('file_name', 'string', length=255),
+#     Field('file_path', 'string', length=255),
+#     Field('doc_expire_date', 'date'),
+#     Field('ref_emp_id', 'string', length=11, default=0),
+#     Field('status', 'string', length=100),
+#     signature,
+#     migrate=False
+# )
+
+db.define_table('doc_metadata',
     Field('cid', 'string', length=20, default=cid),
     Field('asset_id', 'integer',length=11, default=0),
-    Field('doc_id', 'integer', length=11, default=0),
-    Field('doc_type', 'string', length=100),
+    Field('trans_type', 'string', length=100),
+    Field('trans_id', 'integer', length=100),
+    Field('doc_type','string',length=255),
     Field('file_name', 'string', length=255),
     Field('file_path', 'string', length=255),
     Field('doc_expire_date', 'date'),

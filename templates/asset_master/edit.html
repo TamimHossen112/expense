@@ -1,15 +1,15 @@
 [[extend 'layout.html']]
 
 [[block header]]
-[[icon='fa fa-shop']]
-[[breadcamp = 'Vendor']]
+[[icon='fa fa-cubes']]
+[[breadcamp = 'Edit Asset']]
 [[end]]
 
 [[block content]]
 <div class="container-section">
-    <div class="d-flex justify-content-between align-items-center border-bottom">
+    <div class="d-flex justify-content-between align-items-center border-bottom mx-2">
         <span class="icon-text icon-text-bold">
-            <i class="fa-solid fa-plus"></i>
+            <i class="fa-regular fa-pen-to-square"></i>
             <span>Edit</span>
         </span>
 
@@ -23,18 +23,16 @@
                 </button>
             </div>
             <div class="p-1">
-                <a href="[[=URL('vendor/index')]]" class="btn btn-sm btn-light">
+                <a href="[[=URL('asset_type/index')]]" class="btn btn-sm btn-light">
                     <i class="fa-solid fa-arrow-left"></i> <span class="ms-2">Back</span>
                 </a>
             </div>
             <div class="p-1">
                 <div class="btn-group">
-                    <button class="btn btn-primary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown"
-                        aria-expanded="false">
+                    <button class="btn btn-primary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
                         Action
                     </button>
-                
-                    <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                    <div class="dropdown-menu">
                         <a class="dropdown-item" href="delete?id=[[=request.query.get('id')]]" id="delete_btn">
                             <i class="fa-solid fa-trash-can"></i><span class="ms-2">Delete</span></a>
                     </div>
@@ -42,36 +40,36 @@
             </div>
         </div>
     </div>
-    <div class="container py-2">
-        <form action="[[=URL('vendor','update')]]?id=[[=record['id']]]" method="POST">
 
-            <div id="custom_form">        
+    <div class="container py-2">
+        <form action="[[=URL('asset_type/update')]]?id=[[=record['id']]]" method="POST">
+            <div id="custom_form">
                 <div class="row">
                     <div class="col-md-4">
                         <div class="mb-3 custom_input">
-                            <label for="vendor_name" class="form-label">Vendor Name <span class="is_required">*</span></label>
-                            <input type="text" id="vendor_name" name="vendor_name" value="[[=record['vendor_name']]]" class="form-control form-control-sm" required>
+                            <label for="asset_type" class="form-label">Asset Type <span class="is_required">*</span></label>
+                            <input type="text" id="asset_type" name="asset_type" value="[[=record['asset_type']]]" class="form-control form-control-sm" required>
                         </div>
                     </div>
 
                     <div class="col-md-4">
                         <div class="mb-3 custom_input">
-                            <label for="contact" class="form-label">Contact <span class="is_required">*</span></label>
-                            <input type="text" id="contact" name="contact" value="[[=record['contact']]]" class="form-control form-control-sm" required>
+                            <label for="asset_brand" class="form-label">Asset Brand <span class="is_required">*</span></label>
+                            <input type="text" id="asset_brand" name="asset_brand" value="[[=record['asset_brand']]]" class="form-control form-control-sm" required>
                         </div>
                     </div>
 
                     <div class="col-md-4">
                         <div class="mb-3 custom_input">
-                            <label for="vendor_address" class="form-label">Vendor Address <span class="is_required">*</span> </label>
-                            <input type="text" id="vendor_address" name="vendor_address" value="[[=record['vendor_address']]]" class="form-control form-control-sm" required>
+                            <label for="asset_model" class="form-label">Asset Model <span class="is_required">*</span></label>
+                            <input type="text" id="asset_model" name="asset_model" value="[[=record['asset_model']]]" class="form-control form-control-sm" required>
                         </div>
                     </div>
 
-                    <div class="col-md-4">
+                    <div class="col-md-12">
                         <div class="mb-3 custom_input">
-                            <label for="trade_license_no" class="form-label">Trade License No <span class="is_required">*</span> </label>
-                            <input type="text" id="trade_license_no" name="trade_license_no" value="[[=record['trade_license_no']]]" class="form-control form-control-sm" required>
+                            <label for="asset_desc" class="form-label">Description (Max 1000 Characters)</label>
+                            <textarea id="asset_desc" name="asset_desc" class="form-control form-control-sm" rows="3" style="padding: 10px;">[[=record['asset_desc']]]</textarea>
                         </div>
                     </div>
                 </div>
@@ -92,15 +90,34 @@
                         </div>
                     </div>
                 </div>
+
             </div>
         </form>
     </div>
-
 </div>
 [[end]]
 
 [[block scripts]]
 <script>
-   
+$(function () {
+    // Enable Edit Mode
+    $('#btn_edit').click(function () {
+        $('#edit_view_section').removeClass('d-none');
+        $('#btn_edit').addClass('d-none');
+        $('#btn_view').removeClass('d-none');
+        $('#custom_form :input').removeAttr('readonly').removeClass('form-control-plaintext').addClass('form-control');
+    });
+
+    // View mode again
+    $('#btn_view').click(function () {
+        $('#edit_view_section').addClass('d-none');
+        $('#btn_edit').removeClass('d-none');
+        $('#btn_view').addClass('d-none');
+        $('#custom_form :input').attr('readonly', true).removeClass('form-control').addClass('form-control-plaintext');
+    });
+
+    // Initially all inputs in view mode
+    $('#custom_form :input').attr('readonly', true).addClass('form-control-plaintext');
+});
 </script>
 [[end]]

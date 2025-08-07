@@ -1,17 +1,28 @@
 
 /* Form CSS:Input Customization */
+
+
 #custom_form input, #custom_form select{
     border: 1px var(--master-input-border) solid !important;
     border-radius: .375rem !important;
     color: rgb( 42, 46, 52 ) !important;
     outline: none !important;
 }
-#custom_form input[type='text'], #custom_form input[type='number'], #custom_form input[type='email'], #custom_form input[type='file'], #custom_form select{
+#custom_form input[type='text'], 
+#custom_form input[type='number'], 
+#custom_form input[type='email'], 
+#custom_form select{
   width: 100%;
   height: 1.8rem !important;
   padding: 8px 12px !important;
   line-height: 1.8rem;
 }
+
+#custom_form input[type='file'] {
+  width: 100%;
+  line-height: 1.2rem;
+}
+
 #custom_form input[type='checkbox']{
   height: 1rem !important;
   padding: 8px 8px !important;

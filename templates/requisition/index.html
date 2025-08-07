@@ -1,11 +1,233 @@
 [[extend 'layout.html']]
 
 [[block header]]
-[[icon='fa-solid fa-file-signature']]
+[[icon='fa fa-file-lines']]
 [[breadcamp = 'Requisition']]
 [[end]]
 
 [[block content]]
 
+<div class="container-section mx-2">
+    <div class="row">
+<div></div>
+        <!-- Filter label -->
+        <div class="col-md-1 mt-2 mb-2">
+            <span class="icon-text icon-text-bold">
+                <i class="fa-solid fa-table-list"></i>
+                <span>Table</span>
+            </span>
+        </div>
+
+        <!-- Filter form -->
+        <div class="col-md-9 mt-2">
+            <div class="row" id="custom_form" style="display: none;">
+                
+                <div class="col-md-2 mb-2">
+                    <div class="">
+                        <select class="form-select form-select-sm select_custom" name="asset_type"  placeholder="Select Asset">
+                            <option value="">Select Asset</option>
+                        </select>
+                    </div>   
+                </div>
+
+                <div class="col-md-3 mb-2">
+                    <div class="">
+                        <select class="form-select form-select-sm select_custom" name="emp_id" placeholder="Select Employee">
+                            <option value="">Select Employee</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="col-md-3 mb-2">
+                    <div class="">
+                        <input type="text" name="head_office" class="form-control form-control-sm" placeholder="Search Head Office">
+                    </div>
+                </div>
+
+                <div class="col-md-4 mb-2 d-flex justify-content-end">
+                    <div class="me-2">
+                        <button type="submit" id="submit" class="btn btn-sm btn-primary" style="width:90px;">
+                            <i class="fa-solid fa-magnifying-glass"></i> <span class="ms-2">Search</span>
+                        </button>
+                    </div>
+                    <div>
+                        <button type="reset" id="reset" class="btn btn-sm btn-light" style="width:90px;">
+                            <i class="fa-solid fa-retweet"></i> <span class="ms-2">Reset</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filter + Action Buttons -->
+        <div class="col-md-2 mt-2 mb-2">
+            <div class="d-flex justify-content-end">
+                <div class="me-2">
+                    <button type="button" id="filter" class="btn btn-sm btn-light" style="width:90px;">
+                        <i class="fa-solid fa-filter"></i> <span class="ms-2">Filter</span>
+                    </button>
+                </div>
+                <div class="dropdown">
+                    <button class="btn btn-primary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="width:90px;">
+                        Action
+                    </button>
+                    <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                        <a class="dropdown-item" href="[[=URL('requisition/create')]]"><i class="fas fa-add me-1"></i> Add</a>
+                        <button class="dropdown-item" id="ExportExcel"><i class="fas fa-file-excel me-1"></i> Excel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Table -->
+    <div class="table-responsive">
+        <table id="myTable" class="table table-bordered compact" style="width:100%">
+            <thead class="text-truncate"></thead>
+            <tbody></tbody>
+        </table>
+    </div>
+</div>
+
+[[end]]
+
+[[block scripts]]
+<script>
+    $(document).ready(function () {
+        // Load select2 data on first open
+        $("[name='asset_type']").one('select2:open', function (e) {
+            $.ajax({
+                url: '[[=URL("default", "get_asset_type_brand_models")]]',
+                method: 'GET',
+                dataType: 'json',
+                success: function (data) {
+                    const formatted = data.results.map(row => {
+                        const text = `${row.asset_type || ''}`;
+                        return { id: text, text: text };
+                    });
+
+                    const $select = $("[name='asset_type']");
+                    $select.empty();
+
+                    $select.select2({
+                        data: formatted,
+                        placeholder: "Select Asset Type",
+                        allowClear: true
+                    }).select2('open');
+                }
+            });
+        });
+
+        $("[name='emp_id']").one('select2:open', function (e) {
+            $.ajax({
+                url: '[[=URL("default", "get_employee_details")]]',  // Replace with your actual controller/function
+                method: 'GET',
+                dataType: 'json',
+                success: function(data) {
+                    const formatted = data.map(emp => {
+                        const text = `${emp.employee_id || ''} | ${emp.employee_name || ''}`;
+                        return { id: emp.employee_id, text: text };
+                    });
+
+                    const $select = $("[name='emp_id']");
+                    $select.empty();
+
+                    $select.select2({
+                        data: formatted,
+                        placeholder: "Select Employee",
+                        allowClear: true
+                    }).select2('open');
+                }
+
+            });
+        });
 
 
+        // Toggle filter form
+        $("#filter").click(function () {
+            $("#custom_form").fadeToggle("slow");
+        });
+
+        // Initialize DataTable
+        var table = $('#myTable').DataTable({
+            dom: "Bfrt<'d-flex justify-content-between'<l><i><p>>",
+            buttons: [
+                {
+                    extend: 'excel',
+                    title: 'Requisition Data',
+                    filename: 'Requisition_Data',
+                    exportOptions: {
+                        columns: [0, 1, 2, 3, 4]
+                    },
+                }
+            ],
+            order: [0, 'desc'],
+            searching: false,
+            paging: true,
+            serverSide: true,
+            scrollCollapse: false,
+            scrollX: true,
+            scrollY: "413px",
+            fixedHeader: true,
+            fixedColumns: {
+                left: 1,
+                right: 1
+            },
+            lengthMenu: [
+                [15, 50, 100, -1],
+                [15, 50, 100, 'All']
+            ],
+            ajax: {
+                async: true,
+                type: 'GET',
+                url: '[[=URL("requisition", "get_data")]]',
+                data: function (d) {
+                    d.asset_type = $("select[name='asset_type']").val();
+                    d.emp_id = $("select[name='emp_id']").val();
+                    d.head_office = $("input[name='head_office']").val();
+                },
+                dataSrc: 'data'
+            },
+            columns: [
+                {
+                    title: 'SL No.', data: null, render: function (data, type, row, meta) {
+                        return meta.row + 1;
+                    }
+                },
+                { title: 'CID', data: 'cid', render: d => d ?? '-' },
+                { title: 'Asset Type', data: 'asset_type', render: d => d ?? '-' },
+                { title: 'Employee ID', data: 'emp_id', render: d => d ?? '-' },
+                { title: 'Employee Name', data: 'emp_name', render: d => d ?? '-' },
+                { title: 'Designation', data: 'designation', render: d => d ?? '-' },
+                { title: 'TR Code', data: 'tr_code', render: d => d ?? '-' },
+                { title: 'Head Office', data: 'head_office', render: d => d ?? '-' },
+                { title: 'Joining Date', data: 'joining_date', render: d => d ?? '-' },
+                {
+                    title: '', data: 'id', render: function (data) {
+                        return `
+                            <a class="text-secondary" href="[[=URL('requisition/edit')]]?id=${data}"
+                               data-bs-toggle="tooltip" data-bs-placement="top" title="Update">
+                                <i class="fas fa-edit"></i>
+                            </a>`;
+                    }
+                }
+            ]
+        });
+
+        // Filter submit
+        $("#submit").click(function (e) {
+            e.preventDefault();
+            table.ajax.reload();
+        });
+
+        // Filter reset
+        $("#reset").click(function (e) {
+            e.preventDefault();
+            $("select[name='asset_type']").val(null).trigger('change');
+            $("select[name='emp_id']").val('');
+            $("input[name='head_office']").val('');
+            table.ajax.reload();
+        });
+    });
+</script>
+[[end]]

@@ -1,0 +1,102 @@
+[[extend 'layout.html']]
+
+[[block header]]
+[[icon='fa fa-cubes']]
+[[breadcamp = 'Create Asset']]
+[[end]]
+
+[[block content]]
+<div class="container-section">
+    <div class="d-flex justify-content-between align-items-center border-bottom mx-2">
+        <span class="icon-text icon-text-bold">
+            <i class="fa-solid fa-plus"></i>
+            <span>Create</span>
+        </span>
+
+        <div class="d-flex justify-content-end">
+            <div class="p-1">
+                <a href="[[=URL('asset_master/index')]]" class="btn btn-sm btn-light">
+                    <i class="fa-solid fa-arrow-left"></i> <span class="ms-2">Back</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="container py-2">
+        <form action="[[=URL('asset_master','submit')]]" method="POST">
+            <div id="custom_form">        
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="asset_type" class="form-label"><strong>Asset Type <span class="is_required">*</span></strong></label>
+                                <input type="text" id="asset_type" name="asset_type" class="form-control form-control-sm" >
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="asset_brand" class="form-label"><strong>Asset Brand <span class="is_required">*</span></strong> </label>
+                                <input type="text" id="asset_brand" name="asset_brand" class="form-control form-control-sm">
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="asset_model" class="form-label"><strong>Asset Model <span class="is_required">*</span></strong> </label>
+                                <input type="text" id="asset_model" name="asset_model" class="form-control form-control-sm">
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="asset_status" class="form-label">
+                                    <strong>Asset Status <span class="is_required">*</span></strong>
+                                </label>
+                                <select class="form-select form-select-sm select_custom" id="asset_status" name="asset_status" required>
+                                    <option value="">Select Asset Status</option>
+                                    <option value="New">New</option>
+                                    <option value="Used">In use</option>
+                                    <option value="Damaged">Damaged</option>
+                                    <option value="Disposed">Disposed</option>
+                                    <option value="Lost">Lost</option>
+                                </select>
+                            </div>
+
+
+
+
+                        </div>
+                    </div>
+                    
+                    
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label for="asset_desc" class="form-label"><strong>Description (Max 1000 Characters)</strong> </label>
+                            <textarea id="asset_desc" name="asset_desc" class="form-control form-control-sm" style="height:auto; min-height: 6.2rem; border-radius: 0.4rem;" oninput="this.style.height='auto'; this.style.height = this.scrollHeight + 'px'"></textarea>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="row">
+                    <div class="col-12">
+                        <div class="d-flex justify-content-start">
+                            <div class="me-2">
+                                <button type="submit" class="btn btn-sm btn-primary">
+                                    <i class="fa-regular fa-floppy-disk"></i> <span class="ms-2">Save</span>
+                                </button>
+                            </div>
+                            <div>
+                                <button type="reset" class="btn btn-sm btn-light">
+                                    <i class="fa-solid fa-retweet"></i> <span class="ms-2">Reset</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+[[end]]
+
+[[block scripts]]
+<script>
+// Add your JavaScript if needed
+</script>
+[[end]]

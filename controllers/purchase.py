@@ -5,8 +5,13 @@ from ..common import db, session, T, flash
 
 
 @action('purchase/index')
-@action.uses("purchase/index.html",session, flash, )
+@action.uses("purchase/index.html",session, flash)
 def purchase_index():
     return locals()
 
+
+@action('purchase/create')
+@action.uses("purchase/create.html",db,session,flash)
+def purchase_create():
+    return locals()
 

@@ -1,0 +1,200 @@
+[[extend 'layout.html']]
+
+[[block header]]
+[[icon='fa fa-cubes']]
+[[breadcamp = 'Assets']]
+[[end]]
+
+[[block content]]
+<div class="container-section mx-2">
+    <div class="row">
+        
+        <div class="col-md-1 mt-2 mb-2">
+            <span class="icon-text icon-text-bold">
+                <i class="fa-solid fa-table-list"></i>
+                <span>Table</span>
+            </span>
+        </div>
+
+        <div class="col-md-9 mt-2">
+            <div class="row" id="custom_form" style="display: none;">
+                
+                <div class="col-md-2 mb-2">
+                    <div class="">
+                        <select class="form-select form-select-sm select_custom" name="asset_type" placeholder="Select Type">
+                            <option value="">Select Asset Type</option>
+                        </select>    
+                    </div>
+                </div>
+
+                <div class="col-md-2 mb-2">
+                    <div class="">
+                        <select class="form-select form-select-sm select_custom" name="asset_brand" placeholder="Select Brand">
+                            <option value="">Select Asset Brand</option>
+                        </select>    
+                    </div>
+                </div>
+
+                <div class="col-md-2 mb-2">
+                    <div class="">
+                        <select class="form-select form-select-sm select_custom" name="asset_status" placeholder="Select Asset Status">
+                            <option value="">Select Asset Status</option>
+                        </select>    
+                    </div>
+                </div>
+
+                <div class="col-md-6 mb-2 d-flex justify-content-end">
+                    <div class="me-2">
+                        <button type="submit" id="submit" class="btn btn-sm btn-primary" style="width:90px;">
+                            <i class="fa-solid fa-magnifying-glass"></i> <span class="ms-2">Search</span>
+                        </button>
+                    </div>
+                    <div style="margin-right:15px;">
+                        <button type="reset" id="reset" class="btn btn-sm btn-light" style="width:90px;">
+                            <i class="fa-solid fa-retweet"></i> <span class="ms-2">Reset</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-2 mt-2 mb-2">
+            <div class="d-flex justify-content-end">
+                <div class="me-2">
+                    <button type="button" id="filter" class="btn btn-sm btn-light" style="width:90px;">
+                        <i class="fa-solid fa-filter"></i> <span class="ms-2">Filter</span>
+                    </button>
+                </div>
+                <div class="dropdown">
+                    <button class="btn btn-primary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown"
+                        aria-expanded="false" style="width:90px;">
+                        Action
+                    </button>
+                    <div class="dropdown-menu">
+                        <a class="dropdown-item" href="[[=URL('asset_master/create')]]"><i class="fas fa-add me-1"></i> Add</a>
+                        <button class="dropdown-item" id="ExportExcel"><i class="fas fa-file-excel me-1"></i> Excel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table id="myTable" class="table table-bordered compact" style="width:100%">
+            <thead class="text-truncate"></thead>
+            <tbody></tbody>
+        </table>
+    </div>
+</div>
+[[end]]
+
+[[block scripts]]
+<script>
+$(document).ready(function() {
+    $("#filter").click(function() {
+        $("#custom_form").fadeToggle("slow");
+    });
+
+    $("[name='asset_type']").one('select2:open', function() {
+        $.getJSON('/expense/default/get_asset_master_types', function(data) {
+            $("[name='asset_type']").select2({
+                data: data.results,
+                placeholder: "Select Type",
+                allowClear: true
+            }).select2('open');
+        });
+    });
+
+    $("[name='asset_brand']").one('select2:open', function() {
+        $.getJSON('/expense/default/get_asset_master_brands', function(data) {
+            $("[name='asset_brand']").select2({
+                data: data.results,
+                placeholder: "Select Brand",
+                allowClear: true
+            }).select2('open');
+        });
+    });
+
+    $("[name='asset_status']").one('select2:open', function() {
+        $.getJSON('/expense/default/get_asset_master_status', function(data) {
+            $("[name='asset_status']").select2({
+                data: data.results,
+                placeholder: "Select Asset Status",
+                allowClear: true
+            }).select2('open');
+        });
+    });
+
+    var table = $('#myTable').DataTable({
+        dom: "Bfrt<'d-flex justify-content-between'<l><i><p>>",
+        buttons: [{
+            extend: 'excel',
+            title: 'Asset Type Data',
+            filename: 'Asset_Type_Data',
+            exportOptions: { columns: [0,1,2,3,4,5] }
+        }],
+        order: [7, 'desc'],
+        searching: false,
+        paging: true,
+        serverSide: true,
+        scrollX: true,
+        scrollY: "413px",
+        fixedHeader: true,
+        fixedColumns: { left: 1, right: 1 },
+        lengthMenu: [
+            [15, 50, 100, -1],
+            [15, 50, 100, 'All']
+        ],
+        ajax: {
+            async: true,
+            type: 'GET',
+            url: '[[=URL("asset_master","get_data")]]',         
+            data: function (d) {
+                d.asset_type = $("select[name='asset_type']").val();
+                d.asset_brand = $("select[name='asset_brand']").val();
+                d.asset_status = $("select[name='asset_status']").val();
+            },
+            dataSrc: 'data'
+        },
+        columns: [
+            { title: 'SL No.', data: null, render: function(data, type, row, meta) {
+                return meta.row + 1;
+            }},
+            { title: 'CID', data: 'cid', render: d => d ?? '-' },
+            { title: 'Asset Type', data: 'asset_type', render: d => d ?? '-' },
+            { title: 'Asset Brand', data: 'asset_brand', render: d => d ?? '-' },
+            { title: 'Asset Model', data: 'asset_model', render: d => d ?? '-' },
+            { title: 'Asset Status', data: 'asset_status', render: d => d ?? '-' },
+            { 
+                title: 'Description', 
+                data: 'asset_desc', 
+                render: function(data) {
+                    let safeText = data ?? '-';
+                    return `<div style="max-width: 400px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${safeText}">${safeText}</div>`;
+                }
+            },
+            { 
+                title: '', 
+                data: 'id', 
+                render: function(id) {
+                    return `<a class="text-secondary" href="[[=URL('asset_master/edit')]]?id=${id}" title="Edit"><i class="fas fa-edit"></i></a>`;
+                }
+            }
+        ]
+    });
+
+    $("#submit").click(function(e){
+        e.preventDefault();
+        table.ajax.reload();
+    });
+
+    $("#reset").click(function(e){
+        e.preventDefault();
+        $("select[name='asset_type']").val(null).trigger('change');
+        $("select[name='asset_brand']").val(null).trigger('change');
+        $("select[name='asset_status']").val(null).trigger('change')
+        table.ajax.reload();
+    });
+});
+</script>
+[[end]]

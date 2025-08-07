@@ -1,0 +1,408 @@
+[[extend 'layout.html']]
+
+[[block header]]
+[[icon='fa fa-file-pen']]
+[[breadcamp = 'Edit Requisition']]
+[[end]]
+
+[[block content]]
+<div class="container-section">
+    <div class="d-flex justify-content-between align-items-center border-bottom mx-2">
+        <span class="icon-text icon-text-bold">
+            <i class="fa-solid fa-plus"></i>
+            <span>Edit</span>
+        </span>
+
+        <div class="d-flex justify-content-end">
+            <div class="p-1">
+                <button type="button" class="btn btn-sm btn-light d-none" id="btn_view">
+                    <i class="fa-regular fa-eye"></i> <span class="ms-2">View</span>
+                </button>
+                <button type="button" class="btn btn-sm btn-light" id="btn_edit">
+                    <i class="fa-regular fa-pen-to-square"></i> <span class="ms-2">Edit</span>
+                </button>
+            </div>
+            <div class="p-1">
+                <a href="[[=URL('requisition/index')]]" class="btn btn-sm btn-light">
+                    <i class="fa-solid fa-arrow-left"></i> <span class="ms-2">Back</span>
+                </a>
+            </div>
+            <div class="p-1">
+                <div class="btn-group">
+                    <button class="btn btn-primary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown"
+                        aria-expanded="false">
+                        Action
+                    </button>
+                
+                    <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                        <a class="dropdown-item" href="delete?id=[[=request.query.get('id')]]" id="delete_btn">
+                            <i class="fa-solid fa-trash-can"></i><span class="ms-2">Delete</span></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container py-2">
+        <form id="uploadForm" action="[[=URL('requisition','update')]]" method="post" enctype="multipart/form-data">
+            <input type="hidden" name="id" value="[[=request.query.get('id')]]">
+            <div id="custom_form">
+                <div class="row">
+                    <div class="col-md-4 col-sm-12">
+                        <div class="row">
+                            <div class="mb-2 custom_input">
+                                <label for="emp_id" class="form-label">Select Employee <span class="is_required">*</span></label>
+                                <select class="form-select form-select-sm select_custom" id="emp_id" name="emp_id">
+                                    <!-- <option value="">Select Employee</option> -->
+                                    <!-- <option
+                                        style="display: none;"
+                                        value="[[=data['emp_id']]]"
+                                        selected
+                                        data-emp-name="[[=data['emp_name']]]"
+                                        data-designation="[[=data['designation']]]"
+                                        data-territory-code="[[=data['tr_code']]]"
+                                        data-head-office="[[=data['head_office']]]"
+                                        data-joining-date="[[=data['joining_date']]]"
+                                    >
+                                        [[=data['emp_id']]] | [[=data['emp_name']]] | [[=data['designation']]] | [[=data['head_office']]]
+                                    </option> -->
+                                </select>
+                            </div>
+
+                            <div class="mb-2">
+                                <label for="emp_name" class="form-label">Employee Name</label>
+                                <input type="text" class="form-control form-control-sm" id="emp_name" name="emp_name" value="[[=data['emp_name']]]" readonly>
+                            </div>
+
+                            <div class="mb-2">
+                                <label for="designation" class="form-label">Designation</label>
+                                <input type="text" class="form-control form-control-sm" id="designation" name="designation" value="[[=data['designation']]]" readonly>
+                            </div>
+
+                            <div class="mb-2">
+                                <label for="tr_code" class="form-label">Territory Code</label>
+                                <input type="text" class="form-control form-control-sm" id="tr_code" name="tr_code" value="[[=data['tr_code']]]" readonly>
+                            </div>
+
+                            <div class="mb-2">
+                                <label for="head_office" class="form-label">Head Office</label>
+                                <input type="text" class="form-control form-control-sm" id="head_office" name="head_office" value="[[=data['head_office']]]" readonly>
+                            </div>
+
+                            <div class="mb-2">
+                                <label for="joining_date_display" class="form-label">Joining Date <span class="is_required">*</span></label>
+                                <input type="text" class="form-control form-control-sm" id="joining_date_display" value="[[=data['joining_date']]]" readonly>
+                                <input type="hidden" id="joining_date" name="joining_date" value="[[=data['joining_date']]]" >
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <div class="col-md-8 col-sm-12">
+                        <div class="row">
+                            <div class="col-md-6 col-sm-12">
+                                <div class="mb-2 custom_input">
+                                    <label for="asset_type" class="form-label">Asset Type <span class="is_required">*</span></label>
+                                    <select class="form-select form-select-sm select_custom" id="asset_type" name="asset_type">
+                                        <option value="">Select Asset Type</option>
+                                    </select>
+                                </div>
+
+                                <div class="mb-2 custom_input">
+                                    <label for="license_number" class="form-label">Driving License No</label>
+                                    <input type="text" class="form-control form-control-sm" id="license_number" name="license_number" value="[[=data['license_number']]]">
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 col-sm-12">
+                                <div class="mb-2 custom_input">
+                                    <label for="license_issue_date" class="form-label">Driving License Issue Date <span class="is_required">*</span></label>
+                                    <div class="flatpickr-wrapper">
+                                        <input type="text" class="date-picker" id="license_issue_date" name="license_issue_date" value="[[=data['license_issue_date']]]" placeholder=" License Issue Date">
+                                        <i class="fa fa-calendar calendar-icon text-secondary calendar-toggle"></i>                            
+                                    </div>
+                                </div>
+
+                                <div class="mb-2 custom_input">
+                                    <label for="license_expire_date" class="form-label">License Expire Date <span class="is_required">*</span></label>
+                                    <div class="flatpickr-wrapper">
+                                        <input type="text" class="date-picker" id="license_expire_date" name="license_expire_date" value="[[=data['license_expire_date']]]" placeholder="License Expire Date">
+                                        <i class="fa fa-calendar calendar-icon text-secondary calendar-toggle"></i>                            
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-12 col-sm-12">
+                                <div class="mb-2">
+                                    <strong>File Attachment Section</strong>
+                                </div>
+                                <div class="border border-primary p-2 rounded custom_input">
+                                    <div class="row g-2 align-items-end">
+                                        <div class="col-md-4 col-sm-12 mb-1">
+                                            <label for="doc_type" class="form-label">Doc Type <span class="is_required">*</span></label>
+                                            <select class="form-select form-select-sm select_custom" id="doc_type" name="doc_type">
+                                                <option value="">Select Document Type</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="col-md-6 col-sm-12 mb-1">
+                                            <label for="formFile" class="form-label">Choose File <span class="is_required">*</span></label>
+                                            <input type="file" class="form-control form-control-sm" id="formFile" name="upload_file">
+                                        </div>
+
+                                        <div class="col-md-2 col-sm-12 d-flex align-items-end mb-1">
+                                            <button id="uploadBtn" type="button" class="btn btn-sm btn-primary w-100" title="Upload">
+                                                <i class="fa-solid fa-upload"></i>
+                                                <span class="d-lg-inline d-sm-inline d-md-none"> Upload</span>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div id="uploadStatus"></div>
+
+                                    <div>
+                                        <div class="fw-semibold">Uploaded Files</div>
+                                        <div class="table-responsive">
+                                            <table class="table table-bordered table-sm mb-0" id="uploadedFilesTable">
+                                                <thead class="table-light">
+                                                    <tr>
+                                                        <th>Doc Type</th>
+                                                        <th>File Name</th>
+                                                        <th style="width: 70px;">Action</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="uploadedFilesData"></div>
+
+            <div id="edit_view_section" class="d-none d-flex gap-2 mt-2">
+                <button type="submit" class="btn btn-sm btn-primary">
+                    <i class="fa-regular fa-floppy-disk"></i> <span class="ms-2">Update</span>
+                </button>
+                <button type="reset" class="btn btn-sm btn-light">
+                    <i class="fa-solid fa-retweet"></i> <span class="ms-2">Reset</span>
+                </button>
+            </div>
+
+        </form>
+    </div>
+</div>
+[[end]]
+
+[[block scripts]]
+<script>
+    const IMAGE_UPLOAD_API = "[[=IMAGE_UPLOAD_API]]";
+    const IMAGE_DOWNLOAD_API = "[[=IMAGE_DOWNLOAD_API]]";
+    const EMPLOYEE_DETAILS_API = "[[=URL('default', 'get_employee_details')]]";
+    const ASSET_META_API = "[[=URL('default', 'get_asset_type_brand_models')]]";
+    const COMBO_VALUES_API = "[[=URL('default', 'get_combo_values')]]?key=requisition";
+
+    const existingDocs = JSON.parse('[[=XML(docs_json or "[]")]]'); 
+    let uploadedFiles = JSON.parse(JSON.stringify(existingDocs));
+
+    const prefill_emp_id = '[[=data["emp_id"]]]';
+    const prefill_emp_name = '[[=data["emp_name"]]]';
+    const prefill_designation = '[[=data["designation"]]]';
+    const prefill_territory_code = '[[=data["tr_code"]]]';
+    const prefill_head_office = '[[=data["head_office"]]]';
+    const prefill_joining_date = '[[=data["joining_date"]]]';
+
+    const prefill_asset_type = "[[=data.get('asset_type', '')]]".replace(/\s+/g, ' ').trim();
+    const prefill_license_issue = "[[=data.get('license_issue_date', '')]]";
+    const prefill_license_expire = "[[=data.get('license_expire_date', '')]]";
+
+    function populateTable(files) {
+        const $tbody = $('#uploadedFilesTable tbody').empty();
+        $.each(files, function (i, file) {
+            const $row = $('<tr>').append(
+                $('<td>').text(file.doc_type),
+                $('<td>').text(file.file_name),
+                $('<td>').append(
+                    $('<button class="btn btn-sm btn-primary me-1" ><i class="fa-solid fa-download"></i></button>').click(() => {
+                        window.open(`${IMAGE_DOWNLOAD_API}?company=expense&filename=${file.file_path}`, '_blank');
+                    }),
+                    $('<button class="btn btn-sm btn-danger"><i class="fa-solid fa-trash"></i></button>').click(() => {
+                        uploadedFiles.splice(i, 1);
+                        populateTable(uploadedFiles);
+                    })
+                )
+            );
+            $tbody.append($row);
+        });
+    }
+
+    $(function () {
+        const $empSelect = $('#emp_id');
+        const $assetSelect = $('#asset_type');
+        const $docTypeSelect = $('#doc_type');
+
+        populateTable(uploadedFiles);
+
+        // Load Doc Types
+        $.getJSON(COMBO_VALUES_API, function (data) {
+            $.each(data.results, function (_, item) {
+                $('<option>').val(item.id).text(item.text).appendTo($docTypeSelect);
+            });
+        });
+
+        // Load Employees
+        $.getJSON(EMPLOYEE_DETAILS_API, function (employees) {
+            if (prefill_emp_id) {
+                const $opt = $('<option>')
+                    .val(prefill_emp_id)
+                    .text(`${prefill_emp_id} | ${prefill_emp_name} | ${prefill_designation} | ${prefill_head_office}`)
+                    .attr('data-first', 'true')
+                    .data({
+                        empName: prefill_emp_name,
+                        designation: prefill_designation,
+                        territoryCode: prefill_territory_code,
+                        headOffice: prefill_head_office,
+                        joiningDate: prefill_joining_date
+                    });
+
+                $empSelect.append($opt);
+                $empSelect.val(prefill_emp_id);
+            }
+
+            $.each(employees, function (_, emp) {
+                if (emp.employee_id === prefill_emp_id) return;
+
+                const $opt = $('<option>')
+                    .val(emp.employee_id)
+                    .text(`${emp.employee_id} | ${emp.employee_name} | ${emp.designation} | ${emp.head_office}`)
+                    .data({
+                        empName: emp.employee_name,
+                        designation: emp.designation,
+                        territoryCode: emp.territory_code,
+                        headOffice: emp.head_office,
+                        joiningDate: emp.joining_date
+                    });
+
+                $empSelect.append($opt);
+            });
+
+            function formatEmpWithIcon(emp) {
+                if (!emp.id) return emp.text;
+                const isFirst = $(emp.element).attr('data-first') === 'true';
+                const className = isFirst ? 'emp-highlighted-option' : '';
+                return `<span class="${className}"><i class="fa fa-user me-1"></i> ${emp.text}</span>`;
+            }
+
+            $empSelect.select2({
+                templateResult: formatEmpWithIcon,
+                templateSelection: formatEmpWithIcon,
+                escapeMarkup: m => m
+            });
+
+            $empSelect.trigger('change');
+        });
+
+        // On Employee Change
+        $empSelect.change(function () {
+            const data = $(this).find('option:selected').data();
+            $('#emp_name').val(data.empName || '');
+            $('#designation').val(data.designation || '');
+            $('#tr_code').val(data.territoryCode || '');
+            $('#head_office').val(data.headOffice || '');
+            $('#joining_date, #joining_date_display').val(data.joiningDate || '');
+        });
+
+        // Load Assets
+        $.getJSON(ASSET_META_API, function (assets) {
+            $.each(assets.results, function (_, item) {
+                const value = `${item.asset_type}`;
+                const $opt = $('<option>').val(value).text(value);
+                if (value === prefill_asset_type) $opt.prop('selected', true);
+                $assetSelect.append($opt);
+            });
+        });
+
+        if (window.flatpickr) {
+            flatpickr("#license_issue_date", { dateFormat: "Y-m-d", defaultDate: prefill_license_issue || null });
+            flatpickr("#license_expire_date", { dateFormat: "Y-m-d", defaultDate: prefill_license_expire || null });
+        }
+
+        // File Upload
+        $('#uploadBtn').click(function () {
+            const file = $('#formFile')[0].files[0];
+            const docType = $docTypeSelect.val();
+            const docTypeText = $docTypeSelect.find('option:selected').text();
+            const $uploadStatus = $('#uploadStatus').text('').removeClass('text-danger text-success');
+
+            if (!docType || !file) return alert(!docType ? 'Select a document type.' : 'Choose a file.');
+
+            const formData = new FormData();
+            formData.append('upload_file', file);
+
+            $.ajax({
+                url: IMAGE_UPLOAD_API,
+                method: 'POST',
+                data: formData,
+                contentType: false,
+                processData: false,
+                success: function (resp) {
+                    if (resp.res_data) {
+                        uploadedFiles.push({
+                            doc_type: docTypeText,
+                            file_name: file.name,
+                            file_path: resp.res_data.ret_str
+                        });
+                        populateTable(uploadedFiles);
+                        $('#formFile').val('');
+                        $docTypeSelect.val('').trigger('change');
+                    } else {
+                        $uploadStatus.text('Upload failed: ' + (resp.detail || 'Unknown error')).addClass('text-danger');
+                    }
+                },
+                error: function (xhr) {
+                    $uploadStatus.text('Upload error: ' + xhr.statusText).addClass('text-danger');
+                }
+            });
+        });
+
+        $('#uploadForm').on('reset', function () {
+            setTimeout(() => {
+                $empSelect.val(prefill_emp_id).trigger('change');
+                $assetSelect.val(prefill_asset_type).trigger('change');
+                $('#license_issue_date')[0]._flatpickr?.setDate(prefill_license_issue, true);
+                $('#license_expire_date')[0]._flatpickr?.setDate(prefill_license_expire, true);
+                uploadedFiles = JSON.parse(JSON.stringify(existingDocs));
+                populateTable(uploadedFiles);
+            }, 50);
+        });
+
+        $('#uploadForm').submit(function () {
+            const $container = $('#uploadedFilesData').empty();
+            $.each(uploadedFiles, function (i, file) {
+                $.each(file, function (key, val) {
+                    $('<input>', {
+                        type: 'hidden',
+                        name: `uploaded_files[${i}][${key}]`,
+                        value: val
+                    }).appendTo($container);
+                });
+            });
+        });
+    });
+</script>
+<style>
+    .emp-highlighted-option {
+        color: #7b67ee;
+        font-weight: bold;
+    }
+</style>
+[[end]]
+
+
+
+

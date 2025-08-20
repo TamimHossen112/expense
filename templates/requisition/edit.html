@@ -6,6 +6,15 @@
 [[end]]
 
 [[block content]]
+<style>
+    #uploadedFilesTable td, #uploadedFilesTable th {
+        padding-top: 2px;
+        padding-bottom: 2px;
+        font-size: 13px;
+        height: 28px; /* You can adjust this value */
+    }
+    
+</style>
 <div class="container-section">
     <div class="d-flex justify-content-between align-items-center border-bottom mx-2">
         <span class="icon-text icon-text-bold">
@@ -53,19 +62,6 @@
                             <div class="mb-2 custom_input">
                                 <label for="emp_id" class="form-label">Select Employee <span class="is_required">*</span></label>
                                 <select class="form-select form-select-sm select_custom" id="emp_id" name="emp_id">
-                                    <!-- <option value="">Select Employee</option> -->
-                                    <!-- <option
-                                        style="display: none;"
-                                        value="[[=data['emp_id']]]"
-                                        selected
-                                        data-emp-name="[[=data['emp_name']]]"
-                                        data-designation="[[=data['designation']]]"
-                                        data-territory-code="[[=data['tr_code']]]"
-                                        data-head-office="[[=data['head_office']]]"
-                                        data-joining-date="[[=data['joining_date']]]"
-                                    >
-                                        [[=data['emp_id']]] | [[=data['emp_name']]] | [[=data['designation']]] | [[=data['head_office']]]
-                                    </option> -->
                                 </select>
                             </div>
 
@@ -103,14 +99,27 @@
                             <div class="col-md-6 col-sm-12">
                                 <div class="mb-2 custom_input">
                                     <label for="asset_type" class="form-label">Asset Type <span class="is_required">*</span></label>
-                                    <select class="form-select form-select-sm select_custom" id="asset_type" name="asset_type">
+                                    <select class="form-select form-select-sm select_custom" name="asset_type" style="width: 200px;" placeholder="Select Asset" required>
                                         <option value="">Select Asset Type</option>
+                                        [[for asset_type in asset_type_list:]]
+                                            <option value="[[=asset_type]]" [[if str(asset_type) ==str(selected_asset_type):]]Selected[[pass]]> [[=asset_type]] </option>
+                                        [[pass]]
                                     </select>
                                 </div>
 
                                 <div class="mb-2 custom_input">
                                     <label for="license_number" class="form-label">Driving License No</label>
-                                    <input type="text" class="form-control form-control-sm" id="license_number" name="license_number" value="[[=data['license_number']]]">
+                                    <input type="text" class="form-control form-control-sm" id="license_number" name="license_number" value="[[=data['license_number']]]" required>
+                                </div>
+
+                                <div class="mb-2 custom_input">
+                                    <label for="requisition_status" class="form-label">Requisition Status <span class="is_required">*</span></label>
+                                    <select class="form-select form-select-sm select_custom" name="requisition_status" style="width: 200px;" placeholder="Select Requisition Status" required>
+                                        <option value="">Select Requisition Status</option>
+                                        [[for requisition_status in requisition_status_combos:]]
+                                            <option value=[[=requisition_status]] [[if str(requisition_status) == str(selected_requisition_status):]]Selected[[pass]]> [[=requisition_status]] </option>
+                                        [[pass]]
+                                    </select>
                                 </div>
                             </div>
 
@@ -118,7 +127,7 @@
                                 <div class="mb-2 custom_input">
                                     <label for="license_issue_date" class="form-label">Driving License Issue Date <span class="is_required">*</span></label>
                                     <div class="flatpickr-wrapper">
-                                        <input type="text" class="date-picker" id="license_issue_date" name="license_issue_date" value="[[=data['license_issue_date']]]" placeholder=" License Issue Date">
+                                        <input type="text" class="date-picker" id="license_issue_date" name="license_issue_date" value="[[=data['license_issue_date']]]" placeholder=" License Issue Date" required>
                                         <i class="fa fa-calendar calendar-icon text-secondary calendar-toggle"></i>                            
                                     </div>
                                 </div>
@@ -126,8 +135,8 @@
                                 <div class="mb-2 custom_input">
                                     <label for="license_expire_date" class="form-label">License Expire Date <span class="is_required">*</span></label>
                                     <div class="flatpickr-wrapper">
-                                        <input type="text" class="date-picker" id="license_expire_date" name="license_expire_date" value="[[=data['license_expire_date']]]" placeholder="License Expire Date">
-                                        <i class="fa fa-calendar calendar-icon text-secondary calendar-toggle"></i>                            
+                                        <input type="text" class="date-picker" id="license_expire_date" name="license_expire_date" value="[[=data['license_expire_date']]]" placeholder="License Expire Date" required>
+                                        <i class="fa fa-calendar calendar-icon text-secondary calendar-toggle"></i>
                                     </div>
                                 </div>
                             </div>
@@ -142,6 +151,11 @@
                                             <label for="doc_type" class="form-label">Doc Type <span class="is_required">*</span></label>
                                             <select class="form-select form-select-sm select_custom" id="doc_type" name="doc_type">
                                                 <option value="">Select Document Type</option>
+                                                [[for doc_type in doc_type_combos:]]
+                                                    <option value="[[=doc_type]]">
+                                                        [[=doc_type]]
+                                                    </option>
+                                                [[pass]]
                                             </select>
                                         </div>
 
@@ -204,8 +218,6 @@
     const IMAGE_UPLOAD_API = "[[=IMAGE_UPLOAD_API]]";
     const IMAGE_DOWNLOAD_API = "[[=IMAGE_DOWNLOAD_API]]";
     const EMPLOYEE_DETAILS_API = "[[=URL('default', 'get_employee_details')]]";
-    const ASSET_META_API = "[[=URL('default', 'get_asset_type_brand_models')]]";
-    const COMBO_VALUES_API = "[[=URL('default', 'get_combo_values')]]?key=requisition";
 
     const existingDocs = JSON.parse('[[=XML(docs_json or "[]")]]'); 
     let uploadedFiles = JSON.parse(JSON.stringify(existingDocs));
@@ -222,15 +234,14 @@
     const prefill_license_expire = "[[=data.get('license_expire_date', '')]]";
 
     function populateTable(files) {
+        console.log(IMAGE_DOWNLOAD_API)
         const $tbody = $('#uploadedFilesTable tbody').empty();
         $.each(files, function (i, file) {
             const $row = $('<tr>').append(
                 $('<td>').text(file.doc_type),
                 $('<td>').text(file.file_name),
                 $('<td>').append(
-                    $('<button class="btn btn-sm btn-primary me-1" ><i class="fa-solid fa-download"></i></button>').click(() => {
-                        window.open(`${IMAGE_DOWNLOAD_API}?company=expense&filename=${file.file_path}`, '_blank');
-                    }),
+                    `<a href="${IMAGE_DOWNLOAD_API}?company=expense&filename=${file.file_path}" class="btn btn-sm btn-primary me-1" ><i class="fa-solid fa-download"></i></a>`,
                     $('<button class="btn btn-sm btn-danger"><i class="fa-solid fa-trash"></i></button>').click(() => {
                         uploadedFiles.splice(i, 1);
                         populateTable(uploadedFiles);
@@ -247,15 +258,7 @@
         const $docTypeSelect = $('#doc_type');
 
         populateTable(uploadedFiles);
-
-        // Load Doc Types
-        $.getJSON(COMBO_VALUES_API, function (data) {
-            $.each(data.results, function (_, item) {
-                $('<option>').val(item.id).text(item.text).appendTo($docTypeSelect);
-            });
-        });
-
-        // Load Employees
+        console.log(prefill_emp_id)
         $.getJSON(EMPLOYEE_DETAILS_API, function (employees) {
             if (prefill_emp_id) {
                 const $opt = $('<option>')
@@ -307,7 +310,7 @@
             $empSelect.trigger('change');
         });
 
-        // On Employee Change
+
         $empSelect.change(function () {
             const data = $(this).find('option:selected').data();
             $('#emp_name').val(data.empName || '');
@@ -317,26 +320,15 @@
             $('#joining_date, #joining_date_display').val(data.joiningDate || '');
         });
 
-        // Load Assets
-        $.getJSON(ASSET_META_API, function (assets) {
-            $.each(assets.results, function (_, item) {
-                const value = `${item.asset_type}`;
-                const $opt = $('<option>').val(value).text(value);
-                if (value === prefill_asset_type) $opt.prop('selected', true);
-                $assetSelect.append($opt);
-            });
-        });
-
         if (window.flatpickr) {
             flatpickr("#license_issue_date", { dateFormat: "Y-m-d", defaultDate: prefill_license_issue || null });
             flatpickr("#license_expire_date", { dateFormat: "Y-m-d", defaultDate: prefill_license_expire || null });
         }
 
-        // File Upload
         $('#uploadBtn').click(function () {
             const file = $('#formFile')[0].files[0];
             const docType = $docTypeSelect.val();
-            const docTypeText = $docTypeSelect.find('option:selected').text();
+            const docTypeText = $docTypeSelect.find('option:selected').val();
             const $uploadStatus = $('#uploadStatus').text('').removeClass('text-danger text-success');
 
             if (!docType || !file) return alert(!docType ? 'Select a document type.' : 'Choose a file.');

@@ -82,7 +82,7 @@
     $(document).ready(function() {
         $("[name='vendor_name']").one('select2:open', function(e) {
         $.ajax({
-            url: '[[=URL("default","get_vendors")]]',
+            url: '[[=URL("default","get_vendors_filter")]]',
             method: 'GET',
             data: { q: '' },
             dataType: 'json',
@@ -145,7 +145,22 @@
                 { title: 'SL No.', data: null, render: function(data, type, row, meta) {
                     return meta.row + 1;
                 }},
-                { title: 'CID', data: 'cid', render: function(data){ return data ?? '-'; }},
+                {
+                    title: 'Status',
+                    data: 'status',
+                    width: '40px',
+                    render: function(data, type, row) {
+                        const status = data?.toLowerCase() === 'active' ? 'active' : 'inactive';
+                        const colorClass = status === 'active' ? 'bg-success' : 'bg-warning text-dark';
+                        const text = status === 'active' ? 'ACTIVE' : 'INACTIVE';
+
+                        return `<div style="display:flex; justify-content:center; align-items:center; height:100%;">
+                                <div class="badge ${colorClass} fw-bold" style="min-width: 60px; text-align:center; display:inline-block;">
+                                    ${text}
+                                </div>
+                                </div>`;
+                    }
+                },
                 { title: 'Vendor Name', data: 'vendor_name', render: function(data){ return data ?? '-'; }},
                 { title: 'Contact', data: 'contact', render: function(data){ return data ?? '-'; }},
                 { title: 'Address', data: 'vendor_address', render: function(data){ return data ?? '-'; }},

@@ -59,14 +59,52 @@ pass
               </a>
           </li>
 
-          <li class="menu-item [[if _controller_name=='asset_master':]]active_link[[pass]]">
-              <a href="[[=URL('asset_master/index')]]">
+          <li class="menu-item [[if _controller_name=='asset_type':]]active_link[[pass]]">
+              <a href="[[=URL('asset_type/index')]]">
                   <span class="menu-icon">
                       <i class="fa-solid fa-tags"></i>
                   </span>
                   <span class="menu-title">Asset Type</span>
               </a>
           </li>
+
+          <li class="menu-item sub-menu [[if _controller_name in ['category','page_setup','press_setup','ctp_setup']:]]open[[pass]]">
+            <a href="#">
+              <span class="menu-icon">
+                <i class="fa-solid fa-network-wired"></i>
+              </span>
+              <span class="menu-title">Transaction Setup</span>
+            </a>
+            <div class="sub-menu-list">
+              <ul>
+                <li class="menu-item [[if _controller_name=='transaction_config':]]active_link[[pass]]">
+                  <a href="[[=URL('transaction_config/index')]]">
+                    <span class="menu-icon"><i class="fa-solid fa-warehouse"></i></span>
+                    <span class="menu-title">Transaction Config</span>
+                  </a>
+                </li>
+                <!-- <li class="menu-item [[if _controller_name=='ctp_setup':]]active_link[[pass]]">
+                  <a href="[[=URL('ctp_setup/index')]]">
+                    <span class="menu-icon"><i class="fas fa-ad"></i></span>
+                    <span class="menu-title">CTP Setup</span>
+                  </a>
+                </li>  
+                <li class="menu-item [[if _controller_name=='press_setup':]]active_link[[pass]]">
+                  <a href="[[=URL('press_setup/index')]]">
+                    <span class="menu-icon"><i class="fas fa-ad"></i></span>
+                    <span class="menu-title">Press</span>
+                  </a>
+                </li> 
+                <li class="menu-item [[if _controller_name=='page_setup':]]active_link[[pass]]">
+                  <a href="[[=URL('page_setup/index')]]">
+                    <span class="menu-icon"><i class="fas fa-ad"></i></span>
+                    <span class="menu-title">Pages</span>
+                  </a>
+                </li>                -->
+              </ul>
+            </div>
+          </li>
+          
 
 
           <li class="menu-header">

@@ -54,7 +54,18 @@
                             <input type="text" id="trade_license_no" name="trade_license_no" class="form-control form-control-sm">
                         </div>
                     </div>
-                </div>
+
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label for="status" class="form-label">Status</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" value="active" checked id="status" name="status">
+                                <label class="form-check-label" for="status">
+                                Active
+                                </label>
+                            </div>
+                        </div>
+                    </div>
 
                 <div class="row">
                     <div class="col-12">
@@ -80,6 +91,10 @@
 
 [[block scripts]]
 <script>
-
+    $(document).ready(function() {
+        $('#status_toggle').on('change', function() {
+            $('#status_hidden').val($(this).is(':checked') ? 'active' : 'inactive');
+        });
+    });
 </script>
 [[end]]

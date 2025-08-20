@@ -35,13 +35,6 @@
                     </div>
                 </div>
 
-                <div class="col-md-2 mb-2">
-                    <div class="">
-                        <select class="form-select form-select-sm select_custom" name="asset_status" placeholder="Select Asset Status">
-                            <option value="">Select Asset Status</option>
-                        </select>    
-                    </div>
-                </div>
 
                 <div class="col-md-6 mb-2 d-flex justify-content-end">
                     <div class="me-2">
@@ -71,7 +64,7 @@
                         Action
                     </button>
                     <div class="dropdown-menu">
-                        <a class="dropdown-item" href="[[=URL('asset_master/create')]]"><i class="fas fa-add me-1"></i> Add</a>
+                        <a class="dropdown-item" href="[[=URL('asset_type/create')]]"><i class="fas fa-add me-1"></i> Add</a>
                         <button class="dropdown-item" id="ExportExcel"><i class="fas fa-file-excel me-1"></i> Excel</button>
                     </div>
                 </div>
@@ -110,17 +103,8 @@ $(document).ready(function() {
             $("[name='asset_brand']").select2({
                 data: data.results,
                 placeholder: "Select Brand",
-                allowClear: true
-            }).select2('open');
-        });
-    });
-
-    $("[name='asset_status']").one('select2:open', function() {
-        $.getJSON('/expense/default/get_asset_master_status', function(data) {
-            $("[name='asset_status']").select2({
-                data: data.results,
-                placeholder: "Select Asset Status",
-                allowClear: true
+                allowClear: true,
+                tags: true
             }).select2('open');
         });
     });
@@ -148,11 +132,10 @@ $(document).ready(function() {
         ajax: {
             async: true,
             type: 'GET',
-            url: '[[=URL("asset_master","get_data")]]',         
+            url: '[[=URL("asset_type","get_data")]]',         
             data: function (d) {
                 d.asset_type = $("select[name='asset_type']").val();
                 d.asset_brand = $("select[name='asset_brand']").val();
-                d.asset_status = $("select[name='asset_status']").val();
             },
             dataSrc: 'data'
         },
@@ -160,11 +143,25 @@ $(document).ready(function() {
             { title: 'SL No.', data: null, render: function(data, type, row, meta) {
                 return meta.row + 1;
             }},
-            { title: 'CID', data: 'cid', render: d => d ?? '-' },
+            {
+                title: 'Status',
+                data: 'status',
+                width: '40px',
+                render: function(data, type, row) {
+                    const status = data?.toLowerCase() === 'active' ? 'active' : 'inactive';
+                    const colorClass = status === 'active' ? 'bg-success' : 'bg-warning text-dark';
+                    const text = status === 'active' ? 'ACTIVE' : 'INACTIVE';
+
+                    return `<div style="display:flex; justify-content:center; align-items:center; height:100%;">
+                            <div class="badge ${colorClass} fw-bold" style="min-width: 60px; text-align:center; display:inline-block;">
+                                ${text}
+                            </div>
+                            </div>`;
+                }
+            },
             { title: 'Asset Type', data: 'asset_type', render: d => d ?? '-' },
             { title: 'Asset Brand', data: 'asset_brand', render: d => d ?? '-' },
             { title: 'Asset Model', data: 'asset_model', render: d => d ?? '-' },
-            { title: 'Asset Status', data: 'asset_status', render: d => d ?? '-' },
             { 
                 title: 'Description', 
                 data: 'asset_desc', 
@@ -177,7 +174,7 @@ $(document).ready(function() {
                 title: '', 
                 data: 'id', 
                 render: function(id) {
-                    return `<a class="text-secondary" href="[[=URL('asset_master/edit')]]?id=${id}" title="Edit"><i class="fas fa-edit"></i></a>`;
+                    return `<a class="text-secondary" href="[[=URL('asset_type/edit')]]?id=${id}" title="Edit"><i class="fas fa-edit"></i></a>`;
                 }
             }
         ]
@@ -192,7 +189,6 @@ $(document).ready(function() {
         e.preventDefault();
         $("select[name='asset_type']").val(null).trigger('change');
         $("select[name='asset_brand']").val(null).trigger('change');
-        $("select[name='asset_status']").val(null).trigger('change')
         table.ajax.reload();
     });
 });

@@ -18,27 +18,36 @@
 
         <div class="col-md-9 mt-2">
             <div class="row" id="custom_form" style="display: none;">
-                
                 <div class="col-md-2 mb-2">
                     <div class="">
-                        <select class="form-select form-select-sm select_custom" name="asset_type"  placeholder="Select Asset">
-                            <option value="">Select Asset</option>
+                        <select class="form-select form-select-sm select_custom" name="purchase_status"  placeholder="Purchase Status">
+                            <option value="">Purchase Status</option>
                         </select>
                     </div>   
                 </div>
 
-                <div class="col-md-3 mb-2">
+                <div class="col-md-2 mb-2">
                     <div class="">
-                        <select class="form-select form-select-sm select_custom" name="emp_id" placeholder="Select Employee">
-                            <option value="">Select Employee</option>
+                        <select class="form-select form-select-sm select_custom" name="vendor_name"  placeholder="Vendor">
+                            <option value="">Select Vendor</option>
                         </select>
-                    </div>
+                    </div>   
                 </div>
 
-                <div class="col-md-3 mb-2">
+                <div class="col-md-2 mb-2">
                     <div class="">
-                        <input type="text" name="head_office" class="form-control form-control-sm" placeholder="Search Head Office">
-                    </div>
+                        <select class="form-select form-select-sm select_custom" name="payment_type"  placeholder="Payment Type">
+                            <option value="">Payment Type</option>
+                        </select>
+                    </div>   
+                </div>
+
+                <div class="col-md-2 mb-2">
+                    <div class="">
+                        <select class="form-select form-select-sm select_custom" name="payment_status"  placeholder="Payment Status">
+                            <option value="">Payment Status</option>
+                        </select>
+                    </div>   
                 </div>
 
                 <div class="col-md-4 mb-2 d-flex justify-content-end">
@@ -76,7 +85,190 @@
             </div>
         </div>
     </div>
+
+    <div class="table-responsive">
+        <table id="myTable" class="table table-bordered compact" style="width:100%">
+            <thead class="text-truncate"></thead>
+            <tbody></tbody>
+        </table>
+    </div>
 </div>
 
+[[end]]
 
 
+[[block scripts]]
+<script>
+    $(document).ready(function(){
+        $("[name='purchase_status']").one('select2:open', function (e) {
+            $.ajax({
+                url: '[[=URL("default", "get_combo_values")]]?key=purchase_status',
+                method: 'GET',
+                dataType: 'json',
+                success: function (data) {
+                    const formatted = data.results.map(row => ({ id: row.id, text: row.text }));
+                    const $select = $("[name='purchase_status']");
+                    $select.empty();
+                    $select.select2({ data: formatted, placeholder: "Purchase Status", allowClear: true }).select2('open');
+                }
+            });
+        });
+
+        $("[name='vendor_name']").one('select2:open', function (e) {
+            $.ajax({
+                url: '[[=URL("default", "get_vendors_filter")]]',
+                method: 'GET',
+                dataType: 'json',
+                success: function (data) {
+                    const formatted = data.results.map(row => ({ id: row.id, text: row.text }));
+                    const $select = $("[name='vendor_name']");
+                    $select.empty();
+                    $select.select2({ data: formatted, placeholder: "Vendor", allowClear: true }).select2('open');
+                }
+            });
+        });
+
+        $("[name='payment_type']").one('select2:open', function (e) {
+            $.ajax({
+                url: '[[=URL("default", "get_combo_values")]]?key=payment_type',
+                method: 'GET',
+                dataType: 'json',
+                success: function (data) {
+                    const formatted = data.results.map(row => ({ id: row.id, text: row.text }));
+                    const $select = $("[name='payment_type']");
+                    $select.empty();
+                    $select.select2({ data: formatted, placeholder: "Payment Type", allowClear: true }).select2('open');
+                }
+            });
+        });
+
+        $("[name='payment_status']").one('select2:open', function (e) {
+            $.ajax({
+                url: '[[=URL("default", "get_combo_values")]]?key=payment_status',
+                method: 'GET',
+                dataType: 'json',
+                success: function (data) {
+                    const formatted = data.results.map(row => ({ id: row.id, text: row.text }));
+                    const $select = $("[name='payment_status']");
+                    $select.empty();
+                    $select.select2({ data: formatted, placeholder: "Payment Status", allowClear: true }).select2('open');
+                }
+            });
+        });
+
+        $("#filter").click(function () {
+            $("#custom_form").fadeToggle("slow");
+        });
+
+        var table = $('#myTable').DataTable({
+            dom: "Bfrt<'d-flex justify-content-between'<l><i><p>>",
+            buttons: [
+                {
+                    extend: 'excel',
+                    title: 'Purchase Data',
+                    filename: 'Purchase_Data',
+                    exportOptions: {
+                        columns: [0, 1, 2, 3, 4]
+                    },
+                }
+            ],
+            order: [9, 'desc'],
+            searching: false,
+            paging: true,
+            serverSide: true,
+            scrollCollapse: false,
+            scrollX: true,
+            scrollY: "413px",
+            fixedHeader: true,
+            fixedColumns: {
+                left: 1,
+                right: 1
+            },
+            lengthMenu: [
+                [15, 50, 100, -1],
+                [15, 50, 100, 'All']
+            ],
+            ajax: {
+                async: true,
+                type: 'GET',
+                url: '[[=URL("purchase", "get_data")]]',
+                data: function (d) {
+                    d.purchase_status = $("select[name='purchase_status']").val();
+                    d.vendor_name = $("select[name='vendor_name']").val();
+                    d.payment_status = $("select[name='payment_status']").val();
+                    d.payment_type = $("select[name='payment_type']").val();
+                },
+                dataSrc: 'data'
+            },
+            columns: [
+                {
+                    title: 'SL', data: null, render: function (data, type, row, meta) {
+                        return meta.row + 1;
+                    }
+                },
+                { title: 'Purchase ID', data: 'purchase_head_id', render: d => d ?? '-' },
+                { 
+                    title: 'Status', 
+                    data: 'purchase_status', 
+                    render: d => {
+                        if (!d) return '-';
+                        let badgeClass = '';
+                        switch(d) {
+                            case 'Received':
+                                badgeClass = 'badge bg-success';
+                                break;
+                            case 'Canceled':
+                            case 'On Hold':
+                                badgeClass = 'badge bg-danger';
+                                break;
+                            case 'Draft':
+                                badgeClass = 'badge bg-secondary';
+                                break;
+                            case 'In Process':
+                                badgeClass = 'badge bg-primary';
+                                break;
+                            case 'Partially Received':
+                                badgeClass = 'badge bg-warning text-dark';
+                                break;
+                            default:
+                                badgeClass = 'badge bg-light text-dark';
+                        }
+                        return `<div style="display:inline-flex; justify-content:center; width:100%"><span class="${badgeClass}">${d}</span></div>`;
+                    }
+                },
+                { title: 'Vendor Name', data: 'vendor_name', render: d => d ?? '-' },
+                { title: 'Bill No', data: 'bill_no', render: d => d ?? '-' },
+                { title: 'Payable', data: 'total_payable', render: d => d ?? '-' },
+                { title: 'Purchase Date', data: 'purchase_date', render: d => d ?? '-' },
+                { title: 'Payment Type', data: 'payment_type', render: d => d ?? '-' },
+                { title: 'Payment Status', data: 'payment_status', render: d => d ?? '-' },
+                {
+                    title: '', data: 'id', render: function (data) {
+                        return `
+                            <a class="text-secondary" href="[[=URL('purchase/edit')]]?id=${data}"
+                               data-bs-toggle="tooltip" data-bs-placement="top" title="Update">
+                                <i class="fas fa-edit"></i>
+                            </a>`;
+                    }
+                }
+            ]
+        });
+
+        $("#submit").click(function (e) {
+            e.preventDefault();
+            table.ajax.reload();
+        });
+
+        $("#reset").click(function (e) {
+            e.preventDefault();
+            $("select[name='purchase_status']").val(null).trigger('change')
+            $("select[name='vendor_name']").val(null).trigger('change');
+            $("select[name='payment_status']").val(null).trigger('change');
+            $("select[name='payment_type']").val(null).trigger('change');
+
+            table.ajax.reload();
+        });
+    })
+
+</script>
+[[end]]

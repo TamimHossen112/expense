@@ -1,0 +1,255 @@
+[[extend 'layout.html']]
+
+[[block header]]
+[[icon='fa fa-file-pen']]
+[[breadcamp = 'Edit Asset']]
+[[end]]
+
+[[block content]]
+<div class="container-section">
+    <div class="d-flex justify-content-between align-items-center border-bottom mx-2">
+        <span class="icon-text icon-text-bold">
+            <i class="fa-solid fa-plus"></i>
+            <span>Edit</span>
+        </span>
+
+        <div class="d-flex justify-content-end">
+            <div class="p-1">
+                <button type="button" class="btn btn-sm btn-light d-none" id="btn_view">
+                    <i class="fa-regular fa-eye"></i> <span class="ms-2">View</span>
+                </button>
+                <button type="button" class="btn btn-sm btn-light" id="btn_edit">
+                    <i class="fa-regular fa-pen-to-square"></i> <span class="ms-2">Edit</span>
+                </button>
+            </div>
+            <div class="p-1">
+                <a href="[[=URL('asset/index')]]" class="btn btn-sm btn-light">
+                    <i class="fa-solid fa-arrow-left"></i> <span class="ms-2">Back</span>
+                </a>
+            </div>
+            <div class="p-1">
+                <div class="btn-group">
+                    <button class="btn btn-primary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown"
+                        aria-expanded="false">
+                        Action
+                    </button>
+                    <!-- <ul class="dropdown-menu"> -->
+                    <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                        <!--<a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#staticBackdrop"><i class="fas fa-add me-1"></i> Add</a>-->
+                        <a class="dropdown-item" href="delete?id=[[=request.query.get('id')]]" id="delete_btn">
+                            <i class="fa-solid fa-trash-can"></i><span class="ms-2">Delete</span></a>
+                    </div>
+                    <!-- </ul> -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container py-2">
+        <form id="uploadForm" action="[[=URL('asset','update')]]" method="post" enctype="multipart/form-data">
+            <div id="custom_form">
+                <input type="hidden" name="id" value="[[=request.query.get('id')]]">
+                <div class="row">
+
+                    <div class="col-md-3">
+                        <div class="row">
+                            <!-- Asset Type -->
+                            <div class="mb-2 custom_input">
+                                <label for="asset_type_display" class="form-label">
+                                    <strong>Asset Type <span class="is_required">*</span></strong>
+                                </label>
+                                <select class="form-select form-select-sm select_custom" id="asset_type_display" disabled>
+                                    <option value="">Asset Type</option>
+                                    [[for asset_type in asset_type_list:]]
+                                        <option value="[[=asset_type]]" [[if str(asset_type) == str(selected_asset_type):]]selected[[pass]]>[[=asset_type]]</option>
+                                    [[pass]]
+                                </select>
+                                <input type="hidden" id="asset_type" name="asset_type" value="[[=selected_asset_type]]">
+                            </div>
+
+                            <!-- Asset Brand -->
+                            <div class="mb-2 custom_input">
+                                <label for="asset_brand_display" class="form-label">
+                                    <strong>Asset Brand <span class="is_required">*</span></strong>
+                                </label>
+                                <select class="form-select form-select-sm select_custom" id="asset_brand_display" disabled>
+                                    <option value="">Asset Brand</option>
+                                    [[for asset_brand in asset_brand_list:]]
+                                        <option value="[[=asset_brand]]" [[if str(asset_brand) == str(selected_asset_brand):]]selected[[pass]]>[[=asset_brand]]</option>
+                                    [[pass]]
+                                </select>
+                                <input type="hidden" id="asset_brand" name="asset_brand" value="[[=selected_asset_brand]]">
+                            </div>
+
+                            <!-- Asset Model -->
+                            <div class="mb-2 custom_input">
+                                <label for="asset_model_display" class="form-label">
+                                    <strong>Asset Model <span class="is_required">*</span></strong>
+                                </label>
+                                <select class="form-select form-select-sm select_custom" id="asset_model_display" disabled>
+                                    <option value="">Asset Model</option>
+                                    [[for asset_model in asset_model_list:]]
+                                        <option value="[[=asset_model]]" [[if str(asset_model) == str(selected_asset_model):]]selected[[pass]]>[[=asset_model]]</option>
+                                    [[pass]]
+                                </select>
+                                <input type="hidden" id="asset_model" name="asset_model" value="[[=selected_asset_model]]">
+                            </div>
+
+                            <!-- Purchase Price -->
+                            <div class="mb-2 custom_input">
+                                <label for="purchase_price_display" class="form-label">
+                                    <strong>Purchase Price</strong>
+                                </label>
+                                <input type="number" class="form-control form-control-sm" id="purchase_price_display" value="[[=data['purchase_price']]]" disabled>
+                                <input type="hidden" id="purchase_price" name="purchase_price" value="[[=data['purchase_price']]]">
+                            </div>
+                        </div>
+                    </div>
+
+                    
+                    <div class="col-md-3">
+                        <div class="row">
+                            <div class="mb-2 custom_input">
+                                <label for="asset_name" class="form-label"><strong>Asset Name</strong></label>
+                                <input type="text" class="form-control form-control-sm" id="asset_name" name="asset_name" value="[[=data['asset_name']]]">
+                            </div>
+
+                            <div class="mb-2 custom_input">
+                                <label for="asset_model_year" class="form-label"><strong>Asset Model Year</strong></label>
+                                <input type="text" class="form-control form-control-sm" id="asset_model_year" name="asset_model_year" value="[[=data['model_year']]]">
+                            </div>
+
+                            <div class="mb-2 custom_input">
+                                <label for="asset_condition" class="form-label"><strong>Asset Condition <span class="is_required">*</span></strong></label>
+                                <select class="form-select form-select-sm select_custom" id="asset_condition" name="asset_condition">
+                                    <option value="">Asset Condition</option>
+                                    [[for asset_condition in asset_condition_list:]]
+                                        <option value="[[=asset_condition]]" [[if str(asset_condition) ==str(selected_asset_condition):]]Selected[[pass]]> [[=asset_condition]] </option>
+                                    [[pass]]
+                                </select>
+                            </div>
+
+                            <div class=" mb-2 custom_input">
+                                <label for="asset_status" class="form-label"><strong>Asset Status <span class="is_required">*</span></strong></label>
+                                <select class="form-select form-select-sm select_custom" id="asset_status" name="asset_status">
+                                    <option value="">Asset Status</option>
+                                    [[for asset_status in asset_status_list:]]
+                                        <option value="[[=asset_status]]" [[if str(asset_status) ==str(selected_asset_status):]]Selected[[pass]]> [[=asset_status]] </option>
+                                    [[pass]]
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <div class="col-md-3">
+                        <div class="row">
+                            <div class="mb-2 custom_input">
+                                <label for="registration_no" class="form-label"><strong>Registration No</strong></label>
+                                <input type="text" class="form-control form-control-sm" id="registration_no" name="registration_no" value="[[=data['reg_number']]]">
+                            </div>
+
+                            <div class="mb-2 custom_input">
+                                <label for="engine_no" class="form-label"><strong>Engine No</strong></label>
+                                <input type="text" class="form-control form-control-sm" id="engine_no" name="engine_no" value="[[=data['engine_number']]]">
+                            </div>
+
+                            <div class="mb-2 custom_input">
+                                <label for="engine_info" class="form-label"><strong>Engine Info</strong></label>
+                                <input type="text" class="form-control form-control-sm" id="engine_info" name="engine_info" value="[[=data['engine_info']]]">
+                            </div>
+
+                            <div class="mb-2 custom_input">
+                                <label for="chasis_no" class="form-label"><strong>Chasis No</strong></label>
+                                <input type="text" class="form-control form-control-sm" id="chasis_no" name="chasis_no" value="[[=data['chassis_number']]]">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-3">
+                        <div class="row">
+                            <div class="mb-2 custom_input">
+                                <label for="emp_id" class="form-label"><strong>User</strong></label>
+                                <select class="form-select form-select-sm select_custom" id="emp_id" name="emp_id">
+                                    <option value="">Select User</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-2 custom_input">
+                                <label for="current_location" class="form-label"><strong>Current Location</strong></label>
+                                <input type="text" class="form-control form-control-sm" id="current_location" name="current_location" value="[[=data['current_location']]]">
+                            </div>
+
+                            
+
+                            <div class="mb-2 custom_input">
+                                <label for="first_issue_date" class="form-label"><strong>First Issue Date <span class="is_required">*</span></strong></label>
+                                <div class="flatpickr-wrapper">
+                                    <input type="text" class="date-picker" id="first_issue_date" name="first_issue_date" placeholder="First Issue Date" value="[[=data['first_issue_date']]]">
+                                    <i class="fa fa-calendar calendar-icon text-secondary calendar-toggle"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+                </div>
+            </div>
+
+            <div class="row d-none" id="edit_view_section">
+                <div class="col-12">
+                    <div class="d-flex justify-content-start">
+                        <div class="me-2">
+                            <button type="submit" class="btn btn-sm btn-primary">
+                                <i class="fa-regular fa-floppy-disk"></i> <span class="ms-2">Update</span>
+                            </button>
+                        </div>
+                        <div class="">
+                            <button type="reset" class="btn btn-sm btn-light">
+                                <i class="fa-solid fa-retweet"></i> <span class="ms-2">Reset</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+    
+</div>
+[[end]]
+
+[[block scripts]]
+<script>
+    const EMPLOYEE_DETAILS_API = "[[=URL('default', 'get_employee_details')]]";
+    const selectedEmp = "[[=selected_emp]]"; // Passed from controller/template
+
+    // Load employees into dropdown
+    $.getJSON(EMPLOYEE_DETAILS_API)
+        .done(function (employees) {
+            const $empSelect = $('#emp_id');
+            $empSelect.empty();
+            $empSelect.append($('<option>', { value: '', text: 'Select User' }));
+
+            $.each(employees, function (_, emp) {
+                const optionValue = `${emp.employee_id} | ${emp.employee_name}`;
+                const $option = $('<option>')
+                    .val(optionValue)
+                    .text(`${emp.employee_id} | ${emp.employee_name} | ${emp.designation} | ${emp.head_office}`);
+
+                if (optionValue === selectedEmp) {
+                    $option.prop('selected', true);
+                }
+                $option.appendTo($empSelect);
+            });
+        })
+        .fail(function (xhr, status, error) {
+            console.error("Employee load error:", error);
+        });
+
+    // ✅ Normal form submit, backend handles flash + redirect
+    $('#uploadForm').on('submit', function () {
+        // No preventDefault, no AJAX
+        // Just let it submit to [[=URL("asset", "update")]]
+    });
+</script>
+[[end]]

@@ -5,6 +5,411 @@
 [[breadcamp = 'Create Purchase Entry']]
 [[end]]
 
-[[block scripts]]
+[[block content]]
+
+<style>
+    .table-responsive {
+        overflow-x: auto !important;
+    }
+
+    /* select.no-border-select2 + .select2-container--default .select2-selection--single {
+        border: none !important;
+        box-shadow: none !important;
+    }
+
+    .select2-container--default.select2-container--open select.no-border-select2 + .select2-selection--single {
+        border: none !important;
+        box-shadow: none !important;
+    } 
+
+    #purchaseTable input.no-border-input.form-control {
+        border: none !important;
+        box-shadow: none !important;
+        background-color: transparent !important;
+        outline: none !important;
+    } */
+
+    table.table tbody tr, 
+    table.table tbody tr td {
+        padding-top: 0.25rem;  /* default is around 0.75rem */
+        padding-bottom: 0.25rem;
+        line-height: 1.25;  /* reduce line height */
+    }
+
+    #purchaseTable thead tr th {
+        color: #544dc9 !important;
+        text-align: center;
+        vertical-align: middle;
+    }
+
+    #purchaseTable tfoot tr {
+        font-weight: bold;
+        background-color: #dee2e6; /* Light background for the footer row */
+    }
+
+    
+</style>
+
+<div class="container-section " id="pageContent" style="display:none;">
+    <div class="d-flex justify-content-between align-items-center border-bottom mx-2">
+        <span class="icon-text icon-text-bold">
+            <i class="fa-solid fa-plus"></i>
+            <span>Create</span>
+        </span>
+        <div class="d-flex justify-content-end">
+            <div class="p-1">
+                <a href="[[=URL('purchase/index')]]" class="btn btn-sm btn-light">
+                    <i class="fa-solid fa-arrow-left"></i> <span class="ms-2">Back</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="container py-2">
+        <form id="uploadForm" action="[[=URL('purchase','submit')]]" method="post" enctype="multipart/form-data">
+            <div id="custom_form">
+                <div class="row">
+                    <div class="col-md-3 mb-2">
+                        <label for="vendor_id" class="form-label"><strong>Vendor <span class="is_required">*</span></strong></label>
+                        <select class="form-select form-select-sm select_custom" id="vendor_id" name="vendor_id" required>
+                            <option value="">Select Vendor</option>
+                            [[for vendor in vendors:]]
+                                <option value="[[=vendor['id']]] | [[=vendor['text']]]">
+                                    [[=vendor['text']]]
+                                </option>
+                            [[pass]]
+                        </select>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <label for="bill_no" class="form-label"><strong>Bill No</strong></label>
+                        <input type="text" class="form-control form-control-sm" id="bill_no" name="bill_no" required>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <label for="purchase_date" class="form-label"><strong>Purchase Date <span class="is_required">*</span></strong></label>
+                        <div class="flatpickr-wrapper">
+                            <input type="text" class="date-picker" id="purchase_date" name="purchase_date" placeholder="Purchase Date" required>
+                            <i class="fa fa-calendar calendar-icon text-secondary calendar-toggle"></i>
+                        </div>
+                    </div>
+
+                    <div class="col-md-3 mb-2">
+                        <label for="payment_type" class="form-label"><strong>Select Payment Type <span class="is_required">*</span></strong></label>
+                        <select class="form-select form-select-sm select_custom" id="payment_type" name="payment_type" required>
+                            <option value="">Select Payment Type</option>
+                            [[for payment_t in payment_type:]]
+                                <option value="[[=payment_t['text']]]">
+                                    [[=payment_t['text']]]
+                                </option>
+                            [[pass]]
+                        </select>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <label for="payment_status" class="form-label"><strong>Select Payment Status</strong></label>
+                        <select class="form-select form-select-sm select_custom" id="payment_status" name="payment_status" required>
+                            <option value="">Select Payment Status</option>
+                            [[for payment_s in payment_status:]]
+                                <option value="[[=payment_s['text']]]">
+                                    [[=payment_s['text']]]
+                                </option>
+                            [[pass]]
+                        </select>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <label for="purchase_status" class="form-label"><strong>Select Purchase Status</strong></label>
+                        <select class="form-select form-select-sm select_custom" id="purchase_status" name="purchase_status" required>
+                            <option value="">Select Purchase Status</option>
+                            [[for purchase_s in purchase_status:]]
+                                <option value="[[=purchase_s['text']]]">
+                                    [[=purchase_s['text']]]
+                                </option>
+                            [[pass]]
+                        </select>
+                    </div>
+                </div>
+
+                
+                <!-- Purchase Items Table -->
+                <div class="table-responsive mt-2" style="margin-bottom: 0 !important; margin-bottom: 0 !important; padding-bottom: 0 !important;">
+                    <table class="table table-bordered table-sm align-middle" id="purchaseTable" style="margin-bottom: 0 !important;">
+                        <thead>
+                            <tr style="background-color: #ccc9fa;">
+                                <th class="text-truncate" style="min-width: 200px;">Requisition Details</th>
+                                <!-- <th class="text-truncate" style="min-width: 130px;">Asset Type</th> -->
+                                <th class="text-truncate" style="min-width: 140px;">Asset Brand</th>
+                                <th class="text-truncate" style="min-width: 140px;">Asset Model</th>
+                                <th class="text-truncate" style="min-width: 100px;">Purchase Date</th>
+                                <th class="text-truncate" style="min-width: 110px;">Status</th>
+                                <th class="text-truncate" style="min-width: 100px;">Item Price</th>
+                                <th class="text-truncate" style="min-width: 100px;">Discount</th>
+                                <th class="text-truncate" style="min-width: 35px;"></th>
+                            </tr>
+                        </thead>
+
+
+                        <tbody></tbody>
+                    </table>
+                </div>
+
+                <div class="text-end mt-2" id="addRowSection">
+                    <button type="button" class="btn btn-sm btn-primary" id="addRowBtn">
+                        <i class="fa fa-plus"></i> Add
+                    </button>
+                </div>
+
+                <input type="hidden" id="purchaseItemsJson" name="purchase_items_json" />
+
+                <!-- <div class="d-flex justify-content-end align-items-center mt-2">
+                    <button type="button" class="btn btn-sm btn-primary" id="addRowBtn">
+                        <i class="fa fa-plus"></i> Add
+                    </button>
+                </div> -->
+
+                <div class="row">
+                    <div class="col-md-7">
+                        <div class="mb-3 mt-2">
+                            <!-- <label for="remarks" class="form-label"><strong>Remarks</strong></label> -->
+                            <textarea placeholder="Remarks.." id="remarks" name="remarks" class="form-control form-control-sm" style="height:auto; min-height: 6.8rem; border-radius: 0.4rem;" oninput="this.style.height='auto'; this.style.height = this.scrollHeight + 'px'"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="col-md-5">
+                        <table class="table table-bordered mt-2">
+                            <thead class="">
+                                <tr style="background-color: #ccc9fa;">
+                                    <th style="color: #544dc9;" colspan="2" class="text-center">Summary</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Total Price</td>
+                                    <td id="summaryTotalPrice" class="text-end">0.00</td>
+                                </tr>
+                                <tr>
+                                    <td>Total Discount</td>
+                                    <td id="summaryTotalDiscount" class="text-end">0.00</td>
+                                </tr>
+                                <tr>
+                                    <td style="color: #544dc9;"><strong>Total Payable</strong></td>
+                                    <td style="color: #544dc9;" id="summaryTotalPayable" class="text-end"><strong>0.00</strong></td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <!-- Submit button (left) -->
+                        <button type="submit" class="btn btn-sm btn-primary">
+                            <i class="fa fa-check"></i> Submit
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
 [[end]]
+
+[[block scripts]]
+<script>
+$(document).ready(async function () {
+
+    let requisitionOptions = `<option value="">Select</option>`;
+    let requisitionAssetMap = {};
+
+    // Load requisitions
+    async function loadRequisitionOptions() {
+        try {
+            const data = await $.getJSON("/expense/default/get_requisition_details_with_asset_details");
+            requisitionOptions = `<option value="">Select</option>`;
+            requisitionAssetMap = {};
+            data.results.forEach(item => {
+                requisitionOptions += `<option value="${item.req_id}">${item.req_id} | ${item.asset_type}</option>`;
+                requisitionAssetMap[item.req_id] = {
+                    asset_type: item.asset_type,
+                    asset_brand: item.asset_brand,
+                    asset_model: item.asset_model
+                };
+            });
+        } catch (err) {
+            console.error("Failed to load requisitions:", err);
+        }
+    }
+
+    function initSelect2($context) {
+        $context.find('.select_custom').each(function () {
+            const placeholder = $(this).attr('placeholder') || "";
+            $(this).select2({
+                placeholder,
+                allowClear: true,
+                width: '100%'
+            });
+        });
+    }
+
+    function updateTotals() {
+        let totalPrice = 0, totalDiscount = 0;
+        $("#purchaseTable tbody tr").each(function () {
+            totalPrice += parseFloat($(this).find("input.item_price_input").val()) || 0;
+            totalDiscount += parseFloat($(this).find("input.item_discount_input").val()) || 0;
+        });
+        $("#summaryTotalPrice").text(totalPrice.toFixed(2));
+        $("#summaryTotalDiscount").text(totalDiscount.toFixed(2));
+        $("#summaryTotalPayable").html(`<strong style="color: #544dc9;">${(totalPrice - totalDiscount).toFixed(2)}</strong>`);
+    }
+
+    async function createRow(disableDelete = false) {
+        if (requisitionOptions === `<option value="">Select</option>`) await loadRequisitionOptions();
+
+        const rowId = Date.now();
+        console.log("Creating row with ID:", rowId);
+
+        const deleteBtn = disableDelete ? '' : `
+            <button type="button" class="btn btn-sm removeRowBtn" style="background:none; color:var(--bs-danger); font-size:18px;">
+                <i class="fa fa-trash"></i>
+            </button>`;
+
+        const rowHtml = `
+            <tr data-row-id="${rowId}">
+                <td>
+                    <select class="form-select form-select-sm select_custom req_id_select" required>
+                        ${requisitionOptions}
+                    </select>
+                </td>
+                <td style="display:none;">
+                    <select class="form-select form-select-sm select_custom asset_type_select" required>
+                        <option value=""></option>
+                        [[for asset_type in asset_types:]]
+                            <option value="[[=asset_type['text']]]">[[=asset_type['text']]]</option>
+                        [[pass]]
+                    </select>
+                </td>
+                <td>
+                    <select class="form-select form-select-sm select_custom asset_brand_select" required>
+                        <option value="">Select</option>
+                    </select>
+                </td>
+                <td>
+                    <select class="form-select form-select-sm select_custom asset_model_select" required>
+                        <option value="">Select</option>
+                    </select>
+                </td>
+                <td><input type="text" class="form-control form-control-sm datepicker purchase_date_input"></td>
+                <td>
+                    <select class="form-select form-select-sm select_custom receive_status" required>
+                        <option value=""></option>
+                        [[for receive_status in receive_status:]]
+                            <option value="[[=receive_status['text']]]">[[=receive_status['text']]]</option>
+                        [[pass]]
+                    </select>
+                </td>
+                <td><input type="number" class="form-control form-control-sm item_price_input" required></td>
+                <td><input type="number" class="form-control form-control-sm item_discount_input"></td>
+                <td>${deleteBtn}</td>
+            </tr>
+        `;
+
+        const $row = $(rowHtml);
+        $("#purchaseTable tbody").append($row);
+
+        initSelect2($row);
+        $row.find(".datepicker").flatpickr({ dateFormat: "Y-m-d" });
+        $row.find("input.item_price_input, input.item_discount_input").on('input', updateTotals);
+
+        // Requisition selected -> set type for the row
+        $row.find(".req_id_select").on("change", function () {
+            const selected = $(this).val();
+            const assetData = requisitionAssetMap[selected] || {};
+            const $tr = $(this).closest("tr");
+            $tr.find(".asset_type_select").val(assetData.asset_type || "").trigger('change');
+        });
+
+        // Type change -> fetch brands for this row
+        $row.find(".asset_type_select").on("change", async function() {
+            const $tr = $(this).closest("tr");
+            const type = $(this).val();
+            if(!type) return;
+
+            try {
+                const res = await $.getJSON("/expense/asset/get_brands_by_type", { asset_type: type });
+                const $brandSelect = $tr.find(".asset_brand_select");
+                $brandSelect.empty().append('<option value="">Select</option>');
+                res.results.forEach(b => $brandSelect.append(`<option value="${b}">${b}</option>`));
+                $brandSelect.val(null).trigger('change');
+
+                $tr.find(".asset_model_select").empty().append('<option value="">Select</option>');
+            } catch(e) { console.error(e); }
+        });
+
+        // Brand change -> fetch models for this row
+        $row.find(".asset_brand_select").on("change", async function() {
+            const $tr = $(this).closest("tr");
+            const type = $tr.find(".asset_type_select").val();
+            const brand = $(this).val();
+            if(!type || !brand) return;
+
+            try {
+                const res = await $.getJSON("/expense/asset/get_models_by_brand", { asset_type: type, asset_brand: brand });
+                const $modelSelect = $tr.find(".asset_model_select");
+                $modelSelect.empty().append('<option value="">Select</option>');
+                res.results.forEach(m => $modelSelect.append(`<option value="${m}">${m}</option>`));
+                $modelSelect.val(null).trigger('change');
+            } catch(e) { console.error(e); }
+        });
+    }
+
+    $("<style>")
+        .prop("type", "text/css")
+        .html(`
+            input[type=number]::-webkit-inner-spin-button, 
+            input[type=number]::-webkit-outer-spin-button { 
+                -webkit-appearance: none; margin: 0; 
+            }
+            input[type=number] { -moz-appearance: textfield; }
+        `).appendTo("head");
+
+    await createRow(true);
+
+    $("#addRowBtn").on("click", async () => await createRow());
+
+    $(document).on("click", ".removeRowBtn", function () {
+        if ($("#purchaseTable tbody tr").length > 1) {
+            $(this).closest("tr").remove();
+            updateTotals();
+        } else alert("You must have at least one item in the table.");
+    });
+
+    $("#uploadForm").on("submit", function(e){
+        const items = $("#purchaseTable tbody tr").map(function () {
+            const $tr = $(this);
+            return {
+                req_id: $tr.find(".req_id_select").val(),
+                asset_type: $tr.find(".asset_type_select").val(),
+                asset_brand: $tr.find(".asset_brand_select").val(),
+                asset_model: $tr.find(".asset_model_select").val(),
+                purchase_date: $tr.find("input.purchase_date_input").val(),
+                receive_status: $tr.find(".receive_status").val(),
+                item_price: $tr.find("input.item_price_input").val(),
+                item_discount: $tr.find("input.item_discount_input").val()
+            };
+        }).get();
+
+        // Duplicate check
+        const reqIds = items.map(i => i.req_id).filter(v => v);
+        const duplicates = reqIds.filter((id, idx) => reqIds.indexOf(id) !== idx);
+        if (duplicates.length > 0) {
+            alert("You can't add same requisition twice.");
+            e.preventDefault();
+            return;
+        }
+
+        $("#purchaseItemsJson").val(JSON.stringify(items));
+    });
+
+    $('#pageContent').show();
+});
+</script>
+[[end]]
+
+
 

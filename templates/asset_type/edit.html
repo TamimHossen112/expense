@@ -66,12 +66,26 @@
                         </div>
                     </div>
 
-                    <div class="col-md-12">
+                    <div class="col-md-4">
                         <div class="mb-3 custom_input">
                             <label for="asset_desc" class="form-label">Description (Max 1000 Characters)</label>
-                            <textarea id="asset_desc" name="asset_desc" class="form-control form-control-sm" rows="3" style="padding: 10px;">[[=record['asset_desc']]]</textarea>
+                            <textarea id="asset_desc" name="asset_desc" class="form-control form-control-sm" rows="5" style="padding: 10px;">[[=record['asset_desc']]]</textarea>
                         </div>
                     </div>
+
+                    <div class="col-md-4">
+                        <div class="mb-3 ">
+                            <label for="status" class="form-label">Status</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" value="active" id="status" name="status" disabled
+                                [[if record.status=='active':]] checked [[pass]]>
+                                <label class="form-check-label" for="status">
+                                Active
+                                </label>
+                            </div>
+                        </div>                   
+                    </div>
+
                 </div>
 
                 <div class="row d-none" id="edit_view_section">

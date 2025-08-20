@@ -17,7 +17,11 @@ $(document).ready(function() {
         $("#btn_view").toggleClass("d-none");
         $("#btn_edit").toggleClass("d-none");
         $("#edit_view_section").toggleClass("d-none");
+        $("#addRowSection").toggleClass("d-none");
         
+        $("#remarks_section").toggleClass("d-none");
+
+        $("textarea").toggleClass("is_enable");
         $("input").toggleClass("is_enable");
         $(".select2-container").toggleClass("is_enable");
         $('input[type="checkbox"]').each(function() {

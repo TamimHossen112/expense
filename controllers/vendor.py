@@ -3,92 +3,18 @@ from py4web import action, request, response, URL
 from py4web.core import redirect
 from ..common import db, session, T, flash
 
+# ---------------- Helper Functions ---------------- #
+# ---------------- Helper Functions ---------------- #
+# ---------------- Helper Functions ---------------- #
 
-@action('vendor/index')
-@action.uses("vendor/index.html",session, flash, )
-def vendor_index():
-    return locals()
-
-
-@action('vendor/create')
-@action.uses("vendor/create.html",session, flash)
-def vendor_create():
-    return locals()
+def flash_redirect(message, type_, endpoint, vars=None):
+    """Flash message and redirect."""
+    flash.set(message, type_)
+    redirect(URL(endpoint, vars=vars or {}))
 
 
-@action('vendor/submit', method=['POST'])
-@action.uses(db, session, T, flash)
-def submit_vendor_data():
-    vendor_name = request.forms.get('vendor_name')
-    contact = request.forms.get('contact')
-    vendor_address = request.forms.get('vendor_address')
-    trade_license_no = request.forms.get('trade_license_no')
-
-    errors = []
-
-    if not vendor_name:
-        errors.append("Vendor name is required.")
-    if not contact:
-        errors.append("Contact is required.")
-    if not vendor_address:
-        errors.append("Vendor Address is required")
-    if not trade_license_no:
-        errors.append("Trade License Number is required")
-
-    if vendor_name and db(db.vendor.vendor_name == vendor_name).count() > 0:
-        errors.append(f"Vendor '{vendor_name}' already exists.")
-
-    if errors:
-        flash.set(' | '.join(errors), 'warning')
-        redirect(URL('vendor/create'))
-
-    db.vendor.insert(
-        vendor_name=vendor_name,
-        contact=contact,
-        vendor_address=vendor_address,
-        trade_license_no=trade_license_no
-    )
-
-    flash.set("Vendor created successfully!", 'success')
-    redirect(URL('vendor/index'))
-
-
-
-@action('vendor/edit')
-@action.uses('vendor/edit.html', db, session, flash)
-def vendor_edit():
-    vendor_id = request.query.get('id')
-    if not vendor_id:
-        flash.set("Invalid request. Vendor ID is required.", 'danger')
-        redirect(URL('vendor/index'))
-
-    record = db.vendor[ vendor_id ]
-    if not record:
-        flash.set("Vendor not found.", 'warning')
-        redirect(URL('vendor/index'))
-
-    return dict(record=record)
-
-
-
-@action('vendor/update', method=['POST'])
-@action.uses(db, session, flash)
-def vendor_update():
-    vendor_id = request.query.get('id')
-    if not vendor_id:
-        flash.set("Invalid request. Vendor ID is required.", 'danger')
-        redirect(URL('vendor/index'))
-
-    record = db.vendor[ vendor_id ]
-    if not record:
-        flash.set("Vendor not found.", 'warning')
-        redirect(URL('vendor/index'))
-
-    vendor_name = request.forms.get('vendor_name')
-    contact = request.forms.get('contact')
-    vendor_address = request.forms.get('vendor_address')
-    trade_license_no = request.forms.get('trade_license_no')
-
+def validate_vendor_data(vendor_name, contact, vendor_address, trade_license_no):
+    """Validate vendor form data."""
     errors = []
     if not vendor_name:
         errors.append("Vendor name is required.")
@@ -98,45 +24,122 @@ def vendor_update():
         errors.append("Vendor Address is required.")
     if not trade_license_no:
         errors.append("Trade License Number is required.")
+    return errors
 
-    if vendor_name and db((db.vendor.vendor_name == vendor_name) & (db.vendor.id != vendor_id)).count() > 0:
-        errors.append(f"Vendor '{vendor_name}' already exists.")
+
+def vendor_exists(vendor_name, vendor_address, exclude_id=None):
+    """Check if a vendor with same name + address exists."""
+    query = (db.vendor.vendor_name == vendor_name) & (db.vendor.vendor_address == vendor_address)
+    if exclude_id:
+        query &= (db.vendor.id != exclude_id)
+    return db(query).count() > 0
+
+
+def get_vendor_or_redirect(vendor_id):
+    """Fetch vendor record or redirect if not found."""
+    if not vendor_id or not str(vendor_id).isdigit():
+        flash_redirect("Invalid request. Vendor ID is required.", "danger", "vendor/index")
+    record = db.vendor[vendor_id]
+    if not record:
+        flash_redirect("Vendor not found.", "warning", "vendor/index")
+    return record
+
+
+
+
+
+# ---------------- Vendor Actions ---------------- #
+# ---------------- Vendor Actions ---------------- #
+# ---------------- Vendor Actions ---------------- #
+
+@action('vendor/index')
+@action.uses("vendor/index.html", session, flash)
+def vendor_index():
+    return locals()
+
+
+@action('vendor/create')
+@action.uses("vendor/create.html", session, flash)
+def vendor_create():
+    return locals()
+
+
+@action('vendor/submit', method=['POST'])
+@action.uses(db, session, T, flash)
+def submit_vendor_data():
+    vendor_name = (request.forms.get('vendor_name') or '').strip()
+    contact = (request.forms.get('contact') or '').strip()
+    vendor_address = (request.forms.get('vendor_address') or '').strip()
+    trade_license_no = (request.forms.get('trade_license_no') or '').strip()
+    status = request.forms.get('status', 'inactive').strip()
+
+    errors = validate_vendor_data(vendor_name, contact, vendor_address, trade_license_no)
+
+    if vendor_exists(vendor_name, vendor_address):
+        errors.append(f"Vendor '{vendor_name}' with the same address already exists.")
 
     if errors:
-        flash.set(' | '.join(errors), 'warning')
-        redirect(URL('vendor/edit', vars=dict(id=vendor_id)))
+        flash_redirect(' | '.join(errors), 'warning', 'vendor/create')
+
+    db.vendor.insert(
+        vendor_name=vendor_name,
+        contact=contact,
+        vendor_address=vendor_address,
+        trade_license_no=trade_license_no,
+        status=status
+    )
+
+    flash_redirect("Vendor created successfully!", 'success', 'vendor/index')
+
+
+@action('vendor/edit')
+@action.uses('vendor/edit.html', db, session, flash)
+def vendor_edit():
+    vendor_id = request.query.get('id')
+    record = get_vendor_or_redirect(vendor_id)
+    return dict(record=record)
+
+
+@action('vendor/update', method=['POST'])
+@action.uses(db, session, flash)
+def vendor_update():
+    vendor_id = request.query.get('id')
+    record = get_vendor_or_redirect(vendor_id)
+
+    vendor_name = (request.forms.get('vendor_name') or '').strip()
+    contact = (request.forms.get('contact') or '').strip()
+    vendor_address = (request.forms.get('vendor_address') or '').strip()
+    trade_license_no = (request.forms.get('trade_license_no') or '').strip()
+    status = request.forms.get('status', 'inactive').strip()
+
+    errors = validate_vendor_data(vendor_name, contact, vendor_address, trade_license_no)
+
+    if vendor_exists(vendor_name, vendor_address, exclude_id=vendor_id):
+        errors.append(f"Vendor '{vendor_name}' with the same address already exists.")
+
+    if errors:
+        flash_redirect(' | '.join(errors), 'warning', 'vendor/edit', vars=dict(id=vendor_id))
 
     record.update_record(
         vendor_name=vendor_name,
         contact=contact,
         vendor_address=vendor_address,
-        trade_license_no=trade_license_no
+        trade_license_no=trade_license_no,
+        status=status
     )
 
-    flash.set("Vendor updated successfully!", 'success')
-    redirect(URL('vendor/index'))
-
+    flash_redirect("Vendor updated successfully!", 'success', 'vendor/index')
 
 
 @action('vendor/get_data', method=['GET'])
 @action.uses(db)
 def get_vendor_data():
-    vendor_name = request.query.get('vendor_name', '').strip()
-    address = request.query.get('address', '').strip()
-
-    where_clauses = ["1=1"]
-
-    if vendor_name:
-        where_clauses.append(f"vendor_name LIKE '%{vendor_name}%'")
-
-    if address:
-        where_clauses.append(f"vendor_address LIKE '%{address}%'")
-
-    where_sql = " AND ".join(where_clauses)
-
+    vendor_name = (request.query.get('vendor_name') or '').strip()
+    address = (request.query.get('address') or '').strip()
     start = int(request.query.get('start') or 0)
     length = int(request.query.get('length') or 15)
 
+    # Sorting
     sort_col_index = request.query.get('order[0][column]')
     if sort_col_index is None:
         sort_col_name = 'id'
@@ -148,24 +151,24 @@ def get_vendor_data():
         if sort_dir not in ['asc', 'desc']:
             sort_dir = 'desc'
 
-    total_sql = f"""
-        SELECT COUNT(*) AS total 
-        FROM vendor
-        WHERE {where_sql}
-    """
+    # Build dynamic WHERE clause using raw SQL
+    where_clauses = ["1=1"]
+    if vendor_name:
+        where_clauses.append(f"vendor_name LIKE '%{vendor_name}%'")
+    if address:
+        where_clauses.append(f"vendor_address LIKE '%{address}%'")
+    where_sql = " AND ".join(where_clauses)
+
+    total_sql = f"SELECT COUNT(*) AS total FROM vendor WHERE {where_sql}"
     total_rows = db.executesql(total_sql, as_dict=True)[0]['total']
 
     base_sql = f"""
-        SELECT id, cid, vendor_name, contact, vendor_address,
-               trade_license_no
+        SELECT id, vendor_name, contact, vendor_address, trade_license_no, status
         FROM vendor
         WHERE {where_sql}
         ORDER BY {sort_col_name} {sort_dir}
+        LIMIT {length} OFFSET {start}
     """
-
-    if length != -1:
-        base_sql += f" LIMIT {length} OFFSET {start}"
-
     data = db.executesql(base_sql, as_dict=True)
 
     return dict(
@@ -180,29 +183,18 @@ def get_vendor_data():
 @action.uses(db, session, T, flash)
 def delete_vendor():
     vendor_id = request.query.get('id')
-
-    if not vendor_id or not vendor_id.isdigit():
-        flash.set('Invalid request: No ID provided.', 'danger')
-        redirect(URL('vendor/index'))
-
-    vendor = db.vendor(vendor_id)
-    if not vendor:
-        flash.set('Vendor not found.', 'danger')
-        redirect(URL('vendor/index'))
+    vendor = get_vendor_or_redirect(vendor_id)
 
     linked_purchases = db(db.purchase_head.vendor_id == int(vendor_id)).count()
     if linked_purchases > 0:
-        flash.set(
+        flash_redirect(
             f"Cannot delete vendor (linked to {linked_purchases} purchase(s)).",
-            'warning'
+            'warning',
+            'vendor/edit',
+            vars=dict(id=vendor_id)
         )
-        redirect(URL('vendor/edit', vars=dict(id=vendor_id)))
 
     vendor.delete_record()
-
-    flash.set('Vendor deleted successfully.', 'success')
-    redirect(URL('vendor/index'))
-
-
+    flash_redirect('Vendor deleted successfully.', 'success', 'vendor/index')
 
 

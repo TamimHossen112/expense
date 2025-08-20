@@ -24,14 +24,14 @@ def get_user_id():
 cid='SKF'
 #---------------------start EXPENSE Tables---------------------
 signature=db.Table(db,'signature',
-                Field('field1','string',length=100,default=''), 
-                Field('field2','integer',default=0),
-                Field('note','string',length=255,default=''),  
-                Field('created_on','datetime',default=date_fixed),
-                Field('created_by',default=get_user_id),
-                Field('updated_on','datetime',update=date_fixed),
-                Field('updated_by',update=get_user_id),
-                )
+    Field('field1','string',length=100,default=''), 
+    Field('field2','integer',default=0),
+    Field('note','string',length=255,default=''),  
+    Field('created_on','datetime',default=date_fixed),
+    Field('created_by',default=get_user_id),
+    Field('updated_on','datetime',update=date_fixed),
+    Field('updated_by',update=get_user_id),
+)
 
 #################### Expense Tables Start #####################
 
@@ -42,6 +42,7 @@ db.define_table('vendor',
     Field('contact', 'string', length=255),
     Field('vendor_address', 'string', length=255),
     Field('trade_license_no', 'string', length=100),
+    Field('status', 'string', length=20, default='active', requires=IS_IN_SET(['active', 'inactive'])),
     signature,
     migrate=False
 )
@@ -51,8 +52,8 @@ db.define_table('asset_master',
     Field('asset_type', 'string',length=100),
     Field('asset_brand', 'string',length=100),
     Field('asset_model', 'string',length=100),
-    Field('asset_status', 'string',length=100),
     Field('asset_desc','string', length=1000),
+    Field('status', 'string', length=20, default='active', requires=IS_IN_SET(['active', 'inactive'])),
     signature,
     migrate=False
 )
@@ -68,6 +69,7 @@ db.define_table('combo_settings',
 # Requisition Table
 db.define_table('requisition',
     Field('cid', 'string', length=20, default=cid),
+    Field('req_id', 'string', length=100),
     Field('asset_type', 'string', length=100),
     Field('emp_id', 'string', length=100),
     Field('emp_name', 'string', length=100),
@@ -85,6 +87,7 @@ db.define_table('requisition',
     Field('gm_approval', 'string', default='no',requires=IS_IN_SET(['yes', 'no'])),
     Field('hr_approval', 'string', default='no',requires=IS_IN_SET(['yes', 'no'])),
     Field('ed_approval', 'string', default='no',requires=IS_IN_SET(['yes', 'no'])),
+    Field('req_status', 'string', default='pending', requires=IS_IN_SET(['pending', 'approved'])),
     signature,
     migrate=False
 )
@@ -92,15 +95,17 @@ db.define_table('requisition',
 # Purchase Head Table
 db.define_table('purchase_head',
     Field('cid', 'string', length=20, default=cid),
+    Field('purchase_head_id', 'string', length=100),
     Field('req_id', 'integer', length=11,default=0),
-    Field('purchase_id', 'integer', length=11,default=0),
     Field('vendor_id', 'integer',length=11,default=0),
     Field('vendor_name', 'string', length=255),
     Field('bill_no', 'string', length=100),
     Field('total_price', 'float'),
     Field('total_discount', 'float'),
+    Field('total_payable', 'float'),
     Field('payment_type', 'string', length=100),
-    Field('recived_date', 'date'),
+    Field('purchase_date', 'date'),
+    Field('received_date', 'date'),
     Field('payment_status', 'string', length=100),
     Field('purchase_status', 'string', length=100),
     Field('remarks', 'string', length=500),
@@ -111,32 +116,34 @@ db.define_table('purchase_head',
 # Purchase Details Table
 db.define_table('purchase_details',
     Field('cid', 'string', length=20, default=cid),
-    Field('head_id', 'integer', length=11, default=0 ),
-    Field('purchase_id', 'integer', length=11,default=0),
-    Field('req_id', 'integer', length=11,default=0),
+    Field('purchase_head_id', 'string', length=100),
+    Field('purchase_details_id', 'string', length=100),
+    Field('req_id', 'string', length=100),
     Field('asset_type', 'string', length=100),
-    Field('asset_name', 'string', length=255),
-    Field('asset_desc', 'string', length=500),
+    Field('asset_brand', 'string', length=255),
+    Field('asset_model', 'string', length=500),
     Field('purchase_date', 'date'),
-    Field('recived_date', 'date'),
+    Field('receive_status', 'string', length=100),
+    Field('received_date', 'date'),
     Field('item_price', 'float'),
     Field('item_discount', 'float'),
-    Field('payment_type', 'string', length=100),
-    Field('payment_status', 'string', length=100),
-    Field('purchase_status', 'string', length=100),
+    Field('asset_created', 'integer', default=0),
     signature,
-    migrate=False
+    migrate=True
 )
 
 # Asset Table
 db.define_table('asset',
     Field('cid', 'string', length=20, default=cid),
-    Field('asset_id', 'integer', length=11, default=0),
-    Field('purchase_id', 'integer', length=11, default=0),
+    Field('asset_id', 'string', length=100),
+    Field('purchase_head_id', 'string', length=100),
+    Field('purchase_details_id', 'string', length=100),
+    Field('req_id', 'string', length=100),
     Field('asset_type', 'string', length=100),
+    Field('asset_model', 'string', length=255),
+    Field('asset_brand', 'string', length=255),
     Field('asset_name', 'string', length=255),
     Field('asset_desc', 'string',length=500),
-    Field('asset_model', 'string', length=255),
     Field('model_year', 'string', length=100),
     Field('reg_number', 'string', length=100),
     Field('engine_number', 'string', length=100),
@@ -153,32 +160,6 @@ db.define_table('asset',
     migrate=False
 )
 
-# # Asset Details Table      ----------------LATERRRRRRRRRRRRRRR----------------
-# db.define_table('asset_details',
-#     Field('cid', 'string', length=20, default=cid),
-#     Field('asset_id', 'integer', length=11, default=0),
-#     Field('sl', 'integer'),
-#     Field('key', 'string', length=255),
-#     Field('caption', 'string', length=255),
-#     Field('value', 'string', length=255),
-#     signature,
-#     migrate=False
-# )
-
-# # Asset Document Table
-# db.define_table('asset_doc',
-#     Field('cid', 'string', length=20, default=cid),
-#     Field('asset_id', 'integer',length=11, default=0),
-#     Field('doc_id', 'integer', length=11, default=0),
-#     Field('doc_type', 'string', length=100),
-#     Field('file_name', 'string', length=255),
-#     Field('file_path', 'string', length=255),
-#     Field('doc_expire_date', 'date'),
-#     Field('ref_emp_id', 'string', length=11, default=0),
-#     Field('status', 'string', length=100),
-#     signature,
-#     migrate=False
-# )
 
 db.define_table('doc_metadata',
     Field('cid', 'string', length=20, default=cid),
@@ -236,6 +217,33 @@ db.define_table('tr_details',
     migrate=False
 )
 
+
+# # Asset Details Table      ----------------LATERRRRRRRRRRRRRRR----------------
+# db.define_table('asset_details',
+#     Field('cid', 'string', length=20, default=cid),
+#     Field('asset_id', 'integer', length=11, default=0),
+#     Field('sl', 'integer'),
+#     Field('key', 'string', length=255),
+#     Field('caption', 'string', length=255),
+#     Field('value', 'string', length=255),
+#     signature,
+#     migrate=False
+# )
+
+# # Asset Document Table
+# db.define_table('asset_doc',
+#     Field('cid', 'string', length=20, default=cid),
+#     Field('asset_id', 'integer',length=11, default=0),
+#     Field('doc_id', 'integer', length=11, default=0),
+#     Field('doc_type', 'string', length=100),
+#     Field('file_name', 'string', length=255),
+#     Field('file_path', 'string', length=255),
+#     Field('doc_expire_date', 'date'),
+#     Field('ref_emp_id', 'string', length=11, default=0),
+#     Field('status', 'string', length=100),
+#     signature,
+#     migrate=False
+# )
 
 #*******************start combo_settings Tables*******************
 # db.define_table('combo_settings',

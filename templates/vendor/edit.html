@@ -74,6 +74,20 @@
                             <input type="text" id="trade_license_no" name="trade_license_no" value="[[=record['trade_license_no']]]" class="form-control form-control-sm" required>
                         </div>
                     </div>
+
+                    <div class="col-md-4">
+                        <div class="mb-3 ">
+                            <label for="status" class="form-label">Status</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" value="active" id="status" name="status" disabled
+                                [[if record.status=='active':]] checked [[pass]]>
+                                <label class="form-check-label" for="status">
+                                Active
+                                </label>
+                            </div>
+                        </div>                   
+                    </div>
+
                 </div>
 
                 <div class="row d-none" id="edit_view_section">
@@ -100,7 +114,5 @@
 [[end]]
 
 [[block scripts]]
-<script>
-   
-</script>
+
 [[end]]

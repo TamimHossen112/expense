@@ -7,9 +7,19 @@
 
 [[block content]]
 
+<!-- <style>
+    .asset-type-column {
+        min-width: 100px;
+        max-width: 140px;      /* set max width as you want */
+        white-space: normal !important;  /* allow wrapping */
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        vertical-align: middle;
+    }
+</style> -->
+
 <div class="container-section mx-2">
     <div class="row">
-<div></div>
         <!-- Filter label -->
         <div class="col-md-1 mt-2 mb-2">
             <span class="icon-text icon-text-bold">
@@ -21,26 +31,33 @@
         <!-- Filter form -->
         <div class="col-md-9 mt-2">
             <div class="row" id="custom_form" style="display: none;">
-                
                 <div class="col-md-2 mb-2">
                     <div class="">
-                        <select class="form-select form-select-sm select_custom" name="asset_type"  placeholder="Select Asset">
+                        <select class="form-select form-select-sm select_custom" name="req_status"  placeholder="Req Status">
+                            <option value="">Req Status</option>
+                        </select>
+                    </div>   
+                </div>
+
+                <div class="col-md-2 mb-2">
+                    <div class="">
+                        <select class="form-select form-select-sm select_custom" name="asset_type"  placeholder="Asset Type">
                             <option value="">Select Asset</option>
                         </select>
                     </div>   
                 </div>
 
-                <div class="col-md-3 mb-2">
+                <div class="col-md-2 mb-2">
                     <div class="">
-                        <select class="form-select form-select-sm select_custom" name="emp_id" placeholder="Select Employee">
+                        <select class="form-select form-select-sm select_custom" name="emp_id" placeholder="Employee">
                             <option value="">Select Employee</option>
                         </select>
                     </div>
                 </div>
 
-                <div class="col-md-3 mb-2">
+                <div class="col-md-2 mb-2">
                     <div class="">
-                        <input type="text" name="head_office" class="form-control form-control-sm" placeholder="Search Head Office">
+                        <input type="text" name="head_office" class="form-control form-control-sm" placeholder="Head Office">
                     </div>
                 </div>
 
@@ -94,27 +111,36 @@
 [[block scripts]]
 <script>
     $(document).ready(function () {
-        // Load select2 data on first open
-        $("[name='asset_type']").one('select2:open', function (e) {
+        $("[name='req_status']").one('select2:open', function (e) {
             $.ajax({
-                url: '[[=URL("default", "get_asset_type_brand_models")]]',
+                url: '[[=URL("default", "get_combo_values")]]?key=requisition_status',
                 method: 'GET',
                 dataType: 'json',
                 success: function (data) {
-                    const formatted = data.results.map(row => {
-                        const text = `${row.asset_type || ''}`;
-                        return { id: text, text: text };
-                    });
+                    const formatted = data.results.map(row => ({ id: row.id, text: row.text }));
+                    const $select = $("[name='req_status']");
+                    $select.empty();
+                    $select.select2({ data: formatted, placeholder: "Requisition Status", allowClear: true }).select2('open');
+                }
+            });
+        });
 
+        $("[name='asset_type']").one('select2:open', function (e) {
+            $.ajax({
+                url: '[[=URL("default", "get_asset_master_types")]]',
+                method: 'GET',
+                dataType: 'json',
+                success: function (data) {
                     const $select = $("[name='asset_type']");
                     $select.empty();
 
                     $select.select2({
-                        data: formatted,
+                        data: data.results, // already in correct {id, text} format
                         placeholder: "Select Asset Type",
                         allowClear: true
                     }).select2('open');
                 }
+
             });
         });
 
@@ -143,7 +169,6 @@
         });
 
 
-        // Toggle filter form
         $("#filter").click(function () {
             $("#custom_form").fadeToggle("slow");
         });
@@ -157,11 +182,11 @@
                     title: 'Requisition Data',
                     filename: 'Requisition_Data',
                     exportOptions: {
-                        columns: [0, 1, 2, 3, 4]
+                        columns: [0, 1, 2, 3, 4, 5, 6, 7]
                     },
                 }
             ],
-            order: [0, 'desc'],
+            order: [8, 'desc'],
             searching: false,
             paging: true,
             serverSide: true,
@@ -182,6 +207,7 @@
                 type: 'GET',
                 url: '[[=URL("requisition", "get_data")]]',
                 data: function (d) {
+                    d.req_status = $("select[name='req_status']").val();
                     d.asset_type = $("select[name='asset_type']").val();
                     d.emp_id = $("select[name='emp_id']").val();
                     d.head_office = $("input[name='head_office']").val();
@@ -194,13 +220,36 @@
                         return meta.row + 1;
                     }
                 },
-                { title: 'CID', data: 'cid', render: d => d ?? '-' },
-                { title: 'Asset Type', data: 'asset_type', render: d => d ?? '-' },
-                { title: 'Employee ID', data: 'emp_id', render: d => d ?? '-' },
-                { title: 'Employee Name', data: 'emp_name', render: d => d ?? '-' },
-                { title: 'Designation', data: 'designation', render: d => d ?? '-' },
-                { title: 'TR Code', data: 'tr_code', render: d => d ?? '-' },
+                { title: 'Req Id', data: 'req_id', render: d => d ?? '-' },
+                {
+                    title: 'Status',
+                    data: 'req_status',
+                    render: function(data, type, row) {
+                        const status = data?.toLowerCase() === 'approved' ? 'approved' : 'pending';
+                        const colorClass = status === 'approved' ? 'bg-success' : 'bg-warning text-dark';
+                        const text = status === 'approved' ? 'APPROVED' : 'PENDING';
+
+                        return `<div style="display:flex; justify-content:center; align-items:center; height:100%;">
+                                <div class="badge ${colorClass} fw-bold" style="min-width: 60px; text-align:center; display:inline-block;">
+                                    ${text}
+                                </div>
+                                </div>`;
+                    }
+                },
+                { title: 'Asset Type', data: 'asset_type', className: 'asset-type-column', render: d => d ?? '-' },
+                {
+                    title: 'Emp ID | EMP Name | Designation',
+                    data: null,
+                    render: function(data, type, row) {
+                        const emp_id = row.emp_id ?? '';
+                        const emp_name = row.emp_name ?? '';
+                        const designation = row.designation ?? '';
+                        if (!emp_id && !emp_name && !designation) return '-';
+                        return `${emp_id} | ${emp_name} | ${designation}`;
+                    }
+                },
                 { title: 'Head Office', data: 'head_office', render: d => d ?? '-' },
+                { title: 'TR Code', data: 'tr_code', render: d => d ?? '-' },
                 { title: 'Joining Date', data: 'joining_date', render: d => d ?? '-' },
                 {
                     title: '', data: 'id', render: function (data) {
@@ -223,9 +272,10 @@
         // Filter reset
         $("#reset").click(function (e) {
             e.preventDefault();
+            $("select[name='req_status']").val(null).trigger('change')
             $("select[name='asset_type']").val(null).trigger('change');
-            $("select[name='emp_id']").val('');
-            $("input[name='head_office']").val('');
+            $("select[name='emp_id']").val(null).trigger('change');
+            $("input[name='head_office']").val('').trigger('change');
             table.ajax.reload();
         });
     });

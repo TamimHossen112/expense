@@ -68,7 +68,7 @@ pass
               </a>
           </li>
 
-          <li class="menu-item sub-menu [[if _controller_name in ['category','page_setup','press_setup','ctp_setup']:]]open[[pass]]">
+          <li class="menu-item sub-menu [[if _controller_name in ['transaction_config']:]]open[[pass]]">
             <a href="#">
               <span class="menu-icon">
                 <i class="fa-solid fa-network-wired"></i>
@@ -83,24 +83,6 @@ pass
                     <span class="menu-title">Transaction Config</span>
                   </a>
                 </li>
-                <!-- <li class="menu-item [[if _controller_name=='ctp_setup':]]active_link[[pass]]">
-                  <a href="[[=URL('ctp_setup/index')]]">
-                    <span class="menu-icon"><i class="fas fa-ad"></i></span>
-                    <span class="menu-title">CTP Setup</span>
-                  </a>
-                </li>  
-                <li class="menu-item [[if _controller_name=='press_setup':]]active_link[[pass]]">
-                  <a href="[[=URL('press_setup/index')]]">
-                    <span class="menu-icon"><i class="fas fa-ad"></i></span>
-                    <span class="menu-title">Press</span>
-                  </a>
-                </li> 
-                <li class="menu-item [[if _controller_name=='page_setup':]]active_link[[pass]]">
-                  <a href="[[=URL('page_setup/index')]]">
-                    <span class="menu-icon"><i class="fas fa-ad"></i></span>
-                    <span class="menu-title">Pages</span>
-                  </a>
-                </li>                -->
               </ul>
             </div>
           </li>
@@ -143,119 +125,77 @@ pass
           </li>
 
 
-          <li class="menu-item [[if _controller_name=='transaction':]]active_link[[pass]]">
-              <a href="[[=URL('transaction/index')]]">
-                  <span class="menu-icon">
-                      <i class="fa-solid fa-arrows-rotate"></i>
-                  </span>
-                  <span class="menu-title">Transaction</span>
-              </a>
-          </li>
-
-
-          <!-- <li class="menu-item sub-menu [[if _controller_name in ['sales_area','agent','employees','designation']:]]open[[pass]]">
+          <li class="menu-item sub-menu [[if _controller_name in ['allocation','transfer', 'ownership_transfer']:]]open[[pass]]">
             <a href="#">
               <span class="menu-icon">
                 <i class="fa-solid fa-network-wired"></i>
               </span>
-              <span class="menu-title">Agent & Employee</span>
+              <span class="menu-title">Movement</span>
             </a>
             <div class="sub-menu-list">
               <ul>
-                <li class="menu-item [[if _controller_name=='employees':]]active_link[[pass]]">
-                  <a href="[[=URL('employees/index')]]">
+                <li class="menu-item [[if _controller_name=='allocation':]]active_link[[pass]]">
+                  <a href="#">
                     <span class="menu-icon"><i class="fa-solid fa-warehouse"></i></span>
-                    <span class="menu-title">Employee Information</span>
+                    <span class="menu-title">Allocation</span>
+                  </a>
+                </li>
+              </ul>
+            </div>
+            <div class="sub-menu-list">
+              <ul>
+                <li class="menu-item [[if _controller_name=='transfer':]]active_link[[pass]]">
+                  <a href="#">
+                    <span class="menu-icon"><i class="fa-solid fa-warehouse"></i></span>
+                    <span class="menu-title">Transfer</span>
+                  </a>
+                </li>
+              </ul>
+            </div>
+            <div class="sub-menu-list">
+              <ul>
+                <li class="menu-item [[if _controller_name=='ownership_transfer':]]active_link[[pass]]">
+                  <a href="#">
+                    <span class="menu-icon"><i class="fa-solid fa-warehouse"></i></span>
+                    <span class="menu-title">Ownership Transfer</span>
                   </a>
                 </li>
               </ul>
             </div>
           </li>
-      
-          <li class="menu-item sub-menu [[if _controller_name in ['division','district','police_station','post_office','union','station','route','sub_route']:]]open[[pass]]">
+
+
+          <li class="menu-item sub-menu [[if _controller_name in ['incident','maintenance']:]]open[[pass]]">
             <a href="#">
               <span class="menu-icon">
-                <i class="fa-solid fa-route"></i>
+                <i class="fa-solid fa-network-wired"></i>
               </span>
-              <span class="menu-title"> Route Setup </span>
+              <span class="menu-title">Issues</span>
             </a>
+
             <div class="sub-menu-list">
               <ul>
-                
-                <li class="menu-item [[if _controller_name=='district':]]active_link[[pass]]">
-                  <a href="[[=URL('district/index')]]">
+                <li class="menu-item [[if _controller_name=='maintenance':]]active_link[[pass]]">
+                  <a href="#">
                     <span class="menu-icon"><i class="fa-solid fa-warehouse"></i></span>
-                    <span class="menu-title">District</span>
+                    <span class="menu-title">Maintenance</span>
                   </a>
                 </li>
-                
               </ul>
             </div>
-          </li>
-
-          
-          
-          <li class="menu-item sub-menu [[if _controller_name in ['unsold_reason','paper_list','population']:]]open[[pass]]">
-            <a href="#">
-              <span class="menu-icon">
-                <i class="fa-solid fa-gear"></i>
-              </span>
-              <span class="menu-title">Extra</span>
-            </a>
             <div class="sub-menu-list">
               <ul>
-                <li class="menu-item [[if _controller_name=='unsold_reason':]]active_link[[pass]]">
-                  <a href="[[=URL('unsold_reason/index')]]">
+                <li class="menu-item [[if _controller_name=='incident':]]active_link[[pass]]">
+                  <a href="#">
                     <span class="menu-icon"><i class="fa-solid fa-warehouse"></i></span>
-                    <span class="menu-title">Reason Of Unsold</span>
-                  </a>
-                </li>
-                
-              </ul>
-            </div>
-          </li>
-
-
-          <li class="menu-header">
-            <span> Transaction </span>
-          </li>
-          <li class="menu-item sub-menu [[if _controller_name in ['order_entry','classified']:]]open[[pass]]">
-            <a href="#">
-              <span class="menu-icon">
-                <i class="fa-solid fa-bag-shopping"></i>
-              </span>
-              <span class="menu-title">Order</span>
-            </a>
-            <div class="sub-menu-list">
-              <ul>   
-                <li class="menu-item [[if _controller_name=='order_entry':]]active_link[[pass]]">
-                  <a href="[[=URL('order_entry/index')]]">
-                    <span class="menu-icon"><i class="fa-solid fa-warehouse"></i></span>
-                    <span class="menu-title">Order</span>
-                  </a>
-                </li>
-          
-                
-              </ul>
-            </div>
-          </li> -->
-
-          
-          <!-- <li class="menu-header">
-            <span> Report </span>
-          </li>
-          <li class="menu-item">
-            <div class="sub-menu-list">
-              <ul>
-                <li class="menu-item [[if _controller_name=='supplement_discount':]]active_link[[pass]]">
-                  <a href="[[=URL('supplement_discount/index')]]">
-                    <span class="menu-icon"><i class="fa-solid fa-percentage"></i></span>
-                    <span class="menu-title">Report 1</span>
+                    <span class="menu-title">Incident</span>
                   </a>
                 </li>
               </ul>
             </div>
-          </li>  -->
+
+            
+          </li>
 
         </ul>
       </nav>

@@ -1,0 +1,197 @@
+[[extend 'layout.html']]
+
+[[block header]]
+[[icon='fa-solid fa-cogs']]
+[[breadcamp = 'Transaction Config']]
+[[end]]
+
+[[block content]]
+<div class="container-section mx-2">
+    <div class="row">
+
+        <div class="col-md-1 mt-2 mb-2">
+            <span class="icon-text icon-text-bold">
+                <i class="fa-solid fa-table-list"></i>
+                <span>Table</span>
+            </span>
+        </div>
+
+        <div class="col-md-9 mt-2">
+            <div class="row" id="custom_form" style="display: none;">
+
+                <div class="col-md-3 mb-2">
+                    <select class="form-select form-select-sm select_custom" name="tr_type" placeholder="Transaction Type">
+                        <option value="">Select Transaction Type</option>
+                    </select>
+                </div>
+
+                <div class="col-md-3 mb-2">
+                    <input type="text" class="form-control form-control-sm" name="section" placeholder="Section">
+                </div>
+
+                <div class="col-md-3 mb-2">
+                    <input type="text" class="form-control form-control-sm" name="key" placeholder="Key">
+                </div>
+
+                <div class="col-md-3 mb-2">
+                    <select class="form-select form-select-sm select_custom" name="value_type" placeholder="Value Type">
+                        <option value="">Select Value Type</option>
+                    </select>
+                </div>
+
+                <div class="col-md-6 mb-2 d-flex justify-content-end">
+                    <div class="me-2">
+                        <button type="submit" id="submit" class="btn btn-sm btn-primary" style="width:90px;">
+                            <i class="fa-solid fa-magnifying-glass"></i> <span class="ms-2">Search</span>
+                        </button>
+                    </div>
+                    <div style="margin-right:15px;">
+                        <button type="reset" id="reset" class="btn btn-sm btn-light" style="width:90px;">
+                            <i class="fa-solid fa-retweet"></i> <span class="ms-2">Reset</span>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="col-md-2 mt-2 mb-2">
+            <div class="d-flex justify-content-end">
+                <div class="me-2">
+                    <button type="button" id="filter" class="btn btn-sm btn-light" style="width:90px;">
+                        <i class="fa-solid fa-filter"></i> <span class="ms-2">Filter</span>
+                    </button>
+                </div>
+                <div class="dropdown">
+                    <button class="btn btn-primary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown"
+                        aria-expanded="false" style="width:90px;">
+                        Action
+                    </button>
+                    <div class="dropdown-menu">
+                        <a class="dropdown-item" href="[[=URL('transaction_config/create')]]">
+                            <i class="fas fa-add me-1"></i> Add
+                        </a>
+                        <button class="dropdown-item" id="ExportExcel">
+                            <i class="fas fa-file-excel me-1"></i> Excel
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="table-responsive">
+        <table id="myTable" class="table table-bordered compact" style="width:100%">
+            <thead class="text-truncate"></thead>
+            <tbody></tbody>
+        </table>
+    </div>
+</div>
+[[end]]
+
+[[block scripts]]
+<script>
+$(document).ready(function() {
+    // Toggle filter form
+    $("#filter").click(function() {
+        $("#custom_form").fadeToggle("slow");
+    });
+
+    // Populate tr_type and value_type selects on first open
+    $("[name='tr_type']").one('select2:open', function() {
+        $.getJSON('[[=URL("transaction_config","get_tr_type_list")]]', function(data) {
+            $("[name='tr_type']").select2({
+                data: data.results,
+                placeholder: "Select Transaction Type",
+                allowClear: true,
+                tags: true
+            }).select2('open');
+        });
+    });
+
+    $("[name='value_type']").one('select2:open', function() {
+        $.getJSON('[[=URL("transaction_config","get_value_type_list")]]', function(data) {
+            $("[name='value_type']").select2({
+                data: data.results,
+                placeholder: "Select Value Type",
+                allowClear: true,
+                tags: true
+            }).select2('open');
+        });
+    });
+
+    // Initialize DataTable
+    var table = $('#myTable').DataTable({
+        dom: "Bfrt<'d-flex justify-content-between'<l><i><p>>",
+        buttons: [{
+            extend: 'excel',
+            title: 'Transaction Config Data',
+            filename: 'Transaction_Config_Data',
+            exportOptions: { columns: ':visible' }
+        }],
+        order: [0, 'desc'],
+        searching: false,
+        paging: true,
+        serverSide: true,
+        scrollX: true,
+        scrollY: "413px",
+        fixedHeader: true,
+        fixedColumns: { left: 1, right: 1 },
+        lengthMenu: [
+            [15, 50, 100, -1],
+            [15, 50, 100, 'All']
+        ],
+        ajax: {
+            async: true,
+            type: 'GET',
+            url: '[[=URL("transaction_config","get_data")]]',
+            data: function(d) {
+                d.tr_type = $("select[name='tr_type']").val();
+                d.section = $("input[name='section']").val();
+                d.key = $("input[name='key']").val();
+                d.value_type = $("select[name='value_type']").val();
+            },
+            dataSrc: 'data'
+        },
+        columns: [
+            { title: 'SL No.', data: null, render: function(data, type, row, meta) {
+                return meta.row + 1;
+            }},
+            { title: 'Transaction Type', data: 'tr_type', render: d => d ?? '-' },
+            { title: 'SL', data: 'sl', render: d => d ?? '-' },
+            { title: 'Section', data: 'section', render: d => d ?? '-' },
+            { title: 'Order', data: 'order', render: d => d ?? '-' },
+            { title: 'Key', data: 'key', render: d => d ?? '-' },
+            { title: 'Caption', data: 'caption', render: d => d ?? '-' },
+            { title: 'Value', data: 'value', render: d => d ?? '-' },
+            { title: 'Value Type', data: 'value_type', render: d => d ?? '-' },
+            { title: 'Source API', data: 'source_api', render: d => d ?? '-' },
+            { title: 'Value List', data: 'value_list', render: d => d ?? '-' },
+            { title: 'Default Value', data: 'default_value', render: d => d ?? '-' },
+            {
+                title: '', data: 'id', render: function(id) {
+                    return `<a class="text-secondary" href="[[=URL('transaction_config/edit')]]?id=${id}" title="Edit"><i class="fas fa-edit"></i></a>`;
+                }
+            }
+        ]
+    });
+
+    // Search button
+    $("#submit").click(function(e){
+        e.preventDefault();
+        table.ajax.reload();
+    });
+
+    // Reset button
+    $("#reset").click(function(e){
+        e.preventDefault();
+        $("select[name='tr_type']").val(null).trigger('change');
+        $("select[name='value_type']").val(null).trigger('change');
+        $("input[name='section']").val('');
+        $("input[name='key']").val('');
+        table.ajax.reload();
+    });
+});
+</script>
+[[end]]

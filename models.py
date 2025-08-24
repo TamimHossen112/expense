@@ -129,7 +129,7 @@ db.define_table('purchase_details',
     Field('item_discount', 'float'),
     Field('asset_created', 'integer', default=0),
     signature,
-    migrate=True
+    migrate=False
 )
 
 # Asset Table

@@ -65,10 +65,8 @@
                                 </select>
                             </div>
 
-                            <div class="mb-2">
-                                <label for="emp_name" class="form-label">Employee Name</label>
-                                <input type="text" class="form-control form-control-sm" id="emp_name" name="emp_name" value="[[=data['emp_name']]]" readonly>
-                            </div>
+                            <input type="hidden" class="form-control form-control-sm" id="emp_name" name="emp_name" value="[[=data['emp_name']]]" readonly>
+
 
                             <div class="mb-2">
                                 <label for="designation" class="form-label">Designation</label>
@@ -263,7 +261,7 @@
             if (prefill_emp_id) {
                 const $opt = $('<option>')
                     .val(prefill_emp_id)
-                    .text(`${prefill_emp_id} | ${prefill_emp_name} | ${prefill_designation} | ${prefill_head_office}`)
+                    .text(`${prefill_emp_id} | ${prefill_emp_name}`)
                     .attr('data-first', 'true')
                     .data({
                         empName: prefill_emp_name,

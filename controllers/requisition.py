@@ -1,5 +1,5 @@
 import json
-from py4web import action, request, redirect, URL
+from py4web import action, request, redirect, URL, response
 from ..common import db, session, T, flash
 from ..common_fn import IMAGE_UPLOAD_API, IMAGE_DOWNLOAD_API
 import datetime
@@ -328,3 +328,19 @@ def delete_requisition():
         flash.set(f'Error while deleting requisition: {str(e)}', 'danger')
 
     redirect(URL('requisition/index'))
+
+import requests
+@action("requisition/upload_expense_proxy", method=["POST"])
+@action.uses(IMAGE_UPLOAD_API)
+def upload_expense_proxy():
+    upload_file = request.files.get("upload_file")
+    if not upload_file:
+        response.status = 400
+        return {"error": "No file uploaded."}
+    files = {"upload_file": (upload_file.filename, upload_file.file, upload_file.content_type)}
+    r = requests.post(IMAGE_UPLOAD_API, files=files)
+    response.status = r.status_code
+    try:
+        return json.dumps(r.json())
+    except Exception:
+        return {"error": "Failed to parse response (not valid JSON)", "status_code": r.status_code, "raw_response": r.text}

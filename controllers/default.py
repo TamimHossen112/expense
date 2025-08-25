@@ -164,54 +164,70 @@ def get_combo_values():
     return dict(results=results)
 
 
+import requests
+import json
 
 # Employee details (static data)
 @action("default/get_employee_details")
 def get_employee_details():
-    employee_data = [
-        {
-            "employee_id": 1234,
-            "employee_name" : "HelloKitty",
-            "designation": "Sales Manager",
-            "territory_code": "T-102",
-            "head_office": "Dhaka",
-            "joining_date": "2022-05-10"
-        },
-        {
-            "employee_id": 1235,
-            "employee_name" : "Supaman",
-            "designation": "Marketing Executive",
-            "territory_code": "T-103",
-            "head_office": "Chittagong",
-            "joining_date": "2021-08-15"
-        },
-        {
-            "employee_id": 1236,
-            "employee_name" : "Botman",
-            "designation": "HR Officer",
-            "territory_code": "T-104",
-            "head_office": "Khulna",
-            "joining_date": "2020-02-01"
-        },
-        {
-            "employee_id": 1237,
-            "employee_name" : "Onana",
-            "designation": "Finance Analyst",
-            "territory_code": "T-105",
-            "head_office": "Sylhet",
-            "joining_date": "2023-01-20"
-        },
-        {
-            "employee_id": 1239,
-            "employee_name" : "Valentina",
-            "designation": "Project Coordinator",
-            "territory_code": "T-107",
-            "head_office": "Barishal",
-            "joining_date": "2022-07-30"
-        }
-    ]
+    # employee_data = [
+    #     {
+    #         "employee_id": 1234,
+    #         "employee_name" : "HelloKitty",
+    #         "designation": "Sales Manager",
+    #         "territory_code": "T-102",
+    #         "head_office": "Dhaka",
+    #         "joining_date": "2022-05-10"
+    #     },
+    #     {
+    #         "employee_id": 1235,
+    #         "employee_name" : "Supaman",
+    #         "designation": "Marketing Executive",
+    #         "territory_code": "T-103",
+    #         "head_office": "Chittagong",
+    #         "joining_date": "2021-08-15"
+    #     },
+    #     {
+    #         "employee_id": 1236,
+    #         "employee_name" : "Botman",
+    #         "designation": "HR Officer",
+    #         "territory_code": "T-104",
+    #         "head_office": "Khulna",
+    #         "joining_date": "2020-02-01"
+    #     },
+    #     {
+    #         "employee_id": 1237,
+    #         "employee_name" : "Onana",
+    #         "designation": "Finance Analyst",
+    #         "territory_code": "T-105",
+    #         "head_office": "Sylhet",
+    #         "joining_date": "2023-01-20"
+    #     },
+    #     {
+    #         "employee_id": 1239,
+    #         "employee_name" : "Valentina",
+    #         "designation": "Project Coordinator",
+    #         "territory_code": "T-107",
+    #         "head_office": "Barishal",
+    #         "joining_date": "2022-07-30"
+    #     }
+    # ]
+    
+
+    url = "https://uat.alpha.transcombd.com/mytranscom_UAT/test/get_employee_data_expense"
+
+    payload = json.dumps({
+    "cid": "SKF"
+    })
+    headers = {
+    'Content-Type': 'application/json',
+    'Cookie': 'session_id_mytranscom_uat=182.16.158.70-388e4b4b-3c3b-4adb-9358-4fbe0cda140d'
+    }
+
+    response = requests.request("GET", url, headers=headers, data=payload)
+
     response.headers['Content-Type'] = 'application/json'
-    return json.dumps(employee_data)
+    return json.loads(response.text)
 
 
 

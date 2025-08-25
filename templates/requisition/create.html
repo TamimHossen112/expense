@@ -275,7 +275,7 @@
             formData.append('upload_file', file);
 
             $.ajax({
-                url: IMAGE_UPLOAD_API,
+                url: "[[=URL('requisition','upload_expense_proxy')]]",
                 method: 'POST',
                 data: formData,
                 processData: false,
@@ -283,6 +283,7 @@
                 dataType: 'json'
             })
                 .done(function (data) {
+                    console.log(data);
                     if (data.res_data) {
                         const uploadedFileData = {
                             doc_type: docType, // Use value, not text
@@ -297,7 +298,7 @@
                             $('<td>').append(
                                 $('<button>', { class: 'btn btn-sm btn-info me-1', html: '<i class="fa-solid fa-download"></i>' })
                                     .on('click', function () {
-                                        window.open(`${IMAGE_DOWNLOAD_API}?company=expense&filename=${uploadedFileData.file_path}`, '_blank');
+                                        window.open(`${IMAGE_DOWNLOAD_API}/expense/${uploadedFileData.file_path}`, '_blank');
                                     }),
                                 $('<button>', { class: 'btn btn-sm btn-danger', html: '<i class="fa-solid fa-trash"></i>' })
                                     .on('click', function () {

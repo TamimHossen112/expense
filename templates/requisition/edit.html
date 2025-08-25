@@ -239,7 +239,7 @@
                 $('<td>').text(file.doc_type),
                 $('<td>').text(file.file_name),
                 $('<td>').append(
-                    `<a href="${IMAGE_DOWNLOAD_API}?company=expense&filename=${file.file_path}" class="btn btn-sm btn-primary me-1" ><i class="fa-solid fa-download"></i></a>`,
+                    `<a href="${IMAGE_DOWNLOAD_API}/expense/${file.file_path}" class="btn btn-sm btn-primary me-1" target="_blank"><i class="fa-solid fa-download"></i></a>`,
                     $('<button class="btn btn-sm btn-danger"><i class="fa-solid fa-trash"></i></button>').click(() => {
                         uploadedFiles.splice(i, 1);
                         populateTable(uploadedFiles);
@@ -335,7 +335,7 @@
             formData.append('upload_file', file);
 
             $.ajax({
-                url: IMAGE_UPLOAD_API,
+                url: "[[=URL('requisition','upload_expense_proxy')]]",
                 method: 'POST',
                 data: formData,
                 contentType: false,

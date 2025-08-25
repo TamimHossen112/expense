@@ -24,106 +24,66 @@
 
     <div class="container py-2">
         <form action="[[=URL('transaction_config','submit')]]" method="POST">
-            <div id="custom_form">
-                <div class="row g-3">
-
-                    <!-- Transaction Type -->
-                    <div class="col-md-3">
-                        <label for="tr_type" class="form-label"><strong>Transaction Type <span class="is_required">*</span></strong></label>
-                        <select class="form-select select_custom" id="tr_type" name="tr_type">
-                            <option value="">Select or add Transaction Type</option>
-                            [[for tr_type in tr_type_list:]]
-                                <option value="[[=tr_type]]">[[=tr_type]]</option>
-                            [[pass]]
-                        </select>
-                    </div>
-
-                    <!-- SL -->
-                    <div class="col-md-3">
-                        <label for="sl" class="form-label"><strong>SL</strong></label>
-                        <input type="number" class="form-control" id="sl" name="sl">
-                    </div>
-
-                    <!-- Section -->
-                    <div class="col-md-3">
-                        <label for="section" class="form-label"><strong>Section</strong></label>
-                        <input type="text" class="form-control" id="section" name="section">
-                    </div>
-
-                    <!-- Order -->
-                    <div class="col-md-3">
-                        <label for="order" class="form-label"><strong>Order</strong></label>
-                        <input type="number" class="form-control" id="order" name="order">
-                    </div>
-
-                    <!-- Key -->
-                    <div class="col-md-3">
-                        <label for="key" class="form-label"><strong>Key</strong></label>
-                        <input type="text" class="form-control" id="key" name="key">
-                    </div>
-
-                    <!-- Caption -->
-                    <div class="col-md-3">
-                        <label for="caption" class="form-label"><strong>Caption</strong></label>
-                        <input type="text" class="form-control" id="caption" name="caption">
-                    </div>
-
-                    <!-- Value -->
-                    <div class="col-md-3">
-                        <label for="value" class="form-label"><strong>Value</strong></label>
-                        <input type="text" class="form-control" id="value" name="value">
-                    </div>
-
-                    <!-- Value Type -->
-                    <div class="col-md-3">
-                        <label for="value_type" class="form-label"><strong>Value Type</strong></label>
-                        <select class="form-select select_custom" id="value_type" name="value_type">
-                            <option value="">Select or add Value Type</option>
-                            [[for vt in value_type_list:]]
-                                <option value="[[=vt]]">[[=vt]]</option>
-                            [[pass]]
-                        </select>
-                    </div>
-
-                    <!-- Source API -->
-                    <div class="col-md-3">
-                        <label for="source_api" class="form-label"><strong>Source API</strong></label>
-                        <input type="text" class="form-control" id="source_api" name="source_api">
-                    </div>
-
-                    <!-- Value List -->
-                    <div class="col-md-3">
-                        <label for="value_list" class="form-label"><strong>Value List</strong></label>
-                        <input type="text" class="form-control" id="value_list" name="value_list">
-                    </div>
-
-                    <!-- Default Value -->
-                    <div class="col-md-3">
-                        <label for="default_value" class="form-label"><strong>Default Value</strong></label>
-                        <input type="text" class="form-control" id="default_value" name="default_value">
-                    </div>
-
+            <!-- Transaction Type -->
+            <div class="row g-3 mb-3">
+                <div class="col-md-4">
+                    <label for="tr_type" class="form-label"><strong>Transaction Type <span class="is_required">*</span></strong></label>
+                    <select class="form-select select_custom" id="tr_type" name="tr_type">
+                        <option value="">Select or add Transaction Type</option>
+                        [[for tr_type in tr_type_list:]]
+                            <option value="[[=tr_type]]">[[=tr_type]]</option>
+                        [[pass]]
+                    </select>
                 </div>
+            </div>
 
-                <!-- Buttons -->
-                <div class="row mt-3">
-                    <div class="col-12">
-                        <div class="d-flex justify-content-start">
-                            <div class="me-2">
-                                <button type="submit" class="btn btn-sm btn-primary">
-                                    <i class="fa-regular fa-floppy-disk"></i> <span class="ms-2">Save</span>
-                                </button>
-                            </div>
-                            <div>
-                                <button type="reset" class="btn btn-sm btn-light">
-                                    <i class="fa-solid fa-retweet"></i> <span class="ms-2">Reset</span>
-                                </button>
-                            </div>
+            <!-- Entries Table -->
+            <div class="table-wrapper" style="overflow-x:auto;">
+                <table class="table table-bordered table-striped align-middle" id="entriesTable" style="min-width:1300px;">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Section</th>
+                            <th>Order</th>
+                            <th>Key</th>
+                            <th>Caption</th>
+                            <th>Value</th>
+                            <th>Value Type</th>
+                            <th>Source API</th>
+                            <th>Value List</th>
+                            <th>Default Value</th>
+                            <th class="text-center">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Rows will be added here dynamically -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="my-2">
+                <button type="button" class="btn btn-sm btn-success" id="addRow">
+                    <i class="fa-solid fa-plus"></i> Add Row
+                </button>
+            </div>
+
+            <!-- Buttons -->
+            <div class="row mt-3">
+                <div class="col-12">
+                    <div class="d-flex justify-content-start">
+                        <div class="me-2">
+                            <button type="submit" class="btn btn-sm btn-primary">
+                                <i class="fa-regular fa-floppy-disk"></i> <span class="ms-2">Save</span>
+                            </button>
+                        </div>
+                        <div>
+                            <button type="reset" class="btn btn-sm btn-light">
+                                <i class="fa-solid fa-retweet"></i> <span class="ms-2">Reset</span>
+                            </button>
                         </div>
                     </div>
                 </div>
-
             </div>
+
         </form>
     </div>
 </div>
@@ -134,13 +94,69 @@
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
+<style>
+    .table-wrapper {
+        overflow-x: auto;
+    }
+    #entriesTable input,
+    #entriesTable select {
+        width: 100%;
+        min-width: 120px;
+    }
+</style>
+
 <script>
 $(document).ready(function () {
     // Enable Select2 with tags for tr_type and value_type
-    $('#tr_type, #value_type').select2({
+    $('#tr_type').select2({
         tags: true,
         width: '100%',
         placeholder: "Select or add new"
+    });
+
+    let valueTypeOptions = `
+        <option value="">Select or add Value Type</option>
+        [[for vt in value_type_list:]]
+            <option value="[[=vt]]">[[=vt]]</option>
+        [[pass]]
+    `;
+
+    // Add new row
+    $('#addRow').on('click', function () {
+        let row = `
+        <tr>
+            <td><input type="text" class="form-control" name="section[]"></td>
+            <td><input type="number" class="form-control" name="order[]"></td>
+            <td><input type="text" class="form-control" name="key[]"></td>
+            <td><input type="text" class="form-control" name="caption[]"></td>
+            <td><input type="text" class="form-control" name="value[]"></td>
+            <td>
+                <select class="form-select value_type_select" name="value_type[]">
+                    ${valueTypeOptions}
+                </select>
+            </td>
+            <td><input type="text" class="form-control" name="source_api[]"></td>
+            <td><input type="text" class="form-control" name="value_list[]"></td>
+            <td><input type="text" class="form-control" name="default_value[]"></td>
+            <td class="text-center">
+                <button type="button" class="btn btn-sm btn-danger removeRow">
+                    <i class="fa-solid fa-trash"></i>
+                </button>
+            </td>
+        </tr>`;
+        $('#entriesTable tbody').append(row);
+
+        // Apply Select2 for new row's value_type
+        $('#entriesTable tbody tr:last .value_type_select').select2({
+            tags: true,
+            width: '100%',
+            placeholder: "Select or add new"
+        });
+    });
+
+    // Remove row
+    $(document).on('click', '.removeRow', function () {
+        $(this).closest('tr').remove();
     });
 });
 </script>

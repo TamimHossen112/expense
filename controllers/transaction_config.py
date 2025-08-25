@@ -18,53 +18,73 @@ def transaction_config_index():
 @action.uses("transaction_config/create.html", session, flash)
 def transaction_config_create():
     # Example lists for dropdowns
-    tr_type_list = ["Purchase", "Sale", "Adjustment"]
-    value_type_list = ["String", "Number", "Date", "Boolean"]
+    tr_type_list = ["Allocation", "Transfer", "Ownership Transfer", "Maintenance","Incident"]
+    value_type_list = ["integer", "string", "date", "dropdown"]
 
     return dict(tr_type_list=tr_type_list, value_type_list=value_type_list)
 
 
-# -----------------------------
-# Submit / Insert
-# -----------------------------
+
+
 @action('transaction_config/submit', method=['POST'])
 @action.uses(session, flash, db)
 def transaction_config_submit():
-    # Get form values
-    tr_type = request.forms.get('tr_type', '').strip()
-    sl = request.forms.get('sl') or None
-    section = request.forms.get('section', '').strip()
-    order = request.forms.get('order') or None
-    key = request.forms.get('key', '').strip()
-    caption = request.forms.get('caption', '').strip()
-    value = request.forms.get('value', '').strip()
-    value_type = request.forms.get('value_type', '').strip()
-    source_api = request.forms.get('source_api', '').strip()
-    value_list = request.forms.get('value_list', '').strip()
-    default_value = request.forms.get('default_value', '').strip()
+    tr_type = (request.forms.get('tr_type') or '').strip()
 
-    # Validation: Transaction Type is required
     if not tr_type:
         flash.set("Transaction Type is required.", "danger")
         redirect(URL('transaction_config', 'create'))
 
-    # Insert into database
-    db.tr_config.insert(
-        tr_type=tr_type,
-        sl=sl,
-        section=section,
-        order=order,
-        key=key,
-        caption=caption,
-        value=value,
-        value_type=value_type,
-        source_api=source_api,
-        value_list=value_list,
-        default_value=default_value
-    )
+    # Collect lists from POST (ensure always list)
+    sections       = request.forms.get('section[]') or []
+    orders         = request.forms.get('order[]') or []
+    keys           = request.forms.get('key[]') or []
+    captions       = request.forms.get('caption[]') or []
+    values         = request.forms.get('value[]') or []
+    value_types    = request.forms.get('value_type[]') or []
+    source_apis    = request.forms.get('source_api[]') or []
+    value_lists    = request.forms.get('value_list[]') or []
+    default_values = request.forms.get('default_value[]') or []
 
-    flash.set("Transaction Config saved successfully.", "success")
+    # If those come as strings, wrap into list
+    if isinstance(sections, str): sections = [sections]
+    if isinstance(orders, str): orders = [orders]
+    if isinstance(keys, str): keys = [keys]
+    if isinstance(captions, str): captions = [captions]
+    if isinstance(values, str): values = [values]
+    if isinstance(value_types, str): value_types = [value_types]
+    if isinstance(source_apis, str): source_apis = [source_apis]
+    if isinstance(value_lists, str): value_lists = [value_lists]
+    if isinstance(default_values, str): default_values = [default_values]
+
+    try:
+        for i in range(len(sections)):
+            # Skip empty rows
+            if not (sections[i] or keys[i] or captions[i]):
+                continue
+
+            db.tr_config.insert(
+                tr_type=tr_type,
+                section=sections[i].strip() if sections[i] else None,
+                order=int(orders[i]) if orders[i] else None,
+                key=keys[i].strip() if keys[i] else None,
+                caption=captions[i].strip() if captions[i] else None,
+                value=values[i].strip() if values[i] else None,
+                value_type=value_types[i].strip() if value_types[i] else None,
+                source_api=source_apis[i].strip() if source_apis[i] else None,
+                value_list=value_lists[i].strip() if value_lists[i] else None,
+                default_value=default_values[i].strip() if default_values[i] else None
+            )
+
+        db.commit()
+        flash.set("Transaction Config saved successfully.", "success")
+
+    except Exception as e:
+        db.rollback()
+        flash.set(f"Error saving config: {str(e)}", "danger")
+
     redirect(URL('transaction_config', 'index'))
+
 
 
 # -----------------------------

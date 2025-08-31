@@ -1,11 +1,159 @@
 [[extend 'layout.html']]
 
 [[block header]]
-[[icon='fa-solid fa-arrows-rotate']]
-[[breadcamp = 'Transaction']]
+[[icon='fa-solid fa-right-left']]
+[[breadcamp = 'Transfer Transactions']]
 [[end]]
 
 [[block content]]
+<div class="container-section mx-2">
+    <div class="row">
 
+        <div class="col-md-1 mt-2 mb-2">
+            <span class="icon-text icon-text-bold">
+                <i class="fa-solid fa-table-list"></i>
+                <span>Table</span>
+            </span>
+        </div>
 
+        <div class="col-md-9 mt-2">
+            <div class="row" id="custom_form" style="display: none;">
+                <div class="col-md-6 mb-2 d-flex justify-content-end">
+                    <div class="me-2">
+                        <button type="submit" id="submit" class="btn btn-sm btn-primary" style="width:90px;">
+                            <i class="fa-solid fa-magnifying-glass"></i> <span class="ms-2">Search</span>
+                        </button>
+                    </div>
+                    <div style="margin-right:15px;">
+                        <button type="reset" id="reset" class="btn btn-sm btn-light" style="width:90px;">
+                            <i class="fa-solid fa-retweet"></i> <span class="ms-2">Reset</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
 
+        <div class="col-md-2 mt-2 mb-2">
+            <div class="d-flex justify-content-end">
+                <div class="me-2">
+                    <button type="button" id="filter" class="btn btn-sm btn-light" style="width:90px;">
+                        <i class="fa-solid fa-filter"></i> <span class="ms-2">Filter</span>
+                    </button>
+                </div>
+                <div class="dropdown">
+                    <button class="btn btn-primary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown"
+                        aria-expanded="false" style="width:90px;">
+                        Action
+                    </button>
+                    <div class="dropdown-menu">
+                        <a class="dropdown-item" href="[[=URL('transaction/create')]]?type=[[=tr_type]]">
+                            <i class="fas fa-add me-1"></i> Add
+                        </a>
+                        <button class="dropdown-item" id="ExportExcel">
+                            <i class="fas fa-file-excel me-1"></i> Excel
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table id="myTable" class="table table-bordered compact" style="width:100%">
+            <thead class="text-truncate"></thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <input type="hidden" id="tr_type" name="tr_type" value="[[=tr_type]]">
+</div>
+[[end]]
+
+[[block scripts]]
+<script>
+$(document).ready(function() {
+    $("#filter").click(function() {
+        $("#custom_form").fadeToggle("slow");
+    });
+
+    var table = $('#myTable').DataTable({
+        dom: "Bfrt<'d-flex justify-content-between'<l><i><p>>",
+        buttons: [{
+            extend: 'excel',
+            title: 'Transfer Transactions',
+            filename: 'Transfer_Transactions',
+            exportOptions: { columns: ':visible' }
+        }],
+        order: [0, 'desc'],
+        searching: false,
+        paging: true,
+        serverSide: true,
+        scrollX: true,
+        scrollY: "413px",
+        fixedHeader: true,
+        fixedColumns: { left: 1, right: 1 },
+        lengthMenu: [
+            [15, 50, 100, -1],
+            [15, 50, 100, 'All']
+        ],
+        ajax: {
+            async: true,
+            type: 'GET',
+            url: '[[=URL("transfer","get_data")]]',
+            data: function(d) {
+                d.type = $("#tr_type").val();
+            },
+            dataSrc: 'data'
+        },
+        columns: [
+            { title: 'SL No.', data: null, render: function(data, type, row, meta) {
+                return meta.row + 1;
+            }},
+            { 
+                title: 'Status', 
+                data: 'status', 
+                className: 'text-center',  
+                render: function(d) {
+                    let status = (d || '').toLowerCase();
+                    let label = d ?? '-';
+                    let badgeClass = 'bg-secondary';
+                    
+                    if (status === 'pending') badgeClass = 'bg-warning text-dark';
+                    else if (status === 'approved') badgeClass = 'bg-success';
+                    
+                    return `<span class="badge ${badgeClass} d-inline-block text-center" 
+                                style="min-width:80px;">
+                                ${label}
+                            </span>`;
+                } 
+            },
+            { title: 'Transaction Type', data: 'trans_type', render: d => d ?? '-' },
+            { title: 'Asset ID', data: 'asset_id', render: d => d ?? '-' },
+            { title: 'Asset Type', data: 'asset_type', render: d => d ?? '-' },
+            { title: 'Date', data: 'tr_date', render: d => d ?? '-' },
+            {
+                title: '', data: 'id', render: function(id) {
+                    return `
+                        <a class="text-secondary" href="" title="Edit">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                    `;
+                }
+            }
+        ]
+    });
+
+    // Search button
+    $("#submit").click(function(e){
+        e.preventDefault();
+        table.ajax.reload();
+    });
+
+    // Reset button
+    $("#reset").click(function(e){
+        e.preventDefault();
+        table.ajax.reload();
+    });
+});
+</script>
+[[end]]

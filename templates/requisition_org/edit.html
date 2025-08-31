@@ -1,0 +1,136 @@
+[[extend 'layout.html']]
+
+[[block header]]
+[[icon='fa fa-file-pen']]
+[[breadcamp = 'Edit Individual Requisition']]
+[[end]]
+
+[[block content]]
+<style>
+    #uploadedFilesTable td, #uploadedFilesTable th {
+        padding-top: 2px;
+        padding-bottom: 2px;
+        font-size: 13px;
+        height: 28px; /* You can adjust this value */
+    }
+    
+</style>
+
+<div class="container-section">
+    <div class="d-flex justify-content-between align-items-center border-bottom mx-2">
+        <span class="icon-text icon-text-bold">
+            <i class="fa-solid fa-plus"></i>
+            <span>Edit</span>
+        </span>
+
+        <div class="d-flex justify-content-end">
+            <div class="p-1">
+                <button type="button" class="btn btn-sm btn-light d-none" id="btn_view">
+                    <i class="fa-regular fa-eye"></i> <span class="ms-2">View</span>
+                </button>
+                <button type="button" class="btn btn-sm btn-light" id="btn_edit">
+                    <i class="fa-regular fa-pen-to-square"></i> <span class="ms-2">Edit</span>
+                </button>
+            </div>
+            <div class="p-1">
+                <a href="[[=URL('requisition_org/index')]]" class="btn btn-sm btn-light">
+                    <i class="fa-solid fa-arrow-left"></i> <span class="ms-2">Back</span>
+                </a>
+            </div>
+            <div class="p-1">
+                <div class="btn-group">
+                    <button class="btn btn-primary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown"
+                        aria-expanded="false">
+                        Action
+                    </button>
+                
+                    <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                        <a class="dropdown-item" href="delete?id=[[=request.query.get('id')]]" id="delete_btn">
+                            <i class="fa-solid fa-trash-can"></i><span class="ms-2">Delete</span></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container py-2">
+        <form id="uploadForm" action="[[=URL('requisition_org','update')]]" method="post" enctype="multipart/form-data">
+            <input type="hidden" name="id" value="[[=request.query.get('id')]]">
+            <div id="custom_form">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="mb-2 custom_input">
+                            <label for="org_name" class="form-label">Select Organization <span class="is_required">*</span></label>
+                            <select class="form-select form-select-sm select_custom" id="org_name" name="org_name">
+                                <option value="">Select Organization</option>
+                                [[for org in org_list:]]
+                                    <option value="[[=org]]" [[if str(org) ==str(selected_org):]]Selected[[pass]]> [[=org]] </option>
+                                [[pass]]
+                            </select>
+                        </div>
+                    </div>
+                    
+
+                    <div class="col-md-3 col-sm-12">
+                        <div class="mb-2 custom_input">
+                            <label for="asset_type" class="form-label">Asset Type <span class="is_required">*</span></label>
+                            <select class="form-select form-select-sm select_custom" name="asset_type" style="width: 200px;" placeholder="Select Asset" required>
+                                <option value="">Select Asset Type</option>
+                                [[for asset_type in asset_type_list:]]
+                                    <option value="[[=asset_type]]" [[if str(asset_type) ==str(selected_asset_type):]]Selected[[pass]]> [[=asset_type]] </option>
+                                [[pass]]
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <div class="mb-2 custom_input">
+                            <label for="requisition_status" class="form-label">Requisition Status <span class="is_required">*</span></label>
+                            <select class="form-select form-select-sm select_custom" name="requisition_status" style="width: 200px;" placeholder="Select Requisition Status" required>
+                                <option value="">Select Requisition Status</option>
+                                [[for requisition_status in requisition_status_combos:]]
+                                    <option value=[[=requisition_status]] [[if str(requisition_status) == str(selected_requisition_status):]]Selected[[pass]]> [[=requisition_status]] </option>
+                                [[pass]]
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-3 col-sm-12">
+                        <div class="mb-2 custom_input">
+                            <label for="quantity" class="form-label">Quantity</label>
+                            <input type="number" class="form-control form-control-sm" id="quantity" name="quantity" value="[[=requisition['quantity']]]" required>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="edit_view_section" class="d-none d-flex gap-2 mt-2">
+                <button type="submit" class="btn btn-sm btn-primary">
+                    <i class="fa-regular fa-floppy-disk"></i> <span class="ms-2">Update</span>
+                </button>
+                <button type="reset" class="btn btn-sm btn-light">
+                    <i class="fa-solid fa-retweet"></i> <span class="ms-2">Reset</span>
+                </button>
+            </div>
+
+        </form>
+    </div>
+</div>
+
+[[end]]
+
+[[block scripts]]
+<script>
+    
+</script>
+<style>
+    .emp-highlighted-option {
+        color: #7b67ee;
+        font-weight: bold;
+    }
+</style>
+[[end]]
+
+
+
+

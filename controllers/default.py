@@ -1,3 +1,4 @@
+from datetime import date, datetime
 from py4web import action, request, abort, redirect, URL, response, Session
 from py4web.utils.form import Form, FormStyleDefault
 from yatl.helpers import A
@@ -23,27 +24,35 @@ def get_vendors_filter():
 @action("default/get_requisition_details_with_asset_details")
 @action.uses(db)
 def get_requisition_details_with_asset_details():
-    rows = db(db.requisition).select(db.requisition.req_id, db.requisition.emp_id, db.requisition.asset_type)
-    results = []
+    sql = """
+        SELECT r.req_id, 
+               r.asset_type, 
+               r.quantity,
+               COALESCE(SUM(p.quantity), 0) AS purchased_quantity
+        FROM requisition r
+        LEFT JOIN purchase_details p ON r.req_id = p.req_id
+        WHERE LOWER(r.req_status) = 'approved'
+        GROUP BY r.req_id
+    """
+    rows = db.executesql(sql, as_dict=True)
 
+    results = []
     for row in rows:
-        asset_type = asset_brand = asset_model = ""
-        if row.asset_type:
-            parts = row.asset_type.split(" | ")
-            # Safely assign parts if they exist
+        asset_type = ""
+        if row['asset_type']:
+            parts = row['asset_type'].split(" | ")
             asset_type = parts[0] if len(parts) > 0 else ""
-            asset_brand = parts[1] if len(parts) > 1 else ""
-            asset_model = parts[2] if len(parts) > 2 else ""
+
+        max_quantity = row['quantity'] - row['purchased_quantity']
 
         results.append({
-            "req_id": row.req_id,
-            "emp_id": row.emp_id,
+            "req_id": row['req_id'],
             "asset_type": asset_type,
-            "asset_brand": asset_brand,
-            "asset_model": asset_model
+            "max_quantity": max_quantity
         })
 
     return dict(results=results)
+
 
 @action("default/get_asset_brands")
 @action.uses(db)
@@ -134,8 +143,6 @@ def get_asset_type_brand_models():
     return combined_list
 
 
-
-
 # Dropdown: asset brands
 @action("default/get_asset_master_brands")
 @action.uses(db)
@@ -143,6 +150,128 @@ def get_asset_master_brands():
     brands = db(db.asset_master.asset_brand != None).select(db.asset_master.asset_brand, distinct=True).as_list()
     results = [{"id": row["asset_brand"], "text": row["asset_brand"]} for row in brands if row["asset_brand"]]
     return dict(results=results)
+
+
+
+
+
+def safe_date(val):
+    """Format date into YYYY-MM-DD or return empty string."""
+    if not val:
+        return ""
+    if isinstance(val, (date,)):
+        return val.strftime("%Y-%m-%d")
+    try:
+        return str(val)
+    except:
+        return ""
+
+# ---------------------------
+# API Endpoint (Single Asset)
+# ---------------------------
+# @action("default/get_asset_detail")
+# def get_asset_detail_api():
+
+#     asset_id = request.query.get("asset_id")
+#     if not asset_id:
+#         return json.dumps({"error": "asset_id required"}, default=str)
+
+#     details = get_transfer_asset_details([asset_id])
+#     response.headers["Content-Type"] = "application/json"
+#     return json.dumps(details.get(asset_id, {}), default=str)  
+
+
+
+
+
+def get_transfer_asset_details(asset_id=None):
+    """
+    Fetch asset details from DB and enrich with employee info (via API).
+    Returns a flat dict of asset details if single asset_id is provided.
+    """
+    if not asset_id:
+        return {}
+
+    # Convert to list to reuse SQL
+    asset_ids = [asset_id]
+
+    placeholders = ",".join(["%s"] * len(asset_ids))
+    rows = db.executesql(
+        f"""
+        SELECT asset_id, asset_type, asset_name, user_id, first_issue_date
+        FROM asset
+        WHERE asset_id IN ({placeholders})
+        """,
+        asset_ids,
+        as_dict=True
+    )
+
+    if not rows:
+        return {}
+
+    row = rows[0]  # only one asset expected
+    emp_id = row.get("user_id")
+
+    asset_info = {
+        "asset_type": row.get("asset_type") or "",
+        "asset_name": row.get("asset_name") or "",
+        "first_issue_date": safe_date(row.get("first_issue_date")),
+        "using_from": row.get("using_from") or "",
+        "from_emp_id": "",
+        "from_emp_tr_code": "",
+        "from_desg": ""
+    }
+
+    if emp_id:
+        try:
+            url = f"https://uat.beta.transcombd.com/expense/default/get_employee_details?employee_id={emp_id}"
+            resp = requests.get(url, timeout=5)
+            if resp.status_code == 200:
+                emp_data = resp.json()
+                emp = emp_data[0] if isinstance(emp_data, list) else emp_data
+                asset_info.update({
+                    "from_emp_id": f"{emp.get('employee_id', '')} | {emp.get('employee_name', '')}",
+                    "from_emp_tr_code": emp.get("territory_code", ""),
+                    "from_desg": emp.get("designation", "")
+                })
+        except Exception as e:
+            print(f"⚠️ Failed to fetch employee {emp_id}: {e}")
+
+    return asset_info
+
+
+
+
+@action("default/get_transaction_assets")
+def get_transaction_assets():
+    """
+    Unified endpoint:
+    - ?id=XYZ → return single asset details (existing internal format)
+    - no id → return list for Select2 [{id, text}, ...]
+    """
+    asset_id = request.query.get("id")
+
+    if asset_id:
+        details = get_transfer_asset_details(asset_id)
+        response.headers["Content-Type"] = "application/json"
+        return json.dumps(details, default=str)
+
+    rows = db.executesql(
+        "SELECT asset_id, asset_type, asset_name FROM asset ORDER BY asset_id",
+        as_dict=True
+    )
+    assets = [
+        {
+            "id": row['asset_id'],
+            "text": f"{row['asset_id']} | {row['asset_type'] or ''} | {row['asset_name'] or ''}"
+        }
+        for row in rows
+    ]
+
+
+    response.headers["Content-Type"] = "application/json"
+    return json.dumps(assets, default=str)
+
 
 
 @action("default/get_combo_values")
@@ -167,57 +296,15 @@ def get_combo_values():
 import requests
 import json
 
-# Employee details (static data)
 @action("default/get_employee_details")
 def get_employee_details():
-    # employee_data = [
-    #     {
-    #         "employee_id": 1234,
-    #         "employee_name" : "HelloKitty",
-    #         "designation": "Sales Manager",
-    #         "territory_code": "T-102",
-    #         "head_office": "Dhaka",
-    #         "joining_date": "2022-05-10"
-    #     },
-    #     {
-    #         "employee_id": 1235,
-    #         "employee_name" : "Supaman",
-    #         "designation": "Marketing Executive",
-    #         "territory_code": "T-103",
-    #         "head_office": "Chittagong",
-    #         "joining_date": "2021-08-15"
-    #     },
-    #     {
-    #         "employee_id": 1236,
-    #         "employee_name" : "Botman",
-    #         "designation": "HR Officer",
-    #         "territory_code": "T-104",
-    #         "head_office": "Khulna",
-    #         "joining_date": "2020-02-01"
-    #     },
-    #     {
-    #         "employee_id": 1237,
-    #         "employee_name" : "Onana",
-    #         "designation": "Finance Analyst",
-    #         "territory_code": "T-105",
-    #         "head_office": "Sylhet",
-    #         "joining_date": "2023-01-20"
-    #     },
-    #     {
-    #         "employee_id": 1239,
-    #         "employee_name" : "Valentina",
-    #         "designation": "Project Coordinator",
-    #         "territory_code": "T-107",
-    #         "head_office": "Barishal",
-    #         "joining_date": "2022-07-30"
-    #     }
-    # ]
-    
-
     url = "https://uat.alpha.transcombd.com/mytranscom_UAT/test/get_employee_data_expense"
 
+    employee_id = request.query.get("employee_id")
+
     payload = json.dumps({
-    "cid": "SKF"
+    "cid": "SKF",
+    "emp_id": employee_id
     })
     headers = {
     'Content-Type': 'application/json',
@@ -228,6 +315,62 @@ def get_employee_details():
 
     response.headers['Content-Type'] = 'application/json'
     return json.loads(response.text)
+
+
+
+
+@action("default/get_transaction_employee_details")
+def get_transaction_employee_details():
+    emp_id = request.query.get("id")
+    cid = request.query.get("cid", "SKF") 
+
+    try:
+        url = "https://uat.alpha.transcombd.com/mytranscom_UAT/test/get_employee_data_expense"
+        headers = {
+            "Content-Type": "application/json",
+            "Cookie": "session_id_mytranscom_uat=182.16.158.70-388e4b4b-3c3b-4adb-9358-4fbe0cda140d"
+        }
+
+        payload = {"cid": cid}
+        if emp_id:
+            # Single employee → pass emp_id to API
+            payload["emp_id"] = emp_id
+
+        resp = requests.get(url, headers=headers, data=json.dumps(payload), timeout=10)
+        if resp.status_code != 200:
+            raise Exception(f"Status {resp.status_code}")
+
+        employees = resp.json()
+
+        if emp_id:
+            # Single employee requested → return mapped fields
+            if not employees:
+                return json.dumps({}, default=str)
+            emp = employees[0] if isinstance(employees, list) else employees
+            result = {
+                "to_desg": emp.get("designation", ""),
+                "to_mobile": emp.get("mobile", "")
+            }
+        else:
+            # No emp_id → return all for Select2
+            result = [
+                {
+                    "id": e.get("employee_id") or "",
+                    "text": f"{e.get('employee_id','')} | {e.get('employee_name','')}"
+                }
+                for e in employees if e.get("employee_id")
+            ]
+
+        response.headers["Content-Type"] = "application/json"
+        return json.dumps(result, default=str)
+
+    except Exception as e:
+        print(f"⚠️ Failed to fetch employee data: {e}")
+        response.headers["Content-Type"] = "application/json"
+        return json.dumps({}, default=str)
+
+
+
 
 
 

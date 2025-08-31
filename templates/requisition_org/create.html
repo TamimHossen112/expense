@@ -1,0 +1,134 @@
+[[extend 'layout.html']]
+
+[[block header]]
+[[icon='fa fa-file-pen']]
+[[breadcamp = 'Create Organization Requisition']]
+[[end]]
+ 
+[[block content]]
+<div class="container-section">
+    <div class="d-flex justify-content-between align-items-center border-bottom mx-2">
+        <span class="icon-text icon-text-bold">
+            <i class="fa-solid fa-plus"></i>
+            <span>Create</span>
+        </span>
+        <div class="d-flex justify-content-end">
+            <div class="p-1">
+                <a href="[[=URL('requisition_org/index')]]" class="btn btn-sm btn-light">
+                    <i class="fa-solid fa-arrow-left"></i> <span class="ms-2">Back</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="container py-2">
+        <form id="uploadForm" action="[[=URL('requisition_org','submit')]]" method="post" enctype="multipart/form-data">
+            
+            <div class="row">
+                <div class="col-md-3 col-sm-12">
+                    <div class="mb-2">
+                        <label for="org_name" class="form-label">Select Organization <span class="is_required">*</span></label>
+                        <select class="form-select form-select-sm select_custom" id="org_name" name="org_name" required>
+                            <option value="">Select Organization</option>
+                            [[for org in organizations:]]
+                                <option value="[[=org]]">[[=org]]</option>
+                            [[pass]]
+                        </select>
+
+                    </div>
+                </div>
+
+                <div class="col-md-3 col-sm-12">
+                    <div class="mb-2">
+                        <label for="asset_type" class="form-label">Asset Type <span class="is_required">*</span></label>
+                        <select class="form-select form-select-sm select_custom" id="asset_type" name="asset_type" required>
+                            <option value="">Select Asset Type</option>
+                            [[for asset_detail in asset_types:]]
+                                <option value="[[=asset_detail['id']]]">
+                                    [[=asset_detail['text']]]
+                                </option>
+                            [[pass]]
+                        </select>
+                    </div>
+                </div>
+
+                <div class="col-md-3 col-sm-12">
+                    <div class="mb-2">
+                        <label for="quantity" class="form-label">Quantity <span class="is_required">*</span></label>
+                        <input type="number" class="form-control form-control-sm" id="quantity" name="quantity" placeholder="Enter Quantity" required min="1">
+                    </div>
+                </div>
+
+                <div class="col-md-3 col-sm-12">
+                    <div class="mb-2">
+                        <label for="requisition_status" class="form-label">Requisition Status <span class="is_required">*</span></label>
+                        <select class="form-select form-select-sm select_custom" id="requisition_status" name="requisition_status" required>
+                            <option value="">Select Requisition Status</option>
+                            [[for requisition_status in requisition_status_combos:]]
+                                <option value="[[=requisition_status]]">
+                                    [[=requisition_status]]
+                                </option>
+                            [[pass]]
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div id="uploadedFilesData"></div>
+
+            <div class="mt-2 mb-3">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fa-solid fa-floppy-disk"></i> <span class="ms-2">Save</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+[[end]]
+
+[[block scripts]]
+<script>
+    $(document).ready(function () {
+
+        $('#requisition_status').one('select2:open', function () {
+            const $select = $(this);
+            $.ajax({
+                url: '[[=URL("default", "get_combo_values")]]?key=requisition_status',
+                method: 'GET',
+                dataType: 'json',
+                success: function (data) {
+                    const formatted = data.results.map(row => ({
+                        id: row.id,
+                        text: row.text
+                    }));
+                    $select.empty().select2({
+                        data: formatted,
+                        placeholder: "Requisition Status",
+                        allowClear: true,
+                        width: "100%"
+                    }).select2('open');
+                }
+            });
+        });
+
+        $('#asset_type').one('select2:open', function () {
+            const $select = $(this);
+            $.ajax({
+                url: '[[=URL("default", "get_asset_master_types")]]',
+                method: 'GET',
+                dataType: 'json',
+                success: function (data) {
+                    $select.empty().select2({
+                        data: data.results,
+                        placeholder: "Select Asset Type",
+                        allowClear: true,
+                        width: "100%"
+                    }).select2('open');
+                }
+            });
+        });
+
+        $('input.date-picker').flatpickr({ dateFormat: "Y-m-d" });
+    });
+</script>
+[[end]]

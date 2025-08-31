@@ -33,13 +33,10 @@
                         aria-expanded="false">
                         Action
                     </button>
-                    <!-- <ul class="dropdown-menu"> -->
                     <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                        <!--<a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#staticBackdrop"><i class="fas fa-add me-1"></i> Add</a>-->
                         <a class="dropdown-item" href="delete?id=[[=request.query.get('id')]]" id="delete_btn">
                             <i class="fa-solid fa-trash-can"></i><span class="ms-2">Delete</span></a>
                     </div>
-                    <!-- </ul> -->
                 </div>
             </div>
         </div>
@@ -51,9 +48,9 @@
                 <input type="hidden" name="id" value="[[=request.query.get('id')]]">
                 <div class="row">
 
+                    <!-- First column -->
                     <div class="col-md-3">
                         <div class="row">
-                            <!-- Asset Type -->
                             <div class="mb-2 custom_input">
                                 <label for="asset_type_display" class="form-label">
                                     <strong>Asset Type <span class="is_required">*</span></strong>
@@ -67,7 +64,6 @@
                                 <input type="hidden" id="asset_type" name="asset_type" value="[[=selected_asset_type]]">
                             </div>
 
-                            <!-- Asset Brand -->
                             <div class="mb-2 custom_input">
                                 <label for="asset_brand_display" class="form-label">
                                     <strong>Asset Brand <span class="is_required">*</span></strong>
@@ -81,7 +77,6 @@
                                 <input type="hidden" id="asset_brand" name="asset_brand" value="[[=selected_asset_brand]]">
                             </div>
 
-                            <!-- Asset Model -->
                             <div class="mb-2 custom_input">
                                 <label for="asset_model_display" class="form-label">
                                     <strong>Asset Model <span class="is_required">*</span></strong>
@@ -95,28 +90,27 @@
                                 <input type="hidden" id="asset_model" name="asset_model" value="[[=selected_asset_model]]">
                             </div>
 
-                            <!-- Purchase Price -->
                             <div class="mb-2 custom_input">
                                 <label for="purchase_price_display" class="form-label">
                                     <strong>Purchase Price</strong>
                                 </label>
-                                <input type="number" class="form-control form-control-sm" id="purchase_price_display" value="[[=data['purchase_price']]]" disabled>
-                                <input type="hidden" id="purchase_price" name="purchase_price" value="[[=data['purchase_price']]]">
+                                <input type="number" class="form-control form-control-sm" id="purchase_price_display" value="[[=record['purchase_price']]]" disabled>
+                                <input type="hidden" id="purchase_price" name="purchase_price" value="[[=record['purchase_price']]]">
                             </div>
                         </div>
                     </div>
 
-                    
+                    <!-- Second column -->
                     <div class="col-md-3">
                         <div class="row">
                             <div class="mb-2 custom_input">
                                 <label for="asset_name" class="form-label"><strong>Asset Name</strong></label>
-                                <input type="text" class="form-control form-control-sm" id="asset_name" name="asset_name" value="[[=data['asset_name']]]">
+                                <input type="text" class="form-control form-control-sm" id="asset_name" name="asset_name" value="[[=record['asset_name']]]">
                             </div>
 
                             <div class="mb-2 custom_input">
                                 <label for="asset_model_year" class="form-label"><strong>Asset Model Year</strong></label>
-                                <input type="text" class="form-control form-control-sm" id="asset_model_year" name="asset_model_year" value="[[=data['model_year']]]">
+                                <input type="text" class="form-control form-control-sm" id="asset_model_year" name="asset_model_year" value="[[=record['model_year']]]">
                             </div>
 
                             <div class="mb-2 custom_input">
@@ -141,57 +135,70 @@
                         </div>
                     </div>
 
-
+                    <!-- Third column -->
                     <div class="col-md-3">
                         <div class="row">
                             <div class="mb-2 custom_input">
                                 <label for="registration_no" class="form-label"><strong>Registration No</strong></label>
-                                <input type="text" class="form-control form-control-sm" id="registration_no" name="registration_no" value="[[=data['reg_number']]]">
+                                <input type="text" class="form-control form-control-sm" id="registration_no" name="registration_no" value="[[=record['reg_number']]]">
                             </div>
 
                             <div class="mb-2 custom_input">
                                 <label for="engine_no" class="form-label"><strong>Engine No</strong></label>
-                                <input type="text" class="form-control form-control-sm" id="engine_no" name="engine_no" value="[[=data['engine_number']]]">
+                                <input type="text" class="form-control form-control-sm" id="engine_no" name="engine_no" value="[[=record['engine_number']]]">
                             </div>
 
                             <div class="mb-2 custom_input">
                                 <label for="engine_info" class="form-label"><strong>Engine Info</strong></label>
-                                <input type="text" class="form-control form-control-sm" id="engine_info" name="engine_info" value="[[=data['engine_info']]]">
+                                <input type="text" class="form-control form-control-sm" id="engine_info" name="engine_info" value="[[=record['engine_info']]]">
                             </div>
 
                             <div class="mb-2 custom_input">
                                 <label for="chasis_no" class="form-label"><strong>Chasis No</strong></label>
-                                <input type="text" class="form-control form-control-sm" id="chasis_no" name="chasis_no" value="[[=data['chassis_number']]]">
+                                <input type="text" class="form-control form-control-sm" id="chasis_no" name="chasis_no" value="[[=record['chassis_number']]]">
                             </div>
                         </div>
                     </div>
-                    
+
+                    <!-- Fourth column -->
                     <div class="col-md-3">
                         <div class="row">
-                            <div class="mb-2 custom_input">
-                                <label for="emp_id" class="form-label"><strong>User</strong></label>
-                                <select class="form-select form-select-sm select_custom" id="emp_id" name="emp_id">
-                                    <option value="">Select User</option>
-                                </select>
+                            <!-- ✅ User field as readonly input -->
+                            <div class="mb-2">
+                                <label for="emp_id_display" class="form-label"><strong>User</strong></label>
+                                <input type="text" 
+                                    class="form-control form-control-sm readonly-input" 
+                                    id="emp_id_display" 
+                                    value="[[=selected_emp]]" 
+                                    readonly>
+                                <input type="hidden" id="emp_id" name="emp_id" value="[[=selected_emp]]">
                             </div>
+
 
                             <div class="mb-2 custom_input">
                                 <label for="current_location" class="form-label"><strong>Current Location</strong></label>
-                                <input type="text" class="form-control form-control-sm" id="current_location" name="current_location" value="[[=data['current_location']]]">
+                                <input type="text" class="form-control form-control-sm" id="current_location" name="current_location" value="[[=record['current_location']]]">
                             </div>
-
-                            
 
                             <div class="mb-2 custom_input">
                                 <label for="first_issue_date" class="form-label"><strong>First Issue Date <span class="is_required">*</span></strong></label>
                                 <div class="flatpickr-wrapper">
-                                    <input type="text" class="date-picker" id="first_issue_date" name="first_issue_date" placeholder="First Issue Date" value="[[=data['first_issue_date']]]">
+                                    <input type="text" class="date-picker" id="first_issue_date" name="first_issue_date" placeholder="First Issue Date" value="[[=record['first_issue_date']]]">
                                     <i class="fa fa-calendar calendar-icon text-secondary calendar-toggle"></i>
                                 </div>
                             </div>
+
+                            <div class=" mb-2 custom_input">
+                                <label for="owner" class="form-label"><strong>Owner <span class="is_required">*</span></strong></label>
+                                <select class="form-select form-select-sm select_custom" id="owner" name="owner">
+                                    <option value="">Select Owner</option>
+                                    [[for owner in owner_list:]]
+                                        <option value="[[=owner]]" [[if str(owner) == str(selected_owner):]]Selected[[pass]]> [[=owner]] </option>
+                                    [[pass]]
+                                </select>
+                            </div>
                         </div>
                     </div>
-
 
                 </div>
             </div>
@@ -219,37 +226,5 @@
 [[end]]
 
 [[block scripts]]
-<script>
-    const EMPLOYEE_DETAILS_API = "[[=URL('default', 'get_employee_details')]]";
-    const selectedEmp = "[[=selected_emp]]"; // Passed from controller/template
 
-    // Load employees into dropdown
-    $.getJSON(EMPLOYEE_DETAILS_API)
-        .done(function (employees) {
-            const $empSelect = $('#emp_id');
-            $empSelect.empty();
-            $empSelect.append($('<option>', { value: '', text: 'Select User' }));
-
-            $.each(employees, function (_, emp) {
-                const optionValue = `${emp.employee_id} | ${emp.employee_name}`;
-                const $option = $('<option>')
-                    .val(optionValue)
-                    .text(`${emp.employee_id} | ${emp.employee_name} | ${emp.designation} | ${emp.head_office}`);
-
-                if (optionValue === selectedEmp) {
-                    $option.prop('selected', true);
-                }
-                $option.appendTo($empSelect);
-            });
-        })
-        .fail(function (xhr, status, error) {
-            console.error("Employee load error:", error);
-        });
-
-    // ✅ Normal form submit, backend handles flash + redirect
-    $('#uploadForm').on('submit', function () {
-        // No preventDefault, no AJAX
-        // Just let it submit to [[=URL("asset", "update")]]
-    });
-</script>
 [[end]]

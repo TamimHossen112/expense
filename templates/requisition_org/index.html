@@ -2,25 +2,14 @@
 
 [[block header]]
 [[icon='fa fa-file-lines']]
-[[breadcamp = 'Requisition']]
+[[breadcamp = 'Organization Requisition']]
 [[end]]
 
 [[block content]]
 
-<!-- <style>
-    .asset-type-column {
-        min-width: 100px;
-        max-width: 140px;      /* set max width as you want */
-        white-space: normal !important;  /* allow wrapping */
-        word-wrap: break-word;
-        overflow-wrap: break-word;
-        vertical-align: middle;
-    }
-</style> -->
-
 <div class="container-section mx-2">
     <div class="row">
-        <!-- Filter label -->
+
         <div class="col-md-1 mt-2 mb-2">
             <span class="icon-text icon-text-bold">
                 <i class="fa-solid fa-table-list"></i>
@@ -28,7 +17,6 @@
             </span>
         </div>
 
-        <!-- Filter form -->
         <div class="col-md-9 mt-2">
             <div class="row" id="custom_form" style="display: none;">
                 <div class="col-md-2 mb-2">
@@ -49,15 +37,9 @@
 
                 <div class="col-md-2 mb-2">
                     <div class="">
-                        <select class="form-select form-select-sm select_custom" name="emp_id" placeholder="Employee">
-                            <option value="">Select Employee</option>
+                        <select class="form-select form-select-sm select_custom" name="org_name" placeholder="Organization">
+                            <option value="">Select Organization</option>
                         </select>
-                    </div>
-                </div>
-
-                <div class="col-md-2 mb-2">
-                    <div class="">
-                        <input type="text" name="head_office" class="form-control form-control-sm" placeholder="Head Office">
                     </div>
                 </div>
 
@@ -76,7 +58,6 @@
             </div>
         </div>
 
-        <!-- Filter + Action Buttons -->
         <div class="col-md-2 mt-2 mb-2">
             <div class="d-flex justify-content-end">
                 <div class="me-2">
@@ -89,7 +70,7 @@
                         Action
                     </button>
                     <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                        <a class="dropdown-item" href="[[=URL('requisition/create')]]"><i class="fas fa-add me-1"></i> Add</a>
+                        <a class="dropdown-item" href="[[=URL('requisition_org/create')]]"><i class="fas fa-add me-1"></i> Add</a>
                         <button class="dropdown-item" id="ExportExcel"><i class="fas fa-file-excel me-1"></i> Excel</button>
                     </div>
                 </div>
@@ -97,7 +78,6 @@
         </div>
     </div>
 
-    <!-- Table -->
     <div class="table-responsive">
         <table id="myTable" class="table table-bordered compact" style="width:100%">
             <thead class="text-truncate"></thead>
@@ -111,6 +91,7 @@
 [[block scripts]]
 <script>
     $(document).ready(function () {
+        // --- Requisition Status Dropdown ---
         $("[name='req_status']").one('select2:open', function (e) {
             $.ajax({
                 url: '[[=URL("default", "get_combo_values")]]?key=requisition_status',
@@ -125,6 +106,7 @@
             });
         });
 
+        // --- Asset Type Dropdown ---
         $("[name='asset_type']").one('select2:open', function (e) {
             $.ajax({
                 url: '[[=URL("default", "get_asset_master_types")]]',
@@ -133,47 +115,45 @@
                 success: function (data) {
                     const $select = $("[name='asset_type']");
                     $select.empty();
-
                     $select.select2({
-                        data: data.results, // already in correct {id, text} format
+                        data: data.results, 
                         placeholder: "Select Asset Type",
                         allowClear: true
                     }).select2('open');
                 }
-
             });
         });
 
-        $("[name='emp_id']").one('select2:open', function (e) {
+        // --- Organization Dropdown ---
+        $("[name='org_name']").one('select2:open', function (e) {
             $.ajax({
-                url: '[[=URL("default", "get_employee_details")]]',  // Replace with your actual controller/function
+                url: '[[=URL("default", "get_combo_values")]]?key=organizations',
                 method: 'GET',
                 dataType: 'json',
                 success: function(data) {
-                    const formatted = data.map(emp => {
-                        const text = `${emp.employee_id || ''} | ${emp.employee_name || ''}`;
-                        return { id: emp.employee_id, text: text };
-                    });
+                    const formatted = data.results.map(org => ({
+                        id: org.id,
+                        text: org.text
+                    }));
 
-                    const $select = $("[name='emp_id']");
+                    const $select = $("[name='org_name']");
                     $select.empty();
 
                     $select.select2({
                         data: formatted,
-                        placeholder: "Select Employee",
+                        placeholder: "Select Organization",
                         allowClear: true
                     }).select2('open');
                 }
-
             });
         });
 
-
+        // --- Toggle filter form ---
         $("#filter").click(function () {
             $("#custom_form").fadeToggle("slow");
         });
 
-        // Initialize DataTable
+        // --- DataTable ---
         var table = $('#myTable').DataTable({
             dom: "Bfrt<'d-flex justify-content-between'<l><i><p>>",
             buttons: [
@@ -205,12 +185,11 @@
             ajax: {
                 async: true,
                 type: 'GET',
-                url: '[[=URL("requisition", "get_data")]]',
+                url: '[[=URL("requisition_org", "get_data")]]',
                 data: function (d) {
                     d.req_status = $("select[name='req_status']").val();
                     d.asset_type = $("select[name='asset_type']").val();
-                    d.emp_id = $("select[name='emp_id']").val();
-                    d.head_office = $("input[name='head_office']").val();
+                    d.org_name   = $("select[name='org_name']").val(); // ✅ FIXED
                 },
                 dataSrc: 'data'
             },
@@ -236,25 +215,19 @@
                                 </div>`;
                     }
                 },
-                { title: 'Asset Type', data: 'asset_type', className: 'asset-type-column', render: d => d ?? '-' },
                 {
-                    title: 'Emp ID | EMP Name | Designation',
-                    data: null,
-                    render: function(data, type, row) {
-                        const emp_id = row.emp_id ?? '';
-                        const emp_name = row.emp_name ?? '';
-                        const designation = row.designation ?? '';
-                        if (!emp_id && !emp_name && !designation) return '-';
-                        return `${emp_id} | ${emp_name} | ${designation}`;
+                    title: 'Organization',
+                    data: 'org_name', 
+                    render: function(data) {
+                        return data ?? '-'; 
                     }
                 },
-                { title: 'Head Office', data: 'head_office', render: d => d ?? '-' },
-                { title: 'TR Code', data: 'tr_code', render: d => d ?? '-' },
-                { title: 'Joining Date', data: 'joining_date', render: d => d ?? '-' },
+                { title: 'Asset Type', data: 'asset_type', className: 'asset-type-column', render: d => d ?? '-' },
+                { title: 'Quantity', data: 'quantity', render: d => d ?? '-' },
                 {
                     title: '', data: 'id', render: function (data) {
                         return `
-                            <a class="text-secondary" href="[[=URL('requisition/edit')]]?id=${data}"
+                            <a class="text-secondary" href="[[=URL('requisition_org/edit')]]?id=${data}"
                                data-bs-toggle="tooltip" data-bs-placement="top" title="Update">
                                 <i class="fas fa-edit"></i>
                             </a>`;
@@ -263,19 +236,18 @@
             ]
         });
 
-        // Filter submit
+        // --- Filter submit ---
         $("#submit").click(function (e) {
             e.preventDefault();
             table.ajax.reload();
         });
 
-        // Filter reset
+        // --- Reset ---
         $("#reset").click(function (e) {
             e.preventDefault();
-            $("select[name='req_status']").val(null).trigger('change')
+            $("select[name='req_status']").val(null).trigger('change');
             $("select[name='asset_type']").val(null).trigger('change');
-            $("select[name='emp_id']").val(null).trigger('change');
-            $("input[name='head_office']").val('').trigger('change');
+            $("select[name='org_name']").val(null).trigger('change'); // ✅ FIXED
             table.ajax.reload();
         });
     });

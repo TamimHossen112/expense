@@ -1,0 +1,217 @@
+[[extend 'layout.html']]
+
+[[block header]]
+[[icon='fa-solid fa-cogs']]
+[[breadcamp = 'Transfer Edit']]
+[[end]]
+
+[[block content]]
+<div class="container-section">
+  <!-- 🔹 Header -->
+  <div class="d-flex justify-content-between align-items-center border-bottom mx-2">
+    <span class="icon-text icon-text-bold">
+      <i class="fa-solid fa-pen-to-square"></i>
+      <span>Edit Transfer</span>
+    </span>
+    <div class="d-flex justify-content-end">
+      <div class="p-1">
+        <a href="[[=URL('transfer/index')]]" class="btn btn-sm btn-light">
+          <i class="fa-solid fa-arrow-left"></i> <span class="ms-2">Back</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="container py-3">
+    <form id="transferEditForm" method="post" action="[[=URL('transfer/update', vars={'id': head['id']})]]">
+
+      [[# 🔹 Step 1: group fields by section]]
+      [[section_map = {}]]
+      [[for f in details:]]
+        [[section_map.setdefault(f['section'], []).append(f)]]
+      [[pass]]
+
+      [[# 🔹 Step 2: sort sections by min(sl)]]
+      [[sorted_sections = sorted(
+          section_map.items(),
+          key=lambda kv: min((ff.get('sl') if ff.get('sl') is not None else 9999) for ff in kv[1])
+      )]]
+
+      [[# 🔹 Step 3: render each section]]
+      [[for section, section_fields in sorted_sections:]]
+        [[section_fields = sorted(section_fields, key=lambda x: (x.get('order') if x.get('order') is not None else 9999))]]
+        [[if section_fields:]]
+          <!-- 🔹 Section Wrapper -->
+          <div class="form-section">
+
+            <!-- 🔹 Section Header -->
+            <div class="section-header">
+              [[=section]]
+            </div>
+
+            <div class="row g-3">
+              [[for field in section_fields:]]
+                [[readonly_attr = 'readonly' if str(field.get('readonly','')).lower()=='yes' else '']]
+                [[current_val = field['value'] or field['default_value'] or '']]
+                <div class="col-md-6 col-sm-12">
+                  <label for="[[=field['key']]]" class="form-label fw-bold">
+                    [[=field['caption']]]
+                  </label>
+
+                  [[if field['value_type'] in ('string','integer'):]]
+                    <input type="[[='number' if field['value_type']=='integer' else 'text']]" 
+                           class="form-control form-control-sm"
+                           id="[[=field['key']]]" 
+                           name="[[=field['key']]]" 
+                           value="[[=current_val]]" 
+                           [[=readonly_attr]]>
+
+                  [[elif field['value_type'] == 'date':]]
+                    <div class="flatpickr-wrapper position-relative">
+                      <input type="text" 
+                             class="form-control form-control-sm datepicker"
+                             id="[[=field['key']]]"
+                             name="[[=field['key']]]"
+                             value="[[=current_val]]" 
+                             placeholder="Select Date"
+                             [[=readonly_attr]]>
+                      <i class="fa fa-calendar calendar-icon text-secondary calendar-toggle"></i>
+                    </div>
+
+                  [[elif field['value_type'] == 'dropdown' and field['key'] == 'to_emp_id':]]
+                    <!-- 🔹 Dynamic Employee Dropdown -->
+                    <select class="form-select form-select-sm select_custom"
+                            id="to_emp_id"
+                            name="to_emp_id"
+                            [[=readonly_attr]]>
+                      <option value="">Select Employee</option>
+                      [[for emp in transfer_employees:]]
+                        <option value="[[=emp['id']]]"
+                                data-name="[[=emp['name']]]"
+                                data-designation="[[=emp['designation']]]"
+                                data-mobile="[[=emp['mobile']]]"
+                                [[='selected' if str(emp['id'])==str(current_val) else '' ]]>
+                          [[=emp['id']]] | [[=emp['name']]]
+                        </option>
+                      [[pass]]
+                    </select>
+
+                  [[elif field['value_type'] == 'dropdown':]]
+                    <select class="form-select form-select-sm select_custom"
+                            id="[[=field['key']]]"
+                            name="[[=field['key']]]"
+                            [[=readonly_attr]]>
+                      <option value="">Select [[=field['caption']]]</option>
+                      [[for val in (field['value_list'] or []):]]
+                        [[if isinstance(val, dict):]]
+                          <option value="[[=val['value']]]" [[='selected' if str(val['value'])==str(current_val) else '' ]]>
+                            [[=val['label']]]
+                          </option>
+                        [[else:]]
+                          <option value="[[=val]]" [[='selected' if str(val)==str(current_val) else '' ]]>
+                            [[=val]]
+                          </option>
+                        [[pass]]
+                      [[pass]]
+                    </select>
+
+                  [[else:]]
+                    <input type="text" class="form-control form-control-sm"
+                           id="[[=field['key']]]"
+                           name="[[=field['key']]]"
+                           value="[[=current_val]]" 
+                           [[=readonly_attr]]>
+                  [[pass]]
+                </div>
+              [[pass]]
+            </div>
+          </div>
+        [[pass]]
+      [[pass]]
+
+      <div>
+        <button type="submit" class="btn btn-primary btn-sm px-4">Update</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ✅ Styles -->
+<style>
+  .section-header {
+    background-color: #ccc9fa;
+    color: #544dc9;
+    font-weight: bold;
+    padding: 8px 12px;
+    border-bottom: 2px solid #9490e1;
+    margin-bottom: 15px;
+    width: 100%;
+  }
+  .form-section {
+    margin-bottom: 40px;
+  }
+</style>
+
+<!-- ✅ CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
+<!-- ✅ Scripts -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+<script>
+  $(function () {
+    // === Init flatpickr
+    $(".datepicker").each(function () {
+      $(this).flatpickr({ dateFormat: "Y-m-d" });
+    });
+
+    // === Calendar icon click
+    $(document).on("click", ".calendar-toggle", function () {
+      $(this).siblings("input.datepicker").trigger("focus");
+    });
+
+    // === Asset Details JSON
+    var assetDetails = $.parseJSON('[[=XML(asset_details)]]');
+
+    var fieldMap = {
+      employee: "from_emp_id",
+      tr_code: "from_emp_tr_code",
+      designation: "from_desg",
+      using_from: "using_from",
+      first_issue_date: "first_issue_date",
+      asset_type: "asset_type",
+      asset_details: "asset_name"
+    };
+
+    function fillAssetDetails(selectedAssetId) {
+      if (!selectedAssetId || !assetDetails[selectedAssetId]) return;
+      var details = assetDetails[selectedAssetId];
+      $.each(fieldMap, function (detailKey, fieldId) {
+        var $el = $("#" + fieldId);
+        if ($el.length) {
+          $el.val(details[detailKey] || "");
+          if ($el.is("select")) {
+            $el.trigger("change").prop("disabled", true);
+          } else {
+            $el.prop("readonly", true);
+          }
+        }
+      });
+    }
+
+    $("#asset_id").on("change", function () {
+      fillAssetDetails($(this).val());
+    });
+
+    $("#to_emp_id").on("change", function () {
+      var selected = $(this).find("option:selected");
+      var designation = selected.data("designation") || "";
+      var mobile = selected.data("mobile") || "";
+      $("#to_desg").val(designation).prop("readonly", true);
+      $("#to_mobile").val(mobile).prop("readonly", true);
+    });
+  });
+</script>
+
+[[end]]

@@ -19,26 +19,6 @@
         <div class="col-md-9 mt-2">
             <div class="row" id="custom_form" style="display: none;">
 
-                <div class="col-md-3 mb-2">
-                    <select class="form-select form-select-sm select_custom" name="tr_type" placeholder="Transaction Type">
-                        <option value="">Select Transaction Type</option>
-                    </select>
-                </div>
-
-                <div class="col-md-3 mb-2">
-                    <input type="text" class="form-control form-control-sm" name="section" placeholder="Section">
-                </div>
-
-                <div class="col-md-3 mb-2">
-                    <input type="text" class="form-control form-control-sm" name="key" placeholder="Key">
-                </div>
-
-                <div class="col-md-3 mb-2">
-                    <select class="form-select form-select-sm select_custom" name="value_type" placeholder="Value Type">
-                        <option value="">Select Value Type</option>
-                    </select>
-                </div>
-
                 <div class="col-md-6 mb-2 d-flex justify-content-end">
                     <div class="me-2">
                         <button type="submit" id="submit" class="btn btn-sm btn-primary" style="width:90px;">
@@ -98,28 +78,7 @@ $(document).ready(function() {
         $("#custom_form").fadeToggle("slow");
     });
 
-    // Populate tr_type and value_type selects on first open
-    $("[name='tr_type']").one('select2:open', function() {
-        $.getJSON('[[=URL("transaction_config","get_tr_type_list")]]', function(data) {
-            $("[name='tr_type']").select2({
-                data: data.results,
-                placeholder: "Select Transaction Type",
-                allowClear: true,
-                tags: true
-            }).select2('open');
-        });
-    });
 
-    $("[name='value_type']").one('select2:open', function() {
-        $.getJSON('[[=URL("transaction_config","get_value_type_list")]]', function(data) {
-            $("[name='value_type']").select2({
-                data: data.results,
-                placeholder: "Select Value Type",
-                allowClear: true,
-                tags: true
-            }).select2('open');
-        });
-    });
 
     // Initialize DataTable
     var table = $('#myTable').DataTable({
@@ -159,18 +118,8 @@ $(document).ready(function() {
                 return meta.row + 1;
             }},
             { title: 'Transaction Type', data: 'tr_type', render: d => d ?? '-' },
-            { title: 'SL', data: 'sl', render: d => d ?? '-' },
-            { title: 'Section', data: 'section', render: d => d ?? '-' },
-            { title: 'Order', data: 'order', render: d => d ?? '-' },
-            { title: 'Key', data: 'key', render: d => d ?? '-' },
-            { title: 'Caption', data: 'caption', render: d => d ?? '-' },
-            { title: 'Value', data: 'value', render: d => d ?? '-' },
-            { title: 'Value Type', data: 'value_type', render: d => d ?? '-' },
-            { title: 'Source API', data: 'source_api', render: d => d ?? '-' },
-            { title: 'Value List', data: 'value_list', render: d => d ?? '-' },
-            { title: 'Default Value', data: 'default_value', render: d => d ?? '-' },
             {
-                title: '', data: 'id', render: function(id) {
+                title: '', data: 'tr_type', render: function(id) {
                     return `<a class="text-secondary" href="[[=URL('transaction_config/edit')]]?id=${id}" title="Edit"><i class="fas fa-edit"></i></a>`;
                 }
             }

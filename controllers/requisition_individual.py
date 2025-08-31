@@ -2,7 +2,7 @@ import json
 from py4web import action, request, redirect, URL, response
 from ..common import db, session, T, flash
 from ..common_fn import IMAGE_UPLOAD_API, IMAGE_DOWNLOAD_API
-import datetime
+import requests
 
 # -----------------------------
 # Utility Functions
@@ -34,7 +34,6 @@ def get_combo_values(key):
     return []
 
 
-
 def get_asset_types():
     rows = db(db.asset_master.asset_type != None).select(
         db.asset_master.asset_type,
@@ -54,27 +53,27 @@ def fetch_uploaded_files(trans_type, trans_id):
 # -----------------------------
 # Views
 # -----------------------------
-@action('requisition/index')
-@action.uses("requisition/index.html", session, flash)
-def requisition_index():
+@action('requisition_individual/index')
+@action.uses("requisition_individual/index.html", session, flash)
+def requisition_individual_index():
     return locals()
 
 
-@action('requisition/create')
-@action.uses('requisition/create.html', db, session, flash)
-def requisition_create():
+@action('requisition_individual/create')
+@action.uses('requisition_individual/create.html', db, session, flash)
+def requisition_individual_create():
     return dict(
         IMAGE_UPLOAD_API=IMAGE_UPLOAD_API,
         IMAGE_DOWNLOAD_API=IMAGE_DOWNLOAD_API,
-        doc_type_combos=get_combo_values("requisition"),
+        doc_type_combos=get_combo_values("requisition_doc_type"),
         requisition_status_combos=get_combo_values("requisition_status"),
         asset_types=get_asset_types()
     )
 
 
-@action('requisition/edit')
-@action.uses('requisition/edit.html', db, session, flash)
-def requisition_edit():
+@action('requisition_individual/edit')
+@action.uses('requisition_individual/edit.html', db, session, flash)
+def requisition_individual_edit():
     req_id = request.query.get('id')
     if not req_id:
         return dict(error='Missing requisition ID.')
@@ -84,17 +83,17 @@ def requisition_edit():
         return dict(error='Requisition not found.')
 
     file_metadata = fetch_uploaded_files('requisition', row.id)
-    combo_results = get_combo_values("requisition")
+    combo_results = get_combo_values("requisition_doc_type")
     asset_type_list = [r['text'] for r in get_asset_types()]
 
     return dict(
-        data=row.as_dict(),
+        record=row.as_dict(),
         docs=file_metadata,
         docs_json=json.dumps(file_metadata),
         IMAGE_UPLOAD_API=IMAGE_UPLOAD_API,
         IMAGE_DOWNLOAD_API=IMAGE_DOWNLOAD_API,
         requisition_status_combos=get_combo_values("requisition_status"),
-        selected_requisition_status = row.req_status,
+        selected_requisition_status=row.req_status,
         doc_type_combos=combo_results,
         asset_type_list=asset_type_list,
         selected_asset_type=row.asset_type
@@ -118,9 +117,9 @@ def parse_uploaded_files():
     return files
 
 
-@action('requisition/submit', method=['POST'])
+@action('requisition_individual/submit', method=['POST'])
 @action.uses(db, session, flash)
-def requisition_submit():
+def requisition_individual_submit():
     asset_type = request.forms.get('asset_type')
     emp_id = request.forms.get('emp_id')
     emp_name = request.forms.get('emp_name')
@@ -135,7 +134,7 @@ def requisition_submit():
 
     uploaded_files = parse_uploaded_files()
 
-    # Validation
+    # Validation (quantity is NOT required, always set to 1)
     required_fields = {
         "Asset Type": asset_type,
         "Employee ID": emp_id,
@@ -143,12 +142,12 @@ def requisition_submit():
         "Driving License Issue Date": license_issue_date,
         "Driving License Expire Date": license_expire_date,
         "Driving License Number": license_number,
-        "Requisition Status": requisition_status  # validate new field
+        "Requisition Status": requisition_status
     }
     missing_fields = [name for name, val in required_fields.items() if not val]
     if missing_fields:
         flash.set("The following fields are required: " + ", ".join(missing_fields), 'warning')
-        redirect(URL('requisition/create'))
+        redirect(URL('requisition_individual/create'))
 
     try:
         req_code = generate_requisition_code(asset_type)
@@ -165,7 +164,8 @@ def requisition_submit():
             license_issue_date=license_issue_date or None,
             license_expire_date=license_expire_date or None,
             license_number=license_number,
-            req_status=requisition_status  # store in DB
+            req_status=requisition_status,
+            quantity=1
         )
 
         for f in uploaded_files:
@@ -179,32 +179,32 @@ def requisition_submit():
             )
 
         db.commit()
-        flash.set("Requisition and associated documents created successfully!", 'success')
-        redirect(URL('requisition/index'))
+        flash.set("Requisition created successfully!", 'success')
+        redirect(URL('requisition_individual/index'))
 
     except Exception as e:
         db.rollback()
         flash.set(f"An unexpected error occurred: {str(e)}", 'danger')
-        redirect(URL('requisition/create'))
+        redirect(URL('requisition_individual/create'))
 
 
-@action('requisition/update', method=["POST"])
+@action('requisition_individual/update', method=["POST"])
 @action.uses(db, session, flash)
-def requisition_update():
+def requisition_individual_update():
     req_id = request.query.get('id') or request.forms.get('id')
     if not req_id:
         flash.set("Missing requisition ID.", 'danger')
-        redirect(URL('requisition/index'))
+        redirect(URL('requisition_individual/index'))
 
     try:
         req_id = int(req_id)
     except:
         flash.set("Invalid requisition ID.", 'danger')
-        redirect(URL('requisition/index'))
+        redirect(URL('requisition_individual/index'))
 
-    requisition_status = request.forms.get('requisition_status')  # New field
+    requisition_status = request.forms.get('requisition_status')
 
-    # Validate required fields
+    # Validate required fields (quantity excluded)
     required_fields = {
         "Employee ID": request.forms.get('emp_id'),
         "Asset Type": request.forms.get('asset_type'),
@@ -212,17 +212,17 @@ def requisition_update():
         "License Issue Date": request.forms.get('license_issue_date'),
         "License Expire Date": request.forms.get('license_expire_date'),
         "Driving License Number": request.forms.get('license_number'),
-        "Requisition Status": requisition_status  # validate new field
+        "Requisition Status": requisition_status
     }
     missing_fields = [name for name, val in required_fields.items() if not val]
     if missing_fields:
         flash.set("The following fields are required: " + ", ".join(missing_fields), 'warning')
-        redirect(URL('requisition/index'))
+        redirect(URL('requisition_individual/index'))
 
     record = db(db.requisition.id == req_id).select().first()
     if not record:
         flash.set("Requisition ID not found.", 'danger')
-        redirect(URL('requisition/index'))
+        redirect(URL('requisition_individual/index'))
 
     # Update requisition
     db(db.requisition.id == req_id).update(
@@ -236,7 +236,8 @@ def requisition_update():
         license_issue_date=request.forms.get('license_issue_date'),
         license_expire_date=request.forms.get('license_expire_date'),
         asset_type=request.forms.get('asset_type'),
-        req_status=requisition_status  # update new field
+        req_status=requisition_status,
+        quantity=1 
     )
 
     # Replace uploaded files
@@ -252,17 +253,13 @@ def requisition_update():
         )
 
     flash.set("Requisition updated successfully.", "success")
-    redirect(URL('requisition/index'))
+    redirect(URL('requisition_individual/index'))
 
 
 
-
-# -----------------------------
-# Fetch / Delete
-# -----------------------------
-@action('requisition/get_data', method=['GET'])
+@action('requisition_individual/get_data', method=['GET'])
 @action.uses(db)
-def requisition_get_data():
+def requisition_individual_get_data():
     q = request.query
     start, length = int(q.get('start', 0)), int(q.get('length', 15))
     sort_col_index = q.get('order[0][column]')
@@ -290,9 +287,9 @@ def requisition_get_data():
     base_sql = f"""
         SELECT id, req_id, asset_type, emp_id, emp_name, designation,
                tr_code, head_office, joining_date, license_number,
-               req_status
+               req_status, quantity
         FROM requisition
-        WHERE {where_sql}
+        WHERE {where_sql} AND org_name IS NULL
         ORDER BY {sort_col} {sort_dir}
     """
     if length != -1:
@@ -308,13 +305,13 @@ def requisition_get_data():
     )
 
 
-@action('requisition/delete', method=['GET', 'POST'])
+@action('requisition_individual/delete', method=['GET', 'POST'])
 @action.uses(db, session, flash)
-def delete_requisition():
+def delete_requisition_individual():
     req_id = request.query.get('id')
     if not req_id:
         flash.set('Missing requisition ID.', 'danger')
-        redirect(URL('requisition/index'))
+        redirect(URL('requisition_individual/index'))
 
     try:
         record = db(db.requisition.id == req_id).select().first()
@@ -327,10 +324,10 @@ def delete_requisition():
     except Exception as e:
         flash.set(f'Error while deleting requisition: {str(e)}', 'danger')
 
-    redirect(URL('requisition/index'))
+    redirect(URL('requisition_individual/index'))
 
-import requests
-@action("requisition/upload_expense_proxy", method=["POST"])
+
+@action("requisition_individual/upload_expense_proxy", method=["POST"])
 @action.uses(IMAGE_UPLOAD_API)
 def upload_expense_proxy():
     upload_file = request.files.get("upload_file")

@@ -12,22 +12,30 @@
         overflow-x: auto !important;
     }
 
-    /* select.no-border-select2 + .select2-container--default .select2-selection--single {
-        border: none !important;
-        box-shadow: none !important;
+    /* Cross-browser lighter italic placeholder */
+    .quantity_input::-webkit-input-placeholder {
+        color: #bbb !important;
+        font-style: italic;
+    }
+    .quantity_input:-moz-placeholder {
+        color: #bbb !important;
+        font-style: italic;
+        opacity: 1; /* Firefox requires this */
+    }
+    .quantity_input::-moz-placeholder {
+        color: #bbb !important;
+        font-style: italic;
+        opacity: 1;
+    }
+    .quantity_input:-ms-input-placeholder {
+        color: #bbb !important;
+        font-style: italic;
+    }
+    .quantity_input::placeholder {
+        color: #bbb !important;
+        font-style: italic;
     }
 
-    .select2-container--default.select2-container--open select.no-border-select2 + .select2-selection--single {
-        border: none !important;
-        box-shadow: none !important;
-    } 
-
-    #purchaseTable input.no-border-input.form-control {
-        border: none !important;
-        box-shadow: none !important;
-        background-color: transparent !important;
-        outline: none !important;
-    } */
 
     table.table tbody tr, 
     table.table tbody tr td {
@@ -136,9 +144,10 @@
                                 <th class="text-truncate" style="min-width: 200px;">Requisition Details</th>
                                 <!-- <th class="text-truncate" style="min-width: 130px;">Asset Type</th> -->
                                 <th class="text-truncate" style="min-width: 140px;">Asset Brand</th>
-                                <th class="text-truncate" style="min-width: 140px;">Asset Model</th>
+                                <th class="text-truncate" style="min-width: 110px;">Asset Model</th>
                                 <th class="text-truncate" style="min-width: 100px;">Purchase Date</th>
                                 <th class="text-truncate" style="min-width: 110px;">Status</th>
+                                <th class="text-truncate" style="min-width: 70px;">Quantity</th>
                                 <th class="text-truncate" style="min-width: 100px;">Item Price</th>
                                 <th class="text-truncate" style="min-width: 100px;">Discount</th>
                                 <th class="text-truncate" style="min-width: 35px;"></th>
@@ -227,8 +236,7 @@ $(document).ready(async function () {
                 requisitionOptions += `<option value="${item.req_id}">${item.req_id} | ${item.asset_type}</option>`;
                 requisitionAssetMap[item.req_id] = {
                     asset_type: item.asset_type,
-                    asset_brand: item.asset_brand,
-                    asset_model: item.asset_model
+                    max_quantity: item.max_quantity
                 };
             });
         } catch (err) {
@@ -303,6 +311,7 @@ $(document).ready(async function () {
                         [[pass]]
                     </select>
                 </td>
+                <td><input type="number" class="form-control form-control-sm quantity_input" required></td>
                 <td><input type="number" class="form-control form-control-sm item_price_input" required></td>
                 <td><input type="number" class="form-control form-control-sm item_discount_input"></td>
                 <td>${deleteBtn}</td>
@@ -316,12 +325,30 @@ $(document).ready(async function () {
         $row.find(".datepicker").flatpickr({ dateFormat: "Y-m-d" });
         $row.find("input.item_price_input, input.item_discount_input").on('input', updateTotals);
 
-        // Requisition selected -> set type for the row
         $row.find(".req_id_select").on("change", function () {
             const selected = $(this).val();
             const assetData = requisitionAssetMap[selected] || {};
             const $tr = $(this).closest("tr");
+
+            // Set asset type automatically
             $tr.find(".asset_type_select").val(assetData.asset_type || "").trigger('change');
+
+            // ✅ Set placeholder instead of value, with focus/blur behavior
+            if (assetData.max_quantity !== undefined) {
+                const $qty = $tr.find(".quantity_input");
+                $qty.val("")
+                    .attr("placeholder", `max ${assetData.max_quantity}`)
+                    .attr("max", parseInt(assetData.max_quantity, 10) || 0);
+
+                $qty.off("focus blur").on("focus", function () {
+                    $(this).attr("data-placeholder", $(this).attr("placeholder"));
+                    $(this).attr("placeholder", "");
+                }).on("blur", function () {
+                    if (!$(this).val()) {
+                        $(this).attr("placeholder", $(this).attr("data-placeholder"));
+                    }
+                });
+            }
         });
 
         // Type change -> fetch brands for this row
@@ -366,6 +393,12 @@ $(document).ready(async function () {
                 -webkit-appearance: none; margin: 0; 
             }
             input[type=number] { -moz-appearance: textfield; }
+
+            /* ✅ Lighter italic placeholder */
+            .quantity_input::placeholder {
+                color: #B2BEB5;
+                font-style: italic;
+            }
         `).appendTo("head");
 
     await createRow(true);
@@ -389,19 +422,20 @@ $(document).ready(async function () {
                 asset_model: $tr.find(".asset_model_select").val(),
                 purchase_date: $tr.find("input.purchase_date_input").val(),
                 receive_status: $tr.find(".receive_status").val(),
+                quantity: $tr.find("input.quantity_input").val(),
                 item_price: $tr.find("input.item_price_input").val(),
                 item_discount: $tr.find("input.item_discount_input").val()
             };
         }).get();
 
-        // Duplicate check
-        const reqIds = items.map(i => i.req_id).filter(v => v);
-        const duplicates = reqIds.filter((id, idx) => reqIds.indexOf(id) !== idx);
-        if (duplicates.length > 0) {
-            alert("You can't add same requisition twice.");
-            e.preventDefault();
-            return;
-        }
+        // // Duplicate check
+        // const reqIds = items.map(i => i.req_id).filter(v => v);
+        // const duplicates = reqIds.filter((id, idx) => reqIds.indexOf(id) !== idx);
+        // if (duplicates.length > 0) {
+        //     alert("You can't add same requisition twice.");
+        //     e.preventDefault();
+        //     return;
+        // }
 
         $("#purchaseItemsJson").val(JSON.stringify(items));
     });
@@ -410,6 +444,7 @@ $(document).ready(async function () {
 });
 </script>
 [[end]]
+
 
 
 

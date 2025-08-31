@@ -24,7 +24,6 @@
 
     <div class="container py-2">
         <form action="[[=URL('transaction_config','submit')]]" method="POST">
-            <!-- Transaction Type -->
             <div class="row g-3 mb-3">
                 <div class="col-md-4">
                     <label for="tr_type" class="form-label"><strong>Transaction Type <span class="is_required">*</span></strong></label>
@@ -37,25 +36,28 @@
                 </div>
             </div>
 
-            <!-- Entries Table -->
             <div class="table-wrapper" style="overflow-x:auto;">
-                <table class="table table-bordered table-striped align-middle" id="entriesTable" style="min-width:1300px;">
+                <table class="table table-bordered table-striped align-middle" id="entriesTable" style="min-width:1500px;">
                     <thead class="table-light">
                         <tr>
+                            <th>SL</th>
                             <th>Section</th>
                             <th>Order</th>
                             <th>Key</th>
                             <th>Caption</th>
                             <th>Value</th>
                             <th>Value Type</th>
+                            <th>Dependent Fields</th>
+                            <th>Readonly</th>
+                            <th>Hidden</th>
                             <th>Source API</th>
+                            <th>Dependent Fields Source Api</th>
                             <th>Value List</th>
                             <th>Default Value</th>
                             <th class="text-center">Action</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <!-- Rows will be added here dynamically -->
                     </tbody>
                 </table>
             </div>
@@ -66,7 +68,6 @@
                 </button>
             </div>
 
-            <!-- Buttons -->
             <div class="row mt-3">
                 <div class="col-12">
                     <div class="d-flex justify-content-start">
@@ -90,7 +91,6 @@
 [[end]]
 
 [[block scripts]]
-<!-- Select2 -->
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
@@ -107,7 +107,6 @@
 
 <script>
 $(document).ready(function () {
-    // Enable Select2 with tags for tr_type and value_type
     $('#tr_type').select2({
         tags: true,
         width: '100%',
@@ -121,10 +120,15 @@ $(document).ready(function () {
         [[pass]]
     `;
 
-    // Add new row
+    let yesNoOptions = `
+        <option value="no">no</option>
+        <option value="yes">yes</option>
+    `;
+
     $('#addRow').on('click', function () {
         let row = `
         <tr>
+            <td><input type="number" class="form-control" name="sl[]"></td>
             <td><input type="text" class="form-control" name="section[]"></td>
             <td><input type="number" class="form-control" name="order[]"></td>
             <td><input type="text" class="form-control" name="key[]"></td>
@@ -135,7 +139,19 @@ $(document).ready(function () {
                     ${valueTypeOptions}
                 </select>
             </td>
+            <td><input type="text" class="form-control" name="dependent_fields[]"></td>
+            <td>
+                <select class="form-select readonly_select" name="readonly[]">
+                    ${yesNoOptions}
+                </select>
+            </td>
+            <td>
+                <select class="form-select hidden_select" name="hidden[]">
+                    ${yesNoOptions}
+                </select>
+            </td>
             <td><input type="text" class="form-control" name="source_api[]"></td>
+            <td><input type="text" class="form-control" name="dependent_fields_source_api[]"></td>
             <td><input type="text" class="form-control" name="value_list[]"></td>
             <td><input type="text" class="form-control" name="default_value[]"></td>
             <td class="text-center">
@@ -146,15 +162,25 @@ $(document).ready(function () {
         </tr>`;
         $('#entriesTable tbody').append(row);
 
-        // Apply Select2 for new row's value_type
         $('#entriesTable tbody tr:last .value_type_select').select2({
+            tags: true,
+            width: '100%',
+            placeholder: "Select or add new"
+        });
+
+        $('#entriesTable tbody tr:last .readonly_select').select2({
+            tags: true,
+            width: '100%',
+            placeholder: "Select or add new"
+        });
+
+        $('#entriesTable tbody tr:last .hidden_select').select2({
             tags: true,
             width: '100%',
             placeholder: "Select or add new"
         });
     });
 
-    // Remove row
     $(document).on('click', '.removeRow', function () {
         $(this).closest('tr').remove();
     });

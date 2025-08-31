@@ -25,7 +25,9 @@ def transaction_config_create():
 
 
 
-
+# -----------------------------
+# Create / Submit New Config
+# -----------------------------
 @action('transaction_config/submit', method=['POST'])
 @action.uses(session, flash, db)
 def transaction_config_submit():
@@ -45,21 +47,19 @@ def transaction_config_submit():
     source_apis    = request.forms.get('source_api[]') or []
     value_lists    = request.forms.get('value_list[]') or []
     default_values = request.forms.get('default_value[]') or []
+    sls            = request.forms.get('sl[]') or []
+    readonlys      = request.forms.get('readonly[]') or []
+    hiddens        = request.forms.get('hidden[]') or []
+    dependent_fields = request.forms.get('dependent_fields[]') or []
 
     # If those come as strings, wrap into list
-    if isinstance(sections, str): sections = [sections]
-    if isinstance(orders, str): orders = [orders]
-    if isinstance(keys, str): keys = [keys]
-    if isinstance(captions, str): captions = [captions]
-    if isinstance(values, str): values = [values]
-    if isinstance(value_types, str): value_types = [value_types]
-    if isinstance(source_apis, str): source_apis = [source_apis]
-    if isinstance(value_lists, str): value_lists = [value_lists]
-    if isinstance(default_values, str): default_values = [default_values]
+    wrap = lambda v: [v] if isinstance(v, str) else v
+    sections, orders, keys, captions, values = map(wrap, [sections, orders, keys, captions, values])
+    value_types, source_apis, value_lists, default_values = map(wrap, [value_types, source_apis, value_lists, default_values])
+    sls, readonlys, hiddens = map(wrap, [sls, readonlys, hiddens])
 
     try:
         for i in range(len(sections)):
-            # Skip empty rows
             if not (sections[i] or keys[i] or captions[i]):
                 continue
 
@@ -73,12 +73,15 @@ def transaction_config_submit():
                 value_type=value_types[i].strip() if value_types[i] else None,
                 source_api=source_apis[i].strip() if source_apis[i] else None,
                 value_list=value_lists[i].strip() if value_lists[i] else None,
-                default_value=default_values[i].strip() if default_values[i] else None
+                default_value=default_values[i].strip() if default_values[i] else None,
+                sl=int(sls[i]) if i < len(sls) and sls[i] else None,
+                readonly=readonlys[i].strip() if i < len(readonlys) and readonlys[i] else None,
+                hidden=hiddens[i].strip() if i < len(hiddens) and hiddens[i] else None,
+                dependent_fields=dependent_fields[i].strip() if i < len(dependent_fields) and dependent_fields[i] else None
             )
 
         db.commit()
         flash.set("Transaction Config saved successfully.", "success")
-
     except Exception as e:
         db.rollback()
         flash.set(f"Error saving config: {str(e)}", "danger")
@@ -86,115 +89,106 @@ def transaction_config_submit():
     redirect(URL('transaction_config', 'index'))
 
 
-
 # -----------------------------
-# Edit Page
+# Edit Page (GET)
 # -----------------------------
-@action('transaction_config/edit')
-@action.uses('transaction_config/edit.html', db, session, flash)
+@action('transaction_config/edit', method=['GET'])
+@action.uses(db, 'transaction_config/edit.html')
 def transaction_config_edit():
-    row_id = request.query.get('id')
-    if not row_id:
-        return dict(error='Missing transaction config ID.')
+    q = request.query
+    tr_type = q.get('id')
 
-    row = db(db.tr_config.id == row_id).select().first()
-    if not row:
-        return dict(error='Transaction Config not found.')
+    if not tr_type:
+        redirect(URL('transaction_config', 'index'))
 
-    # Example dropdown lists
-    tr_type_list = ["Purchase", "Sale", "Adjustment"]
-    value_type_list = ["String", "Number", "Date", "Boolean"]
+    value_type_list = ["integer", "string", "date", "dropdown"]
+
+    rows = db.executesql(f"""
+        SELECT id, tr_type, section, `order`, `key`, caption, value,
+               value_type, source_api, value_list, default_value,
+               sl, readonly, hidden, dependent_fields, dependent_fields_source_api
+        FROM tr_config
+        WHERE tr_type = '{tr_type}'
+        ORDER BY sl ASC, `order` ASC
+    """, as_dict=True)
 
     return dict(
-        data=row.as_dict(),
-        tr_type_list=tr_type_list,
-        selected_tr_type=row.tr_type,
-        value_type_list=value_type_list,
-        selected_value_type=row.value_type
+        tr_type=tr_type,
+        rows=rows,
+        value_type_list=value_type_list
     )
 
 
-# -----------------------------
-# Update / Save Edit
-# -----------------------------
 @action('transaction_config/update', method=['POST'])
 @action.uses(db, session, flash)
 def transaction_config_update():
-    row_id = request.forms.get('id')
-    if not row_id:
-        flash.set("Missing transaction config ID.", "danger")
-        redirect(URL('transaction_config', 'index'))
-
-    row = db(db.tr_config.id == row_id).select().first()
-    if not row:
-        flash.set("Transaction Config not found.", "danger")
-        redirect(URL('transaction_config', 'index'))
-
-    # Get form values
-    tr_type = request.forms.get('tr_type', '').strip()
-    sl = request.forms.get('sl') or None
-    section = request.forms.get('section', '').strip()
-    order = request.forms.get('order') or None
-    key = request.forms.get('key', '').strip()
-    caption = request.forms.get('caption', '').strip()
-    value = request.forms.get('value', '').strip()
-    value_type = request.forms.get('value_type', '').strip()
-    source_api = request.forms.get('source_api', '').strip()
-    value_list = request.forms.get('value_list', '').strip()
-    default_value = request.forms.get('default_value', '').strip()
-
+    tr_type = request.forms.get('tr_type','').strip()
     if not tr_type:
         flash.set("Transaction Type is required.", "danger")
-        redirect(URL('transaction_config', 'edit', vars={'id': row_id}))
+        redirect(URL('transaction_config','index'))
 
-    # Update the row
-    row.update_record(
-        tr_type=tr_type,
-        sl=sl,
-        section=section,
-        order=order,
-        key=key,
-        caption=caption,
-        value=value,
-        value_type=value_type,
-        source_api=source_api,
-        value_list=value_list,
-        default_value=default_value
-    )
+    fields = ['section','order','key','caption','value','value_type','dependent_fields',
+              'readonly','hidden','source_api','dependent_fields_source_api','value_list','default_value','sl']
 
-    flash.set("Transaction Config updated successfully.", "success")
-    redirect(URL('transaction_config', 'index'))
+    # Collect lists safely
+    data = {}
+    for f in fields:
+        value = request.forms.get(f"{f}[]")
+        if value is None:
+            data[f] = []
+        elif isinstance(value, list):
+            data[f] = value
+        else:
+            data[f] = [value]  # wrap single value into a list
+
+    # Delete old config
+    db(db.tr_config.tr_type==tr_type).delete()
+
+    for i in range(len(data['key'])):
+        db.tr_config.insert(
+            tr_type=tr_type,
+            section=data['section'][i].strip() if i<len(data['section']) else '',
+            order=int(data['order'][i]) if i<len(data['order']) and data['order'][i] else None,
+            key=data['key'][i].strip() if i<len(data['key']) else '',
+            caption=data['caption'][i].strip() if i<len(data['caption']) else '',
+            value=data['value'][i].strip() if i<len(data['value']) else '',
+            value_type=data['value_type'][i].strip() if i<len(data['value_type']) else '',
+            dependent_fields=data['dependent_fields'][i].strip() if i<len(data['dependent_fields']) else '',
+            readonly=data['readonly'][i].strip() if i<len(data['readonly']) else '',
+            hidden=data['hidden'][i].strip() if i<len(data['hidden']) else '',
+            source_api=data['source_api'][i].strip() if i<len(data['source_api']) else '',
+            dependent_fields_source_api=data['dependent_fields_source_api'][i].strip() if i<len(data['dependent_fields_source_api']) else '',
+            value_list=data['value_list'][i].strip() if i<len(data['value_list']) else '',
+            default_value=data['default_value'][i].strip() if i<len(data['default_value']) else '',
+            sl=int(data['sl'][i]) if i<len(data['sl']) and data['sl'][i] else None
+        )
+
+    db.commit()
+    flash.set("Transaction Config updated successfully.","success")
+    redirect(URL('transaction_config','index'))
 
 
-# -----------------------------
-# Get Data for Datatable
+
+
+
+# Get Distinct tr_type for Datatable
 # -----------------------------
 @action('transaction_config/get_data', method=['GET'])
 @action.uses(db)
 def transaction_config_get_data():
     q = request.query
     start, length = int(q.get('start', 0)), int(q.get('length', 15))
-    sort_col_index = q.get('order[0][column]')
     sort_dir = q.get('order[0][dir]', 'desc').lower()
     sort_dir = sort_dir if sort_dir in ['asc', 'desc'] else 'desc'
-    sort_col = 'id'  # default
 
-    # Determine sort column safely
-    if sort_col_index is not None:
-        sort_col_index = int(sort_col_index)
-        sort_col = q.get(f'columns[{sort_col_index}][data]', '') or 'id'
-        if sort_col.lower() in ['order', 'key']:
-            sort_col = f"`{sort_col}`"
+    # Total distinct tr_type count
+    total_rows = db.executesql('SELECT COUNT(DISTINCT tr_type) AS total FROM tr_config', as_dict=True)[0]['total']
 
-    # Total rows
-    total_rows = db.executesql('SELECT COUNT(*) AS total FROM tr_config', as_dict=True)[0]['total']
-
-    # Fetch data
+    # Fetch distinct tr_type values
     base_sql = f'''
-        SELECT id, tr_type, sl, section, `order`, `key`, caption, value,
-               value_type, source_api, value_list, default_value
+        SELECT DISTINCT tr_type
         FROM tr_config
-        ORDER BY {sort_col} {sort_dir}
+        ORDER BY tr_type {sort_dir}
     '''
     if length != -1:
         base_sql += f' LIMIT {length} OFFSET {start}'
@@ -207,3 +201,5 @@ def transaction_config_get_data():
         recordsFiltered=total_rows,
         draw=int(q.get('draw', 1))
     )
+
+

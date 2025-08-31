@@ -1,0 +1,397 @@
+[[extend 'layout.html']]
+
+[[block header]]
+[[icon='fa fa-file-pen']]
+[[breadcamp = 'Create Individual Requisition']]
+[[end]]
+
+[[block content]]
+<style>
+    #uploadedFilesTable td, #uploadedFilesTable th {
+    padding-top: 2px;
+    padding-bottom: 2px;
+    font-size: 13px;
+    height: 28px; 
+}
+</style>
+
+<div id="pageLoader" style="text-align:center; padding:50px;">
+    <i class="fa fa-spinner fa-spin fa-2x"></i> Loading...
+</div>
+
+<div id="formContainer" style="display:none;">
+    <div class="container-section">
+        <div class="d-flex justify-content-between align-items-center border-bottom mx-2">
+            <span class="icon-text icon-text-bold">
+                <i class="fa-solid fa-plus"></i>
+                <span>Create</span>
+            </span>
+            <div class="d-flex justify-content-end">
+                <div class="p-1">
+                    <a href="[[=URL('requisition_individual/index')]]" class="btn btn-sm btn-light">
+                        <i class="fa-solid fa-arrow-left"></i> <span class="ms-2">Back</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="container py-2">
+            <form id="uploadForm" action="[[=URL('requisition_individual','submit')]]" method="post" enctype="multipart/form-data">
+                <div id="custom_form">
+                    <div class="row">
+                        <div class="col-md-3 col-sm-12">
+                            <div class="row">
+                                <div class="mb-2">
+                                    <label for="emp_id" class="form-label">Select Employee <span class="is_required">*</span></label>
+                                    <select class="form-select form-select-sm select_custom" id="emp_id" name="emp_id" required>
+                                        <option value="">Select Employee </option>
+                                    </select>
+                                </div>
+
+                                    <input type="hidden" class="form-control form-control-sm" id="emp_name" name="emp_name" readonly>
+
+                                <div class="mb-2">
+                                    <label for="designation" class="form-label">Designation</label>
+                                    <input type="text" class="form-control form-control-sm" id="designation" name="designation" readonly>
+                                </div>
+
+                                <div class="mb-2">
+                                    <label for="tr_code" class="form-label">Territory Code</label>
+                                    <input type="text" class="form-control form-control-sm" id="tr_code" name="tr_code" readonly>
+                                </div>
+
+                                <div class="mb-2">
+                                    <label for="head_office" class="form-label">Head Office</label>
+                                    <input type="text" class="form-control form-control-sm" id="head_office" name="head_office" readonly>
+                                </div>
+
+                                <div class="mb-2">
+                                    <label for="joining_date_display" class="form-label">Joining Date <span class="is_required">*</span></label>
+                                    <input type="text" class="form-control form-control-sm" id="joining_date_display" readonly>
+                                    <input type="hidden" id="joining_date" name="joining_date">
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <div class="col-md-9 col-sm-12">
+                            <div class="row">
+                                <div class="col-md-4 col-sm-12">
+
+                                    <div class="mb-2">
+                                        <label for="asset_type" class="form-label">Asset Type <span class="is_required">*</span></label>
+                                        <select class="form-select form-select-sm select_custom" id="asset_type" name="asset_type" required>
+                                            <option value="">Select Asset Type</option>
+                                            [[for asset_detail in asset_types:]]
+                                                <option value="[[=asset_detail['id']]]">
+                                                    [[=asset_detail['text']]]
+                                                </option>
+                                            [[pass]]
+                                        </select>
+                                    </div>
+
+                                    <div class="mb-2">
+                                        <label for="license_number" class="form-label">Driving License No<span class="is_required">*</span></label>
+                                        <input type="text" class="form-control form-control-sm" id="license_number" name="license_number" required>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-4 col-sm-12">
+                                    <div class="mb-2">
+                                        <label for="license_issue_date" class="form-label">Driving License Issue Date <span class="is_required">*</span></label>
+                                        <div class="flatpickr-wrapper">
+                                            <input type="text" class="date-picker" id="license_issue_date" name="license_issue_date" placeholder=" License Issue Date" required>
+                                            <i class="fa fa-calendar calendar-icon text-secondary calendar-toggle"></i>                            
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-2">
+                                        <label for="license_expire_date" class="form-label">License Expire Date <span class="is_required">*</span></label>
+                                        <div class="flatpickr-wrapper">
+                                            <input type="text" class="date-picker" id="license_expire_date" name="license_expire_date" placeholder="License Expire Date" required>
+                                            <i class="fa fa-calendar calendar-icon text-secondary calendar-toggle"></i>                            
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-4 col-sm-12">
+                                    <div class="mb-2">
+                                        <label for="requisition_status" class="form-label">Requisition Status <span class="is_required">*</span></label>
+                                        <select class="form-select form-select-sm select_custom" id="requisition_status" name="requisition_status" required>
+                                            <option value="">Select Requisition Status</option>
+                                            [[for requisition_status in requisition_status_combos:]]
+                                                <option value="[[=requisition_status]]">
+                                                    [[=requisition_status]]
+                                                </option>
+                                            [[pass]]
+                                        </select>
+                                    </div>
+                                </div>
+
+                                
+
+                                <div class="col-md-12 col-sm-12">
+                                    <div class="mb-2">
+                                        <strong>File Attachment Section</strong>    
+                                    </div>
+                                    <div class="border border-primary p-2 rounded">
+                                        <div class="row">
+                                            <div class="col-md-4 col-sm-12 mb-2">
+                                                <label for="doc_type" class="form-label">Doc Type</label>
+                                                <select class="form-select form-select-sm select_custom" id="doc_type" name="doc_type">
+                                                    <option value="">Select Document Type</option>
+                                                    [[for doc_type in doc_type_combos:]]
+                                                        <option value="[[=doc_type]]">
+                                                            [[=doc_type]]
+                                                        </option>
+                                                    [[pass]]
+                                                </select>
+                                            </div>
+
+                                            <div class="col-md-6 col-sm-12 mb-2">
+                                                <label for="formFile" class="form-label">Choose File</label>
+                                                <input type="file" class="form-control form-control-sm" id="formFile" name="upload_file">
+                                            </div>
+
+                                            <div class="col-md-2 col-sm-12 d-flex align-items-end mb-2">
+                                                <button id="uploadBtn" type="button" class="btn btn-sm btn-primary w-100" title="Upload">
+                                                    <i class="fa-solid fa-upload"></i>
+                                                    <span class="d-lg-inline d-sm-inline d-md-none"> Upload</span>
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <div id="uploadStatus"></div>
+                                        
+                                        <div style="margin-bottom: 0; padding-bottom: 0;">
+                                            <div class="mb-1" style="margin-bottom: 4px;">Uploaded Files</div>
+                                            <div class="table-responsive" style="margin-bottom: 0 !important; padding-bottom: 0 !important;">
+                                                <table class="table table-bordered table-sm mb-0" id="uploadedFilesTable" style="margin-bottom: 0 !important;">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Doc Type</th>
+                                                            <th>File Name</th>
+                                                            <th>Action</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody></tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="uploadedFilesData"></div>
+
+                <div class="mt-2 mb-3">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fa-solid fa-floppy-disk"></i> <span class="ms-2">Save</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+[[end]]
+
+[[block scripts]]
+<script>
+    const uploadedFiles = [];
+    const IMAGE_UPLOAD_API = "[[=IMAGE_UPLOAD_API]]";
+    const IMAGE_DOWNLOAD_API = "[[=IMAGE_DOWNLOAD_API]]";
+    const EMPLOYEE_DETAILS_API = "[[=URL('default', 'get_employee_details')]]";
+
+    $(document).ready(function () {
+        const $spinner = $('#pageLoader');
+        const $content = $('#formContainer');
+
+        $.getJSON(EMPLOYEE_DETAILS_API)
+            .done(function (employees) {
+                const $empSelect = $('#emp_id').empty();
+
+                // Add a blank option so nothing is preselected
+                $empSelect.append(new Option("", "", true, true)).val(null);
+
+                employees.forEach(emp => {
+                    const option = new Option(
+                        `${emp.employee_id} | ${emp.employee_name}`,
+                        emp.employee_id,
+                        false,
+                        false
+                    );
+                    $(option).data({
+                        empName: emp.employee_name,
+                        designation: emp.designation,
+                        territoryCode: emp.territory_code,
+                        headOffice: emp.head_office,
+                        joiningDate: emp.joining_date
+                    });
+                    $empSelect.append(option);
+                });
+
+                $empSelect.select2({
+                    placeholder: "Select Employee",
+                    allowClear: true,
+                    width: "100%"
+                }).val(null).trigger("change"); // Force reset after init
+
+                $spinner.hide();
+                $content.show();
+            });
+
+
+        
+
+
+        // ✅ On Employee change -> Fill fields
+        $('#emp_id').on('change', function () {
+            const $option = $(this).find(':selected');
+            $('#emp_name').val($option.data('empName') || '');
+            $('#designation').val($option.data('designation') || '');
+            $('#tr_code').val($option.data('territoryCode') || '');
+            $('#head_office').val($option.data('headOffice') || '');
+            $('#joining_date_display').val($option.data('joiningDate') || '');
+            $('#joining_date').val($option.data('joiningDate') || '');
+        });
+
+        // ✅ Requisition Status (lazy load on open)
+        $('#requisition_status').one('select2:open', function () {
+            const $select = $(this);
+            $.ajax({
+                url: '[[=URL("default", "get_combo_values")]]?key=requisition_status',
+                method: 'GET',
+                dataType: 'json',
+                success: function (data) {
+                    const formatted = data.results.map(row => ({
+                        id: row.id,
+                        text: row.text
+                    }));
+                    $select.empty().select2({
+                        data: formatted,
+                        placeholder: "Requisition Status",
+                        allowClear: true,
+                        width: "100%"
+                    }).select2('open');
+                }
+            });
+        });
+
+        // ✅ Asset Type (lazy load on open)
+        $('#asset_type').one('select2:open', function () {
+            const $select = $(this);
+            $.ajax({
+                url: '[[=URL("default", "get_asset_master_types")]]',
+                method: 'GET',
+                dataType: 'json',
+                success: function (data) {
+                    $select.empty().select2({
+                        data: data.results, // already {id,text}
+                        placeholder: "Select Asset Type",
+                        allowClear: true,
+                        width: "100%"
+                    }).select2('open');
+                }
+            });
+        });
+
+        // ✅ Initialize Doc Type select2 immediately (static list)
+        $('#doc_type').select2({
+            placeholder: "Select Document Type",
+            allowClear: true,
+            width: "100%"
+        });
+
+        // ✅ Init flatpickr for date inputs
+        $('input.date-picker').flatpickr({ dateFormat: "Y-m-d" });
+
+        // ✅ On form submit: Add hidden inputs for uploaded files
+        $('#uploadForm').on('submit', function () {
+            const $container = $('#uploadedFilesData').empty();
+            $.each(uploadedFiles, function (index, fileData) {
+                $.each(['doc_type', 'file_name', 'file_path'], function (_, key) {
+                    $('<input>', {
+                        type: 'hidden',
+                        name: `uploaded_files[${index}][${key}]`,
+                        value: fileData[key]
+                    }).appendTo($container);
+                });
+            });
+        });
+
+        // ✅ Upload button click
+        $('#uploadBtn').on('click', function () {
+            const $fileInput = $('#formFile');
+            const docType = $('#doc_type').val();
+            const $uploadStatus = $('#uploadStatus');
+            const $tableBody = $('#uploadedFilesTable tbody');
+
+            $uploadStatus.text('').removeClass('text-danger text-success');
+
+            if (!docType || !$fileInput[0].files.length) {
+                alert(!docType ? 'Select a document type.' : 'Choose a file.');
+                return;
+            }
+
+            const file = $fileInput[0].files[0];
+            const formData = new FormData();
+            formData.append('upload_file', file);
+
+            $.ajax({
+                url: "[[=URL('requisition_individual','upload_expense_proxy')]]",
+                method: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                dataType: 'json'
+            })
+                .done(function (data) {
+                    if (data.res_data) {
+                        const uploadedFileData = {
+                            doc_type: docType,
+                            file_name: file.name,
+                            file_path: data.res_data.ret_str
+                        };
+                        uploadedFiles.push(uploadedFileData);
+
+                        const $row = $('<tr>').append(
+                            $('<td>').text(uploadedFileData.doc_type),
+                            $('<td>').text(uploadedFileData.file_name),
+                            $('<td>').append(
+                                $('<button>', { class: 'btn btn-sm btn-info me-1', html: '<i class="fa-solid fa-download"></i>' })
+                                    .on('click', function () {
+                                        window.open(`${IMAGE_DOWNLOAD_API}/expense/${uploadedFileData.file_path}`, '_blank');
+                                    }),
+                                $('<button>', { class: 'btn btn-sm btn-danger', html: '<i class="fa-solid fa-trash"></i>' })
+                                    .on('click', function () {
+                                        const index = uploadedFiles.indexOf(uploadedFileData);
+                                        if (index > -1) uploadedFiles.splice(index, 1);
+                                        $row.remove();
+                                    })
+                            )
+                        );
+                        $tableBody.append($row);
+
+                        $fileInput.val('');
+                        $('#doc_type').val('').trigger('change');
+                    } else {
+                        $uploadStatus.text('Upload failed: ' + (data.detail || 'Unknown error')).addClass('text-danger');
+                    }
+                })
+                .fail(function (xhr, status, error) {
+                    $uploadStatus.text('Upload error: ' + error).addClass('text-danger');
+                });
+        });
+    });
+</script>
+[[end]]
+
+
+
+
+

@@ -87,19 +87,37 @@ pass
             </div>
           </li>
           
-
-
           <li class="menu-header">
             <span> Operations </span>
           </li>
 
-          <li class="menu-item [[if _controller_name=='requisition':]]active_link[[pass]]">
-              <a href="[[=URL('requisition/index')]]">
-                  <span class="menu-icon">
-                      <i class="fa-solid fa-file-pen"></i>
-                  </span>
-                  <span class="menu-title">Requisition</span>
-              </a>
+          <li class="menu-item sub-menu [[if _controller_name in ['requisition_individual','requisition_org']:]]open[[pass]]">
+            <a href="#">
+              <span class="menu-icon">
+                <i class="fa-solid fa-network-wired"></i>
+              </span>
+              <span class="menu-title">Requisition</span>
+            </a>
+            <div class="sub-menu-list">
+              <ul>
+                <li class="menu-item [[if _controller_name=='requisition_individual':]]active_link[[pass]]">
+                  <a href="[[=URL('requisition_individual/index')]]">
+                    <span class="menu-icon"><i class="fa-solid fa-warehouse"></i></span>
+                    <span class="menu-title">Individual</span>
+                  </a>
+                </li>
+              </ul>
+            </div>
+            <div class="sub-menu-list">
+              <ul>
+                <li class="menu-item [[if _controller_name=='requisition_org':]]active_link[[pass]]">
+                  <a href="[[=URL('requisition_org/index')]]">
+                    <span class="menu-icon"><i class="fa-solid fa-warehouse"></i></span>
+                    <span class="menu-title">Organization</span>
+                  </a>
+                </li>
+              </ul>
+            </div>
           </li>
 
           <li class="menu-item [[if _controller_name=='purchase':]]active_link[[pass]]">
@@ -132,36 +150,25 @@ pass
               </span>
               <span class="menu-title">Movement</span>
             </a>
+            [[
+              from apps.expense.common_fn import get_tr_types
+              data = get_tr_types()
+              
+            ]]
+
+            [[for type in data:]]
             <div class="sub-menu-list">
               <ul>
                 <li class="menu-item [[if _controller_name=='allocation':]]active_link[[pass]]">
-                  <a href="#">
+                  <a href="[[=URL('transaction/index')]]?type=[[=type['tr_type']]]">
                     <span class="menu-icon"><i class="fa-solid fa-warehouse"></i></span>
-                    <span class="menu-title">Allocation</span>
+                    <span class="menu-title">[[=type['tr_type']]]</span>
                   </a>
                 </li>
               </ul>
             </div>
-            <div class="sub-menu-list">
-              <ul>
-                <li class="menu-item [[if _controller_name=='transfer':]]active_link[[pass]]">
-                  <a href="#">
-                    <span class="menu-icon"><i class="fa-solid fa-warehouse"></i></span>
-                    <span class="menu-title">Transfer</span>
-                  </a>
-                </li>
-              </ul>
-            </div>
-            <div class="sub-menu-list">
-              <ul>
-                <li class="menu-item [[if _controller_name=='ownership_transfer':]]active_link[[pass]]">
-                  <a href="#">
-                    <span class="menu-icon"><i class="fa-solid fa-warehouse"></i></span>
-                    <span class="menu-title">Ownership Transfer</span>
-                  </a>
-                </li>
-              </ul>
-            </div>
+            [[pass]]
+
           </li>
 
 

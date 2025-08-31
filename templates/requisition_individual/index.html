@@ -1,0 +1,283 @@
+[[extend 'layout.html']]
+
+[[block header]]
+[[icon='fa fa-file-lines']]
+[[breadcamp = 'Individual Requisition']]
+[[end]]
+
+[[block content]]
+
+<!-- <style>
+    .asset-type-column {
+        min-width: 100px;
+        max-width: 140px;      /* set max width as you want */
+        white-space: normal !important;  /* allow wrapping */
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        vertical-align: middle;
+    }
+</style> -->
+
+<div class="container-section mx-2">
+    <div class="row">
+        <!-- Filter label -->
+        <div class="col-md-1 mt-2 mb-2">
+            <span class="icon-text icon-text-bold">
+                <i class="fa-solid fa-table-list"></i>
+                <span>Table</span>
+            </span>
+        </div>
+
+        <!-- Filter form -->
+        <div class="col-md-9 mt-2">
+            <div class="row" id="custom_form" style="display: none;">
+                <div class="col-md-2 mb-2">
+                    <div class="">
+                        <select class="form-select form-select-sm select_custom" name="req_status"  placeholder="Req Status">
+                            <option value="">Req Status</option>
+                        </select>
+                    </div>   
+                </div>
+
+                <div class="col-md-2 mb-2">
+                    <div class="">
+                        <select class="form-select form-select-sm select_custom" name="asset_type"  placeholder="Asset Type">
+                            <option value="">Select Asset</option>
+                        </select>
+                    </div>   
+                </div>
+
+                <div class="col-md-2 mb-2">
+                    <div class="">
+                        <select class="form-select form-select-sm select_custom" name="emp_id" placeholder="Employee">
+                            <option value="">Select Employee</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="col-md-2 mb-2">
+                    <div class="">
+                        <input type="text" name="head_office" class="form-control form-control-sm" placeholder="Head Office">
+                    </div>
+                </div>
+
+                <div class="col-md-4 mb-2 d-flex justify-content-end">
+                    <div class="me-2">
+                        <button type="submit" id="submit" class="btn btn-sm btn-primary" style="width:90px;">
+                            <i class="fa-solid fa-magnifying-glass"></i> <span class="ms-2">Search</span>
+                        </button>
+                    </div>
+                    <div>
+                        <button type="reset" id="reset" class="btn btn-sm btn-light" style="width:90px;">
+                            <i class="fa-solid fa-retweet"></i> <span class="ms-2">Reset</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filter + Action Buttons -->
+        <div class="col-md-2 mt-2 mb-2">
+            <div class="d-flex justify-content-end">
+                <div class="me-2">
+                    <button type="button" id="filter" class="btn btn-sm btn-light" style="width:90px;">
+                        <i class="fa-solid fa-filter"></i> <span class="ms-2">Filter</span>
+                    </button>
+                </div>
+                <div class="dropdown">
+                    <button class="btn btn-primary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="width:90px;">
+                        Action
+                    </button>
+                    <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                        <a class="dropdown-item" href="[[=URL('requisition_individual/create')]]"><i class="fas fa-add me-1"></i> Add</a>
+                        <button class="dropdown-item" id="ExportExcel"><i class="fas fa-file-excel me-1"></i> Excel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Table -->
+    <div class="table-responsive">
+        <table id="myTable" class="table table-bordered compact" style="width:100%">
+            <thead class="text-truncate"></thead>
+            <tbody></tbody>
+        </table>
+    </div>
+</div>
+
+[[end]]
+
+[[block scripts]]
+<script>
+    $(document).ready(function () {
+        $("[name='req_status']").one('select2:open', function (e) {
+            $.ajax({
+                url: '[[=URL("default", "get_combo_values")]]?key=requisition_status',
+                method: 'GET',
+                dataType: 'json',
+                success: function (data) {
+                    const formatted = data.results.map(row => ({ id: row.id, text: row.text }));
+                    const $select = $("[name='req_status']");
+                    $select.empty();
+                    $select.select2({ data: formatted, placeholder: "Requisition Status", allowClear: true }).select2('open');
+                }
+            });
+        });
+
+        $("[name='asset_type']").one('select2:open', function (e) {
+            $.ajax({
+                url: '[[=URL("default", "get_asset_master_types")]]',
+                method: 'GET',
+                dataType: 'json',
+                success: function (data) {
+                    const $select = $("[name='asset_type']");
+                    $select.empty();
+
+                    $select.select2({
+                        data: data.results, // already in correct {id, text} format
+                        placeholder: "Select Asset Type",
+                        allowClear: true
+                    }).select2('open');
+                }
+
+            });
+        });
+
+        $("[name='emp_id']").one('select2:open', function (e) {
+            $.ajax({
+                url: '[[=URL("default", "get_employee_details")]]',  // Replace with your actual controller/function
+                method: 'GET',
+                dataType: 'json',
+                success: function(data) {
+                    const formatted = data.map(emp => {
+                        const text = `${emp.employee_id || ''} | ${emp.employee_name || ''}`;
+                        return { id: emp.employee_id, text: text };
+                    });
+
+                    const $select = $("[name='emp_id']");
+                    $select.empty();
+
+                    $select.select2({
+                        data: formatted,
+                        placeholder: "Select Employee",
+                        allowClear: true
+                    }).select2('open');
+                }
+
+            });
+        });
+
+
+        $("#filter").click(function () {
+            $("#custom_form").fadeToggle("slow");
+        });
+
+        // Initialize DataTable
+        var table = $('#myTable').DataTable({
+            dom: "Bfrt<'d-flex justify-content-between'<l><i><p>>",
+            buttons: [
+                {
+                    extend: 'excel',
+                    title: 'Requisition Data',
+                    filename: 'Requisition_Data',
+                    exportOptions: {
+                        columns: [0, 1, 2, 3, 4, 5, 6, 7]
+                    },
+                }
+            ],
+            order: [8, 'desc'],
+            searching: false,
+            paging: true,
+            serverSide: true,
+            scrollCollapse: false,
+            scrollX: true,
+            scrollY: "413px",
+            fixedHeader: true,
+            fixedColumns: {
+                left: 1,
+                right: 1
+            },
+            lengthMenu: [
+                [15, 50, 100, -1],
+                [15, 50, 100, 'All']
+            ],
+            ajax: {
+                async: true,
+                type: 'GET',
+                url: '[[=URL("requisition_individual", "get_data")]]',
+                data: function (d) {
+                    d.req_status = $("select[name='req_status']").val();
+                    d.asset_type = $("select[name='asset_type']").val();
+                    d.emp_id = $("select[name='emp_id']").val();
+                    d.head_office = $("input[name='head_office']").val();
+                },
+                dataSrc: 'data'
+            },
+            columns: [
+                {
+                    title: 'SL No.', data: null, render: function (data, type, row, meta) {
+                        return meta.row + 1;
+                    }
+                },
+                { title: 'Req Id', data: 'req_id', render: d => d ?? '-' },
+                {
+                    title: 'Status',
+                    data: 'req_status',
+                    render: function(data, type, row) {
+                        const status = data?.toLowerCase() === 'approved' ? 'approved' : 'pending';
+                        const colorClass = status === 'approved' ? 'bg-success' : 'bg-warning text-dark';
+                        const text = status === 'approved' ? 'APPROVED' : 'PENDING';
+
+                        return `<div style="display:flex; justify-content:center; align-items:center; height:100%;">
+                                <div class="badge ${colorClass} fw-bold" style="min-width: 60px; text-align:center; display:inline-block;">
+                                    ${text}
+                                </div>
+                                </div>`;
+                    }
+                },
+                { title: 'Asset Type', data: 'asset_type', className: 'asset-type-column', render: d => d ?? '-' },
+                {
+                    title: 'Employee',
+                    data: null,
+                    render: function(data, type, row) {
+                        const emp_id = row.emp_id ?? '';
+                        const emp_name = row.emp_name ?? '';
+                        const designation = row.designation ?? '';
+                        if (!emp_id && !emp_name && !designation) return '-';
+                        return `${emp_id} | ${emp_name}`;
+                    }
+                },
+                { title: 'Head Office', data: 'head_office', render: d => d ?? '-' },
+                { title: 'TR Code', data: 'tr_code', render: d => d ?? '-' },
+                { title: 'Joining Date', data: 'joining_date', render: d => d ?? '-' },
+                {
+                    title: '', data: 'id', render: function (data) {
+                        return `
+                            <a class="text-secondary" href="[[=URL('requisition_individual/edit')]]?id=${data}"
+                               data-bs-toggle="tooltip" data-bs-placement="top" title="Update">
+                                <i class="fas fa-edit"></i>
+                            </a>`;
+                    }
+                }
+            ]
+        });
+
+        // Filter submit
+        $("#submit").click(function (e) {
+            e.preventDefault();
+            table.ajax.reload();
+        });
+
+        // Filter reset
+        $("#reset").click(function (e) {
+            e.preventDefault();
+            $("select[name='req_status']").val(null).trigger('change')
+            $("select[name='asset_type']").val(null).trigger('change');
+            $("select[name='emp_id']").val(null).trigger('change');
+            $("input[name='head_office']").val('').trigger('change');
+            table.ajax.reload();
+        });
+    });
+</script>
+[[end]]

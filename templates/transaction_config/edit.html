@@ -1,7 +1,7 @@
 [[extend 'layout.html']]
 
 [[block header]]
-[[icon='fa-solid fa-cogs']]
+[[icon='fa-solid fa-pen-to-square']]
 [[breadcamp = 'Edit Transaction Config']]
 [[end]]
 
@@ -12,7 +12,6 @@
             <i class="fa-solid fa-pen-to-square"></i>
             <span>Edit Transaction Config</span>
         </span>
-
         <div class="d-flex justify-content-end">
             <div class="p-1">
                 <a href="[[=URL('transaction_config','index')]]" class="btn btn-sm btn-light">
@@ -24,106 +23,100 @@
 
     <div class="container py-2">
         <form action="[[=URL('transaction_config','update')]]" method="POST">
-            <input type="hidden" name="id" value="[[=data['id']]]">
-            <div id="custom_form">
-                <div class="row g-3">
-
-                    <!-- Transaction Type -->
-                    <div class="col-md-3">
-                        <label for="tr_type" class="form-label"><strong>Transaction Type <span class="is_required">*</span></strong></label>
-                        <select class="form-select select_custom" id="tr_type" name="tr_type">
-                            <option value="">Select or add Transaction Type</option>
-                            [[for tr_type in tr_type_list:]]
-                                <option value="[[=tr_type]]" [[='selected' if tr_type==selected_tr_type else '']]>[[=tr_type]]</option>
-                            [[pass]]
-                        </select>
-                    </div>
-
-                    <!-- SL -->
-                    <div class="col-md-3">
-                        <label for="sl" class="form-label"><strong>SL</strong></label>
-                        <input type="number" class="form-control" id="sl" name="sl" value="[[=data['sl'] or '']]">
-                    </div>
-
-                    <!-- Section -->
-                    <div class="col-md-3">
-                        <label for="section" class="form-label"><strong>Section</strong></label>
-                        <input type="text" class="form-control" id="section" name="section" value="[[=data['section']]]">
-                    </div>
-
-                    <!-- Order -->
-                    <div class="col-md-3">
-                        <label for="order" class="form-label"><strong>Order</strong></label>
-                        <input type="number" class="form-control" id="order" name="order" value="[[=data['order'] or '']]">
-                    </div>
-
-                    <!-- Key -->
-                    <div class="col-md-3">
-                        <label for="key" class="form-label"><strong>Key</strong></label>
-                        <input type="text" class="form-control" id="key" name="key" value="[[=data['key']]]">
-                    </div>
-
-                    <!-- Caption -->
-                    <div class="col-md-3">
-                        <label for="caption" class="form-label"><strong>Caption</strong></label>
-                        <input type="text" class="form-control" id="caption" name="caption" value="[[=data['caption']]]">
-                    </div>
-
-                    <!-- Value -->
-                    <div class="col-md-3">
-                        <label for="value" class="form-label"><strong>Value</strong></label>
-                        <input type="text" class="form-control" id="value" name="value" value="[[=data['value']]]">
-                    </div>
-
-                    <!-- Value Type -->
-                    <div class="col-md-3">
-                        <label for="value_type" class="form-label"><strong>Value Type</strong></label>
-                        <select class="form-select select_custom" id="value_type" name="value_type">
-                            <option value="">Select or add Value Type</option>
-                            [[for vt in value_type_list:]]
-                                <option value="[[=vt]]" [[='selected' if vt==selected_value_type else '']]>[[=vt]]</option>
-                            [[pass]]
-                        </select>
-                    </div>
-
-                    <!-- Source API -->
-                    <div class="col-md-3">
-                        <label for="source_api" class="form-label"><strong>Source API</strong></label>
-                        <input type="text" class="form-control" id="source_api" name="source_api" value="[[=data['source_api']]]">
-                    </div>
-
-                    <!-- Value List -->
-                    <div class="col-md-3">
-                        <label for="value_list" class="form-label"><strong>Value List</strong></label>
-                        <input type="text" class="form-control" id="value_list" name="value_list" value="[[=data['value_list']]]">
-                    </div>
-
-                    <!-- Default Value -->
-                    <div class="col-md-3">
-                        <label for="default_value" class="form-label"><strong>Default Value</strong></label>
-                        <input type="text" class="form-control" id="default_value" name="default_value" value="[[=data['default_value']]]">
-                    </div>
-
+            <div class="row g-3 mb-3">
+                <div class="col-md-4">
+                    <label for="tr_type" class="form-label"><strong>Transaction Type</strong></label>
+                    <input type="text" class="form-control" id="tr_type" name="tr_type" value="[[=tr_type]]" readonly>
                 </div>
+            </div>
 
-                <!-- Buttons -->
-                <div class="row mt-3">
-                    <div class="col-12">
-                        <div class="d-flex justify-content-start">
-                            <div class="me-2">
-                                <button type="submit" class="btn btn-sm btn-primary">
-                                    <i class="fa-regular fa-floppy-disk"></i> <span class="ms-2">Save</span>
+            <div class="table-wrapper" style="overflow-x:auto;">
+                <table class="table table-bordered table-striped align-middle" id="entriesTable" style="min-width:1500px;">
+                    <thead class="table-light">
+                        <tr>
+                            <th>SL</th>
+                            <th>Section</th>
+                            <th>Order</th>
+                            <th>Key</th>
+                            <th>Caption</th>
+                            <th>Value</th>
+                            <th>Value Type</th>
+                            <th>Dependent Fields</th>
+                            <th>Readonly</th>
+                            <th>Hidden</th>
+                            <th>Source API</th>
+                            <th>Dependent Fields Source Api</th>
+                            <th>Value List</th>
+                            <th>Default Value</th>
+                            <th class="text-center">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        [[for row in rows:]]
+                        <tr>
+                            <td><input type="number" class="form-control" name="sl[]" value="[[=row.get('sl','')]]"></td>
+                            <td><input type="text" class="form-control" name="section[]" value="[[=row.get('section','') or '']]"></td>
+                            <td><input type="number" class="form-control" name="order[]" value="[[=row.get('order','') or '']]"></td>
+                            <td><input type="text" class="form-control" name="key[]" value="[[=row.get('key','') or '']]"></td>
+                            <td><input type="text" class="form-control" name="caption[]" value="[[=row.get('caption','') or '']]"></td>
+                            <td><input type="text" class="form-control" name="value[]" value="[[=row.get('value','') or '']]"></td>
+                            <td>
+                                <select class="form-select value_type_select" name="value_type[]">
+                                    <option value="">Select or add Value Type</option>
+                                    [[for vt in value_type_list:]]
+                                        <option value="[[=vt]]" [[if row.get('value_type','')==vt:]]selected[[pass]]>[[=vt]]</option>
+                                    [[pass]]
+                                </select>
+                            </td>
+                            <td><input type="text" class="form-control" name="dependent_fields[]" value="[[=row.get('dependent_fields','') or '']]"></td>
+                            <td>
+                                <select class="form-select readonly_select" name="readonly[]">
+                                    <option value="no" [[if row.get('readonly','')=='no':]]selected[[pass]]>no</option>
+                                    <option value="yes" [[if row.get('readonly','')=='yes':]]selected[[pass]]>yes</option>
+                                </select>
+                            </td>
+                            <td>
+                                <select class="form-select hidden_select" name="hidden[]">
+                                    <option value="no" [[if row.get('hidden','')=='no':]]selected[[pass]]>no</option>
+                                    <option value="yes" [[if row.get('hidden','')=='yes':]]selected[[pass]]>yes</option>
+                                </select>
+                            </td>
+                            <td><input type="text" class="form-control" name="source_api[]" value="[[=row.get('source_api','') or '']]"></td>
+                            <td><input type="text" class="form-control" name="dependent_fields_source_api[]" value="[[=row.get('dependent_fields_source_api','') or '']]"></td>
+                            <td><input type="text" class="form-control" name="value_list[]" value="[[=row.get('value_list','') or '']]"></td>
+                            <td><input type="text" class="form-control" name="default_value[]" value="[[=row.get('default_value','') or '']]"></td>
+                            <td class="text-center">
+                                <button type="button" class="btn btn-sm btn-danger removeRow">
+                                    <i class="fa-solid fa-trash"></i>
                                 </button>
-                            </div>
-                            <div>
-                                <button type="reset" class="btn btn-sm btn-light">
-                                    <i class="fa-solid fa-retweet"></i> <span class="ms-2">Reset</span>
-                                </button>
-                            </div>
+                            </td>
+                        </tr>
+                        [[pass]]
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="my-2">
+                <button type="button" class="btn btn-sm btn-success" id="addRow">
+                    <i class="fa-solid fa-plus"></i> Add Row
+                </button>
+            </div>
+
+            <div class="row mt-3">
+                <div class="col-12">
+                    <div class="d-flex justify-content-start">
+                        <div class="me-2">
+                            <button type="submit" class="btn btn-sm btn-primary">
+                                <i class="fa-regular fa-floppy-disk"></i> <span class="ms-2">Update</span>
+                            </button>
+                        </div>
+                        <div>
+                            <button type="reset" class="btn btn-sm btn-light">
+                                <i class="fa-solid fa-retweet"></i> <span class="ms-2">Reset</span>
+                            </button>
                         </div>
                     </div>
                 </div>
-
             </div>
         </form>
     </div>
@@ -131,17 +124,53 @@
 [[end]]
 
 [[block scripts]]
-<!-- Select2 -->
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
 <script>
-$(document).ready(function () {
-    // Enable Select2 with tags for tr_type and value_type
-    $('#tr_type, #value_type').select2({
-        tags: true,
-        width: '100%',
-        placeholder: "Select or add new"
+$(function () {
+    function initSelect2(context) {
+        $(context).find('.value_type_select').select2({tags:true,width:'100%',placeholder:"Select or add new"});
+        $(context).find('.readonly_select').select2({tags:true,width:'100%'});
+        $(context).find('.hidden_select').select2({tags:true,width:'100%'});
+    }
+
+    initSelect2(document);
+
+    $('#addRow').on('click', function () {
+        let vtOptions = `<option value="">Select or add Value Type</option>`;
+        [[for vt in value_type_list:]]
+            vtOptions += `<option value="[[=vt]]">[[=vt]]</option>`;
+        [[pass]]
+
+        let row = `<tr>
+            <td><input type="number" class="form-control" name="sl[]" value=""></td>
+            <td><input type="text" class="form-control" name="section[]" value=""></td>
+            <td><input type="number" class="form-control" name="order[]" value=""></td>
+            <td><input type="text" class="form-control" name="key[]" value=""></td>
+            <td><input type="text" class="form-control" name="caption[]" value=""></td>
+            <td><input type="text" class="form-control" name="value[]" value=""></td>
+            <td><select class="form-select value_type_select" name="value_type[]">` + vtOptions + `</select></td>
+            <td><input type="text" class="form-control" name="dependent_fields[]" value=""></td>
+            <td><select class="form-select readonly_select" name="readonly[]"><option value="no">no</option><option value="yes">yes</option></select></td>
+            <td><select class="form-select hidden_select" name="hidden[]"><option value="no">no</option><option value="yes">yes</option></select></td>
+            <td><input type="text" class="form-control" name="source_api[]" value=""></td>
+            <td><input type="text" class="form-control" name="dependent_fields_source_api[]" value=""></td>
+            <td><input type="text" class="form-control" name="value_list[]" value=""></td>
+            <td><input type="text" class="form-control" name="default_value[]" value=""></td>
+            <td class="text-center">
+                <button type="button" class="btn btn-sm btn-danger removeRow d-inline-flex align-items-center justify-content-center">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>
+        </tr>`;
+
+        $('#entriesTable tbody').append(row);
+        initSelect2($('#entriesTable tbody tr:last'));
+    });
+
+    $(document).on('click', '.removeRow', function () {
+        $(this).closest('tr').remove();
     });
 });
 </script>

@@ -1,0 +1,347 @@
+[[extend 'layout.html']]
+
+[[block header]]
+[[icon='fa-solid fa-cogs']]
+[[breadcamp = 'Transfer']]
+[[end]]
+
+[[block content]]
+<div class="container-section">
+  <div class="d-flex justify-content-between align-items-center border-bottom mx-2">
+    <span class="icon-text icon-text-bold">
+      <i class="fa-solid fa-plus"></i>
+      <span>Initiate Transfer</span>
+    </span>
+    <div class="d-flex justify-content-end">
+      <div class="p-1">
+        <a href="[[=URL('transaction/index', vars={'type': request.query.get('type')})]]" 
+          class="btn btn-sm btn-light">
+          <i class="fa-solid fa-arrow-left"></i> <span class="ms-2">Back</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="container py-3">
+    <form id="transactionForm" method="post" action="[[=URL('transaction/submit', vars={'type':request.query.get('type')})]]">
+      [[# 🔹 Step 1: group fields by section]]
+      [[section_map = {}]]
+      [[for f in fields:]]
+        [[section_map.setdefault(f['section'], []).append(f)]]
+      [[pass]]
+
+      [[# 🔹 Step 2: sort sections by min(sl)]]
+      [[sorted_sections = sorted(
+          section_map.items(),
+          key=lambda kv: min((ff.get('sl') if ff.get('sl') is not None else 9999) for ff in kv[1])
+      )]]
+
+      [[# 🔹 Step 3: render each section]]
+      [[for section, section_fields in sorted_sections:]]
+        [[section_fields = sorted(section_fields, key=lambda x: (x.get('order') if x.get('order') is not None else 9999))]]
+        [[if section_fields:]]
+          <div class="form-section">
+            <div class="section-header">
+              [[=section]]
+            </div>
+
+            <div class="row g-3">
+              [[for field in section_fields:]]
+                [[readonly_attr = 'readonly' if str(field.get('readonly','')).lower()=='yes' else '']]
+                <div class="col-md-6 col-sm-12">
+                  <label for="[[=field['key']]]" class="form-label fw-bold">
+                    [[=field['caption']]]
+                  </label>
+
+                  [[if field['value_type'] in ('string','integer'):]]
+                    <input type="[[='number' if field['value_type']=='integer' else 'text']]" 
+                           class="form-control form-control-sm"
+                           id="[[=field['key']]]" 
+                           name="[[=field['key']]]" 
+                           value="[[=field['default_value'] or '']]" 
+                           [[=readonly_attr]]>
+
+                  [[elif field['value_type'] == 'date':]]
+                    <div class="flatpickr-wrapper position-relative">
+                      <input type="text" 
+                             class="form-control form-control-sm datepicker"
+                             id="[[=field['key']]]"
+                             name="[[=field['key']]]"
+                             value="[[=field['default_value'] or '']]" 
+                             placeholder="Select Date"
+                             [[=readonly_attr]]>
+                      <i class="fa fa-calendar calendar-icon text-secondary calendar-toggle"></i>
+                    </div>
+
+                  [[elif field['value_type'] == 'dropdown':]]
+                    <select class="form-select form-select-sm select_custom"
+                            id="[[=field['key']]]"
+                            name="[[=field['key']]]"
+                            [[=readonly_attr]]>
+                      <option value="">Select [[=field['caption']]]</option>
+
+                      [[# If dependency_fields exist → show keys of value_list dict]]
+                      [[if field.get('dependency_fields'):]]
+                        [[for k in (field['value_list'] or {}).keys():]]
+                          <option value="[[=k]]" [[='selected' if k==field['default_value'] else '' ]]>
+                            [[=k]]
+                          </option>
+                        [[pass]]
+
+                      [[else:]]
+                        [[for val in (field['value_list'] or []):]]
+                          [[if isinstance(val, dict):]]
+                            <option value="[[=val['value']]]" [[='selected' if val['value']==field['default_value'] else '' ]]>
+                              [[=val['label']]]
+                            </option>
+                          [[else:]]
+                            <option value="[[=val]]" [[='selected' if val==field['default_value'] else '' ]]>
+                              [[=val]]
+                            </option>
+                          [[pass]]
+                        [[pass]]
+                      [[pass]]
+                    </select>
+
+                  [[else:]]
+                    <input type="text" class="form-control form-control-sm"
+                           id="[[=field['key']]]"
+                           name="[[=field['key']]]"
+                           value="[[=field['default_value'] or '']]" 
+                           [[=readonly_attr]]>
+                  [[pass]]
+                </div>
+              [[pass]]
+            </div>
+          </div>
+        [[pass]]
+      [[pass]]
+
+      <div>
+        <button type="submit" class="btn btn-primary btn-sm px-4">Submit</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<style>
+  .section-header {
+    background-color: #ccc9fa;
+    color: #544dc9;
+    font-weight: bold;
+    padding: 8px 12px;
+    border-bottom: 2px solid #9490e1;
+    margin-bottom: 15px;
+    width: 100%;
+  }
+  .form-section {
+    margin-bottom: 40px;
+  }
+</style>
+
+[[block scripts]]
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<script>
+const fieldsConfig = [[=XML(fields_json)]];
+console.log("fieldsConfig loaded:", fieldsConfig);
+
+function initSelect2($field) {
+    if (!$field.is("select")) return;
+    $field.select2({
+        placeholder: $field.attr('placeholder') || "Select",
+        allowClear: true,
+        width: 'resolve',
+        dropdownAutoWidth: true    
+    });
+}
+
+function populateDropdown($field, data) {
+    $field.empty();
+    $field.append(new Option("Select an option", "", false, false));
+
+    if (Array.isArray(data)) {
+        data.forEach(item => {
+            $field.append(new Option(item.text, item.id, false, false));
+        });
+    } else if (typeof data === "object") {
+        Object.keys(data).forEach(key => {
+            $field.append(new Option(key, key, false, false));
+        });
+    }
+
+    $field.trigger('change.select2');
+}
+
+function updateDependentFields(fieldKey, value) {
+    const fieldConfig = fieldsConfig.find(f => f.key === fieldKey);
+    if (!fieldConfig || !fieldConfig.dependent_fields || !fieldConfig.dependent_fields_source_api) return;
+
+    const depFields = fieldConfig.dependent_fields.split(",").map(s => s.trim());
+    const url = `[[=URL('default')]]/${fieldConfig.dependent_fields_source_api}${value || ''}`;
+
+    $.getJSON(url, function(response) {
+        let data = Array.isArray(response) ? response[0] || {} : response;
+        depFields.forEach(depKey => {
+            const $depField = $("#" + depKey);
+            if (!$depField.length) return;
+            const newValue = data[depKey] || '';
+            if ($depField.is("select")) {
+                $depField.val(newValue).trigger('change.select2');
+            } else {
+                $depField.val(newValue).trigger('input');
+            }
+        });
+    }).fail(err => console.error("Error fetching dependent fields:", err));
+}
+
+function attachDynamicDropdown(field) {
+    const $field = $("#" + field.key);
+    if (!$field.length || field.value_type !== "dropdown") return;
+
+    initSelect2($field);
+
+    let loaded = false; 
+    $field.on("select2:open", function () {
+        if (loaded) return;
+        const url = `[[=URL('default')]]/${field.source_api}`;
+        console.log("Fetching options for", field.key, url);
+
+        $.getJSON(url, function(response) {
+            populateDropdown($field, response);
+            loaded = true;
+
+            $field.select2('close');
+            $field.select2('open');
+        }).fail(err => console.error("Failed to load options for", field.key, err));
+    });
+
+    $field.on("change", function() {
+        const selectedValue = $(this).val();
+        if (!selectedValue) return;
+        updateDependentFields(field.key, selectedValue);
+    });
+}
+
+function resizeSelect2() {
+    $('.select2').each(function() {
+        $(this).css('width', '100%');
+    });
+}
+
+$(window).on('resize', resizeSelect2);
+
+$(document).ready(function () {
+    fieldsConfig.forEach(field => {
+        if (field.value_type === "dropdown") {
+            attachDynamicDropdown(field);
+        }
+    });
+    resizeSelect2(); 
+    console.log("Dropdowns will load on click and resize with the window.");
+});
+</script>
+[[end]]
+
+
+
+
+
+
+<!-- [[block scripts]]
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<script>
+  const fieldsConfig = [[=XML(fields_json)]];
+  console.log("fieldsConfig loaded:", fieldsConfig);
+
+  function handleFieldChange(fieldKey, selectedValue) {
+    console.log("🎯 Changed:", fieldKey, selectedValue);
+
+    const fieldConfig = fieldsConfig.find(f => f.key === fieldKey);
+    console.log("Field Config:", fieldConfig);
+    if (!fieldConfig) return;
+
+    let depFields = fieldConfig.dependent_fields;
+    if (!depFields) return;
+    if (typeof depFields === "string") {
+      depFields = depFields.split(",").map(s => s.trim());
+    }
+
+    const selectedMap = fieldConfig.value_list[selectedValue];
+    if (!selectedMap) return;
+
+    depFields.forEach(depKey => {
+      const depValue = selectedMap[depKey] || "";
+      const $depField = $("#" + depKey);
+
+      if ($depField.length === 0) {
+        console.warn("⚠️ Dependent field not found in DOM:", depKey);
+        return;
+      }
+
+      if ($depField.is("select")) {
+        $depField.empty();
+
+        if (Array.isArray(depValue)) {
+          depValue.forEach(opt => {
+            $depField.append(new Option(opt, opt));
+          });
+        } else {
+          if (depValue) {
+            $depField.append(new Option(depValue, depValue));
+          }
+        }
+
+        if ($depField.hasClass("select_custom") || $depField.hasClass("select_custom_modal")) {
+          $depField.trigger("change.select2");
+        } else {
+          $depField.trigger("change");
+        }
+
+      } else {
+        $depField.val(depValue);
+      }
+    });
+  }
+
+  $(document).ready(function () {
+    $('.select_custom').each(function () {
+      var placeholder = $(this).attr('placeholder') || "Select an option";
+      $(this).select2({
+        placeholder: placeholder,
+        allowClear: true,
+        width: "100%"
+      });
+    });
+
+    $('.select_custom_modal').select2({
+      dropdownParent: $("#staticBackdrop"),
+      placeholder: "Select an option",
+      allowClear: true,
+      width: "100%"
+    });
+
+    $(document).on("change", "select", function () {
+      const fieldKey = $(this).attr("id");
+      const selectedValue = $(this).val();
+      handleFieldChange(fieldKey, selectedValue);
+    });
+
+    console.log("✅ Dynamic dependency script initialized");
+  });
+</script>
+[[end]] -->
+
+
+
+
+
+
+
+
+

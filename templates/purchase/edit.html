@@ -20,27 +20,30 @@
         background-color: #FFFFFF !important; /* lighter shade for form fields */
         color: #FFFFFF !important;
     }
-    /* .locked-row input {
-        background-color: #FFFFFF !important;
-        color: #FFFFFF !important;
-    } */
-
-    /* select.no-border-select2 + .select2-container--default .select2-selection--single {
-        border: none !important;
-        box-shadow: none !important;
+    
+    /* Cross-browser lighter italic placeholder */
+    .quantity_input::-webkit-input-placeholder {
+        color: #bbb !important;
+        font-style: italic;
     }
-
-    .select2-container--default.select2-container--open select.no-border-select2 + .select2-selection--single {
-        border: none !important;
-        box-shadow: none !important;
-    } 
-
-    #purchaseTable input.no-border-input.form-control {
-        border: none !important;
-        box-shadow: none !important;
-        background-color: transparent !important;
-        outline: none !important;
-    } */
+    .quantity_input:-moz-placeholder {
+        color: #bbb !important;
+        font-style: italic;
+        opacity: 1; /* Firefox requires this */
+    }
+    .quantity_input::-moz-placeholder {
+        color: #bbb !important;
+        font-style: italic;
+        opacity: 1;
+    }
+    .quantity_input:-ms-input-placeholder {
+        color: #bbb !important;
+        font-style: italic;
+    }
+    .quantity_input::placeholder {
+        color: #bbb !important;
+        font-style: italic;
+    }
 
     table.table tbody tr, 
     table.table tbody tr td {
@@ -122,12 +125,12 @@
                     </div>
                     <div class="col-md-3 mb-2 custom_input">
                         <label for="bill_no" class="form-label"><strong>Bill No</strong></label>
-                        <input type="text" class="form-control form-control-sm" id="bill_no" name="bill_no" value="[[=data['bill_no']]]">
+                        <input type="text" class="form-control form-control-sm" id="bill_no" name="bill_no" value="[[=notdata['bill_no']]]">
                     </div>
                     <div class="col-md-3 mb-2 custom_input">
                         <label for="purchase_date" class="form-label"><strong>Purchase Date <span class="is_required">*</span></strong></label>
                         <div class="flatpickr-wrapper">
-                            <input type="text" class="date-picker" id="purchase_date" name="purchase_date" value="[[=data['purchase_date']]]" placeholder=" Purchase Date">
+                            <input type="text" class="date-picker" id="purchase_date" name="purchase_date" value="[[=notdata['purchase_date']]]" placeholder=" Purchase Date">
                             <i class="fa fa-calendar calendar-icon text-secondary calendar-toggle"></i>                            
                         </div>
                     </div>
@@ -183,6 +186,7 @@
                                 <th class="text-truncate" style="min-width: 100px;">Purchase Date</th>
                                 <!-- <th class="text-truncate" style="min-width: 100px;">Received Date</th> -->
                                 <th class="text-truncate" style="min-width: 110px;">Status</th> 
+                                <th class="text-truncate" style="min-width: 70px;">Quantity</th>
                                 <th class="text-truncate" style="min-width: 100px;">Item Price</th>
                                 <th class="text-truncate" style="min-width: 70px;">Discount</th>
                                 <th class="text-truncate" style="min-width: 35px;"></th>
@@ -204,7 +208,7 @@
                 <div class="row">
                     <div class="col-md-7">
                         <div class="mb-3 mt-2">
-                            <textarea placeholder="Remarks.." id="remarks" name="remarks" class="form-control form-control-sm" style="height:auto; min-height: 6.8rem; border-radius: 0.4rem;" oninput="this.style.height='auto'; this.style.height = this.scrollHeight + 'px'">[[=data['remarks']]]</textarea>
+                            <textarea placeholder="Remarks.." id="remarks" name="remarks" class="form-control form-control-sm" style="height:auto; min-height: 6.8rem; border-radius: 0.4rem;" oninput="this.style.height='auto'; this.style.height = this.scrollHeight + 'px'">[[=notdata['remarks']]]</textarea>
                         </div>
                     </div>
 
@@ -272,15 +276,14 @@ $(document).ready(async function(){
 
                 requisitionAssetMap[item.req_id] = {
                     asset_type: item.asset_type,
-                    asset_brand: item.asset_brand,
-                    asset_model: item.asset_model
+                    max_quantity: parseInt(item.max_quantity, 10) || 0
                 };
 
-                // For preloaded defaults
                 defaultAssetMap[item.req_id] = {
                     asset_type: item.asset_type,
                     asset_brand: item.asset_brand,
-                    asset_model: item.asset_model
+                    asset_model: item.asset_model,
+                    max_quantity: parseInt(item.max_quantity, 10) || 0
                 };
             });
         } catch (err) {
@@ -303,8 +306,11 @@ $(document).ready(async function(){
         let totalPrice = 0;
         let totalDiscount = 0;
         $("#purchaseTable tbody tr").each(function() {
-            totalPrice += parseFloat($(this).find("input[name='item_price[]']").val()) || 0;
-            totalDiscount += parseFloat($(this).find("input[name='item_discount[]']").val()) || 0;
+            const qty = parseFloat($(this).find("input[name='quantity[]']").val()) || 0;
+            const price = parseFloat($(this).find("input[name='item_price[]']").val()) || 0;
+            const discount = parseFloat($(this).find("input[name='item_discount[]']").val()) || 0;
+            totalPrice += qty * price;
+            totalDiscount += discount;
         });
         $("#summaryTotalPrice").text(totalPrice.toFixed(2));
         $("#summaryTotalDiscount").text(totalDiscount.toFixed(2));
@@ -320,7 +326,6 @@ $(document).ready(async function(){
             : `<button type="button" class="btn btn-sm removeRowBtn" style="background-color:white; border:none; color:var(--bs-danger); font-size:18px;">
                 <i class="fa fa-trash"></i>
             </button>`;
-
 
         const rowClass = locked ? 'locked-row' : '';
         const row = `
@@ -364,6 +369,7 @@ $(document).ready(async function(){
                         [[pass]]
                     </select>
                 </td>
+                <td class="${inputClass}"><input type="number" step="1" min="0" class="form-control form-control-sm no-border-input quantity_input" name="quantity[]" value="" required ${islocked}></td>
                 <td class="${inputClass}"><input type="number" step="0.01" class="form-control form-control-sm no-border-input item_price_input" name="item_price[]" required ${islocked}></td>
                 <td class="${inputClass}"><input type="number" step="0.01" class="form-control form-control-sm no-border-input item_discount_input" name="item_discount[]" ${islocked}></td>
                 <td class="${inputClass}">${deleteBtn}</td>
@@ -374,7 +380,7 @@ $(document).ready(async function(){
         $("#purchaseTable tbody").append($row);
         initSelectCustom($row);
         $row.find(".datepicker").flatpickr({ dateFormat: "Y-m-d" });
-        $row.find("input[name='item_price[]'], input[name='item_discount[]']").on('input', updateTotals);
+        $row.find("input[name='item_price[]'], input[name='item_discount[]'], input[name='quantity[]']").on('input', updateTotals);
 
         if(data) {
             $row.find(".req_id_select").val(data.req_id).trigger('change');
@@ -383,8 +389,9 @@ $(document).ready(async function(){
             $row.find(".asset_model_select").val(data.asset_model).trigger('change');
             $row.find(".receive_status").val(data.receive_status).trigger('change');
             $row.find("input[name='purchase_date[]']").flatpickr().setDate(data.purchase_date, true);
-
             if(data.received_date) $row.find("input[name='received_date[]']").flatpickr().setDate(data.received_date, true);
+
+            $row.find("input[name='quantity[]']").val(data.quantity || "");
             $row.find("input[name='item_price[]']").val(data.item_price);
             $row.find("input[name='item_discount[]']").val(data.item_discount);
         }
@@ -392,27 +399,40 @@ $(document).ready(async function(){
         $row.find(".req_id_select").on("change", function () {
             const selectedReqId = $(this).val();
             const $tr = $(this).closest("tr");
+            const assetData = defaultAssetMap[selectedReqId] || { asset_type: "", max_quantity: 0 };
 
-            const assetData = defaultAssetMap[selectedReqId] || { asset_type: "" };
+            // auto fill asset type
             $tr.find(".asset_type_select").val(assetData.asset_type).trigger('change');
+
+            // update quantity input with max limit & placeholder (even if 0)
+            const $qty = $tr.find(".quantity_input");
+            $qty.val("")
+                .attr("placeholder", `max ${assetData.max_quantity}`)
+                .attr("max", assetData.max_quantity);
+
+            // focus/blur placeholder toggle
+            $qty.off("focus blur").on("focus", function () {
+                $(this).attr("data-placeholder", $(this).attr("placeholder"));
+                $(this).attr("placeholder", "");
+            }).on("blur", function () {
+                if (!$(this).val()) {
+                    $(this).attr("placeholder", $(this).attr("data-placeholder"));
+                }
+            });
         });
 
         $row.find(".asset_type_select").on("change", async function() {
             const $tr = $(this).closest("tr");
             const asset_type = $(this).val();
-
             $tr.find(".asset_brand_select").empty().append('<option value=""></option>');
             $tr.find(".asset_model_select").empty().append('<option value=""></option>');
-
             if(asset_type) {
                 try {
                     const res = await $.getJSON("/expense/asset/get_brands_by_type", { asset_type });
                     res.results.forEach(brand => {
                         $tr.find(".asset_brand_select").append(`<option value="${brand}">${brand}</option>`);
                     });
-                } catch(err) {
-                    console.error("Failed to fetch brands:", err);
-                }
+                } catch(err) { console.error("Failed to fetch brands:", err); }
             }
         });
 
@@ -420,18 +440,14 @@ $(document).ready(async function(){
             const $tr = $(this).closest("tr");
             const asset_type = $tr.find(".asset_type_select").val();
             const asset_brand = $(this).val();
-
             $tr.find(".asset_model_select").empty().append('<option value=""></option>');
-
             if(asset_type && asset_brand) {
                 try {
                     const res = await $.getJSON("/expense/asset/get_models_by_brand", { asset_type, asset_brand });
                     res.results.forEach(model => {
                         $tr.find(".asset_model_select").append(`<option value="${model}">${model}</option>`);
                     });
-                } catch(err) {
-                    console.error("Failed to fetch models:", err);
-                }
+                } catch(err) { console.error("Failed to fetch models:", err); }
             }
         }); 
     }
@@ -450,7 +466,6 @@ $(document).ready(async function(){
         if(purchaseEntries.length > 0) {
             for(let i = 0; i < purchaseEntries.length; i++) {
                 islocked = purchaseEntries[i].item_asset_created ? true : false;
-                console.log(islocked)
                 await createRow(purchaseEntries[i], i === 0, false, islocked);
             }
         } else await createRow(true);
@@ -468,51 +483,25 @@ $(document).ready(async function(){
 
     $("#uploadForm").on("submit", function(e){
         const items = $("#purchaseTable tbody tr").map(function () {
-        const $tr = $(this);
-        return {
-            req_id: $tr.find(".req_id_select").val() || "",
-            asset_type: $tr.find(".asset_type_select").val() || "",
-            asset_brand: $tr.find(".asset_brand_select").val() || "",
-            asset_model: $tr.find(".asset_model_select").val() || "",
-            purchase_date: $tr.find("input.purchase_date_input").val() || "",
-            receive_status: $tr.find("select.receive_status").val() || "",
-            received_date: $tr.find("input.received_date_input").val() || "",
-            item_price: $tr.find("input.item_price_input").val() || "0",
-            item_discount: $tr.find("input.item_discount_input").val() || "0",
-            item_asset_created: $tr.find("input[name='item_asset_created[]']").val() || "0"  // << add this
-        };
-    }).get();
-
+            const $tr = $(this);
+            return {
+                req_id: $tr.find(".req_id_select").val() || "",
+                asset_type: $tr.find(".asset_type_select").val() || "",
+                asset_brand: $tr.find(".asset_brand_select").val() || "",
+                asset_model: $tr.find(".asset_model_select").val() || "",
+                purchase_date: $tr.find("input.purchase_date_input").val() || "",
+                receive_status: $tr.find("select.receive_status").val() || "",
+                received_date: $tr.find("input.received_date_input").val() || "",
+                quantity: $tr.find("input.quantity_input").val() || "0",
+                item_price: $tr.find("input.item_price_input").val() || "0",
+                item_discount: $tr.find("input.item_discount_input").val() || "0",
+                item_asset_created: $tr.find("input[name='item_asset_created[]']").val() || "0"
+            };
+        }).get();
 
         if (items.length === 0) { alert("Please add at least one purchase item."); e.preventDefault(); return; }
 
         $("#purchaseTable .select2-selection").removeClass("border border-danger");
-
-        const seen = new Set();
-        const dups = new Set();
-
-        $("#purchaseTable tbody tr").each(function () {
-            const id = $(this).find(".req_id_select").val();
-            if (!id) return;  
-            if (seen.has(id)) dups.add(id);
-            else seen.add(id);
-        });
-
-        if (dups.size > 0) {
-            e.preventDefault();
-            let focused = false;
-            $("#purchaseTable tbody tr").each(function () {
-                const $sel = $(this).find(".req_id_select");
-                const id = $sel.val();
-                if (dups.has(id)) {
-                    const $s2 = $sel.next(".select2").find(".select2-selection");
-                    $s2.addClass("border border-danger");
-                    if (!focused) { try { $sel.select2("open"); } catch (_) { $sel.focus(); } focused = true; }
-                }
-            });
-            alert("You can't add the same requisition twice.\nDuplicate requisition(s): " + Array.from(dups).join(", "));
-            return;
-        }
 
         $("#purchaseItemsJson").val(JSON.stringify(items));
     });
@@ -522,6 +511,9 @@ $(document).ready(async function(){
 });
 </script>
 [[end]]
+
+
+
 
 
 

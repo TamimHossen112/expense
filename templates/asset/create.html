@@ -233,42 +233,19 @@
 $(document).ready(function() {
     let purchaseAssetMap = [];
     let purchaseMap = [];
-    let manualAssetChange = true; 
+    let manualAssetChange = true;
 
     const headerDiv = document.querySelector('.accordion-header'); 
     const importSwitch = document.getElementById('importSwitch');
     const collapseDiv = document.getElementById('collapseImport');
-
     const bsCollapse = new bootstrap.Collapse(collapseDiv, { toggle: false });
 
     headerDiv.addEventListener('click', function(e) {
         if (['INPUT', 'SELECT', 'LABEL'].includes(e.target.tagName)) return;
         importSwitch.checked = !importSwitch.checked;
-
-        if (importSwitch.checked) {
-            bsCollapse.show();
-        } else {
-            bsCollapse.hide();
-        }
+        if (importSwitch.checked) bsCollapse.show();
+        else bsCollapse.hide();
     });
-
-    const EMPLOYEE_DETAILS_API = "[[=URL('default', 'get_employee_details')]]";
-    const BRAND_DROPDOWN_API = "[[=URL('asset', 'get_brands_by_type')]]";
-    const MODEL_DROPDOWN_API = "[[=URL('asset', 'get_models_by_brand')]]";
-
-    const originalAssetTypeOptions = $('#asset_type').html();
-
-    // Load employees
-    $.getJSON(EMPLOYEE_DETAILS_API)
-        .done(function(employees) {
-            const $empSelect = $('#emp_id');
-            $.each(employees, function(_, emp) {
-                $('<option>')
-                    .val(`${emp.employee_id} | ${emp.employee_name}`)
-                    .text(`${emp.employee_id} | ${emp.employee_name} | ${emp.designation} | ${emp.head_office}`)
-                    .appendTo($empSelect);
-            });
-        });
 
     // When accordion opens → fetch purchase map
     $('#collapseImport').on('shown.bs.collapse', function () {
@@ -287,19 +264,14 @@ $(document).ready(function() {
         }
     });
 
-    // When accordion closes → clear everything
     $('#collapseImport').on('hidden.bs.collapse', function () {
         importSwitch.checked = false;
         resetAssetFields();
     });
 
-    // Toggle switch manually
     $('#importSwitch').on('change', function() {
-        if ($(this).is(':checked')) {
-            $('#collapseImport').collapse('show');
-        } else {
-            $('#collapseImport').collapse('hide');
-        }
+        if ($(this).is(':checked')) $('#collapseImport').collapse('show');
+        else $('#collapseImport').collapse('hide');
     });
 
     // Purchase head selection → load purchase details
@@ -321,30 +293,35 @@ $(document).ready(function() {
             });
     });
 
-    // Purchase detail selection → auto-fill asset fields
+    // Purchase detail selection → auto-fill asset_type/brand/model only
     $('#purchase_details_import').on('change', function() {
         const selectedId = $(this).val();
         const selectedItem = purchaseAssetMap.find(item => String(item.purchase_details_id) === String(selectedId));
 
         if (selectedItem) {
-            manualAssetChange = false; 
+            manualAssetChange = false;
+
+            // Set asset_type/brand/model and lock
             $('#asset_type').html(`<option value="${selectedItem.asset_type}">${selectedItem.asset_type}</option>`)
-                .val(selectedItem.asset_type).trigger('change').prop('disabled', true)
+                .val(selectedItem.asset_type).prop('disabled', true)
                 .after(`<input type="hidden" name="asset_type" value="${selectedItem.asset_type}">`);
 
             $('#asset_brand').html(`<option value="${selectedItem.asset_brand}">${selectedItem.asset_brand}</option>`)
-                .val(selectedItem.asset_brand).trigger('change').prop('disabled', true)
+                .val(selectedItem.asset_brand).prop('disabled', true)
                 .after(`<input type="hidden" name="asset_brand" value="${selectedItem.asset_brand}">`);
 
             $('#asset_model').html(`<option value="${selectedItem.asset_model}">${selectedItem.asset_model}</option>`)
-                .val(selectedItem.asset_model).trigger('change').prop('disabled', true)
+                .val(selectedItem.asset_model).prop('disabled', true)
                 .after(`<input type="hidden" name="asset_model" value="${selectedItem.asset_model}">`);
 
             $('#purchase_price').val(selectedItem.item_price).prop('readonly', true);
 
+            // Hidden fields for purchase
             $('#req_id').val(selectedItem.req_id);
             $('#purchase_head_id').val(selectedItem.purchase_head_id);
             $('#purchase_details_id').val(selectedItem.purchase_details_id);
+
+            // ✅ DO NOT set asset_name here – backend will generate it
             manualAssetChange = true;
         } else {
             resetAssetFields();
@@ -354,17 +331,14 @@ $(document).ready(function() {
     // Asset type → load brands
     $('#asset_type').on('change', function() {
         if (!manualAssetChange) return;
-
         const type = $(this).val();
         if (type) {
-            $.getJSON(BRAND_DROPDOWN_API, { asset_type: type })
+            $.getJSON("[[=URL('asset','get_brands_by_type')]]", { asset_type: type })
                 .done(function(resp) {
                     const $brand = $('#asset_brand');
                     $brand.empty().append('<option value="">Select Asset Brand</option>');
-                    resp.results.forEach(function(brand) {
-                        $brand.append($('<option>', { value: brand, text: brand }));
-                    });
-                    $brand.val('').trigger('change').prop('disabled', false);
+                    resp.results.forEach(b => $brand.append($('<option>', { value: b, text: b })));
+                    $brand.val('').prop('disabled', false);
                     $('#asset_model').empty().append('<option value="">Select Asset Model</option>').prop('disabled', false);
                 });
         } else {
@@ -376,18 +350,15 @@ $(document).ready(function() {
     // Asset brand → load models
     $('#asset_brand').on('change', function() {
         if (!manualAssetChange) return;
-
         const type = $('#asset_type').val();
         const brand = $(this).val();
         if (type && brand) {
-            $.getJSON(MODEL_DROPDOWN_API, { asset_type: type, asset_brand: brand })
+            $.getJSON("[[=URL('asset','get_models_by_brand')]]", { asset_type: type, asset_brand: brand })
                 .done(function(resp) {
                     const $model = $('#asset_model');
                     $model.empty().append('<option value="">Select Asset Model</option>');
-                    resp.results.forEach(function(model) {
-                        $model.append($('<option>', { value: model, text: model }));
-                    });
-                    $model.val('').trigger('change').prop('disabled', false);
+                    resp.results.forEach(m => $model.append($('<option>', { value: m, text: m })));
+                    $model.val('').prop('disabled', false);
                 });
         } else {
             $('#asset_model').empty().append('<option value="">Select Asset Model</option>').prop('disabled', false);
@@ -395,22 +366,21 @@ $(document).ready(function() {
     });
 
     function resetAssetFields() {
-        // Reset asset fields (fully cleared)
-        // $('#asset_type').html(originalAssetTypeOptions).val('').prop('disabled', false);
-        // $('#asset_brand').html('<option value="">Select Asset Brand</option>').val('').prop('disabled', false);
-        // $('#asset_model').html('<option value="">Select Asset Model</option>').val('').prop('disabled', false);
+        // Reset asset_type/brand/model dropdowns
+        // $('#asset_type').prop('disabled', false).val('');
+        // $('#asset_brand').prop('disabled', false).val('');
+        // $('#asset_model').prop('disabled', false).val('');
         // $('#purchase_price').val('').prop('readonly', false);
 
         // $('#req_id').val('');
         // $('#purchase_head_id').val('');
         // $('#purchase_details_id').val('');
 
-        // ✅ Just clear the value without triggering change
+        // // Optional: clear selects in import
         // $('#purchase_import').val('');
         // $('#purchase_details_import').val('');
     }
-
-
 });
 </script>
 [[end]]
+

@@ -1,7 +1,7 @@
 import json
 from py4web import action, request, URL
 from py4web.core import redirect
-from ..common import db, session, T, flash, auth
+from ..common import db, session, T, flash
 from datetime import datetime
 
 # ------------------ UTILS ------------------
@@ -61,17 +61,17 @@ def asset_create():
     )
 
 @action('asset/submit', method=["POST"])
-@action.uses(db, session, auth.user, flash)
+@action.uses(db, session, flash)
 def asset_submit():
     try:
         form = request.forms
 
-        # Collect values
+        # Collect form values
+        asset_name = form.get("asset_name")
         asset_type = form.get("asset_type")
         asset_brand = form.get("asset_brand")
         asset_model = form.get("asset_model")
         purchase_price = form.get("purchase_price")
-        asset_name = form.get("asset_name")
         asset_model_year = form.get("asset_model_year")
         asset_status = form.get("asset_status")
         asset_condition = form.get("asset_condition")
@@ -101,6 +101,9 @@ def asset_submit():
             flash.set(f"Missing required fields: {', '.join(missing)}", "warning", sanitize=True)
             redirect(URL("asset/index"))
 
+        # ✅ Generate asset code automatically
+        asset_code = generate_asset_code(asset_type)
+
         # ✅ Insert into DB
         asset_id = db.asset.insert(
             asset_type=asset_type,
@@ -108,6 +111,7 @@ def asset_submit():
             asset_model=asset_model,
             purchase_price=purchase_price,
             asset_name=asset_name,
+            asset_id=asset_code,  # using generated asset code
             asset_model_year=asset_model_year,
             asset_status=asset_status,
             asset_condition=asset_condition,
@@ -121,16 +125,15 @@ def asset_submit():
             req_id=req_id,
             purchase_head_id=purchase_head_id,
             purchase_details_id=purchase_details_id,
-            created_by=getattr(auth.user, "id", None),
-            created_on=datetime.utcnow()
         )
 
-        flash.set(f"✅ Asset created successfully (ID: {asset_id})", "success", sanitize=True)
+        flash.set(f"✅ Asset created successfully (Code: {asset_code})", "success", sanitize=True)
         redirect(URL("asset/index"))
 
     except Exception as e:
         flash.set(f"❌ Error creating asset: {str(e)}", "danger", sanitize=True)
         redirect(URL("asset/index"))
+
 
 @action('asset/get_brands_by_type')
 @action.uses(db)

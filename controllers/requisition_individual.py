@@ -308,23 +308,42 @@ def requisition_individual_get_data():
 @action('requisition_individual/delete', method=['GET', 'POST'])
 @action.uses(db, session, flash)
 def delete_requisition_individual():
-    req_id = request.query.get('id')
-    if not req_id:
+    # Get the `id` from the query
+    requisition_id = request.query.get('id')
+    if not requisition_id:
         flash.set('Missing requisition ID.', 'danger')
         redirect(URL('requisition_individual/index'))
 
     try:
-        record = db(db.requisition.id == req_id).select().first()
-        if record:
-            db((db.doc_metadata.trans_type == 'requisition') & (db.doc_metadata.trans_id == req_id)).delete()
-            db(db.requisition.id == req_id).delete()
-            flash.set('Requisition deleted successfully.', 'success')
-        else:
+        # Fetch the record from the requisition table using `id`
+        record = db(db.requisition.id == requisition_id).select().first()
+        if not record:
             flash.set('Requisition not found.', 'warning')
+            redirect(URL('requisition_individual/index'))
+
+        # Get the `req_id` from the record
+        req_id = record.req_id
+
+        # Check if the `req_id` is used in the purchase_details table
+        used_count = db(db.purchase_details.req_id == req_id).count()
+        if used_count > 0:
+            flash.set(
+                f"Cannot delete requisition '{req_id}' because it is used in {used_count} purchase(s).",
+                'warning'
+            )
+            # Redirect to the edit page with the requisition ID
+            redirect(URL('requisition_individual/edit', vars=dict(id=requisition_id)))
+
+        # Delete associated metadata and the requisition record
+        db((db.doc_metadata.trans_type == 'requisition') & (db.doc_metadata.trans_id == requisition_id)).delete()
+        db(db.requisition.id == requisition_id).delete()
+        flash.set('Requisition deleted successfully.', 'success')
+
     except Exception as e:
         flash.set(f'Error while deleting requisition: {str(e)}', 'danger')
 
     redirect(URL('requisition_individual/index'))
+
 
 
 @action("requisition_individual/upload_expense_proxy", method=["POST"])

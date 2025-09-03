@@ -12,6 +12,13 @@
         overflow-x: auto !important;
     }
 
+    .item_gross_total, .item_net_total {
+        background-color: #9b9b9b;
+        text-align: center;
+        vertical-align: middle;
+        font-weight: bold;
+    }
+
     /* Cross-browser lighter italic placeholder */
     .quantity_input::-webkit-input-placeholder {
         color: #bbb !important;
@@ -89,7 +96,7 @@
                         </select>
                     </div>
                     <div class="col-md-3 mb-2">
-                        <label for="bill_no" class="form-label"><strong>Bill No</strong></label>
+                        <label for="bill_no" class="form-label"><strong>Bill No <span class="is_required">*</span></strong></label>
                         <input type="text" class="form-control form-control-sm" id="bill_no" name="bill_no" required>
                     </div>
                     <div class="col-md-3 mb-2">
@@ -112,7 +119,7 @@
                         </select>
                     </div>
                     <div class="col-md-3 mb-2">
-                        <label for="payment_status" class="form-label"><strong>Select Payment Status</strong></label>
+                        <label for="payment_status" class="form-label"><strong>Select Payment Status <span class="is_required">*</span></strong></label>
                         <select class="form-select form-select-sm select_custom" id="payment_status" name="payment_status" required>
                             <option value="">Select Payment Status</option>
                             [[for payment_s in payment_status:]]
@@ -122,35 +129,23 @@
                             [[pass]]
                         </select>
                     </div>
-                    <div class="col-md-3 mb-2">
-                        <label for="purchase_status" class="form-label"><strong>Select Purchase Status</strong></label>
-                        <select class="form-select form-select-sm select_custom" id="purchase_status" name="purchase_status" required>
-                            <option value="">Select Purchase Status</option>
-                            [[for purchase_s in purchase_status:]]
-                                <option value="[[=purchase_s['text']]]">
-                                    [[=purchase_s['text']]]
-                                </option>
-                            [[pass]]
-                        </select>
-                    </div>
                 </div>
 
-                
-                <!-- Purchase Items Table -->
                 <div class="table-responsive mt-2" style="margin-bottom: 0 !important; margin-bottom: 0 !important; padding-bottom: 0 !important;">
                     <table class="table table-bordered table-sm align-middle" id="purchaseTable" style="margin-bottom: 0 !important;">
                         <thead>
                             <tr style="background-color: #ccc9fa;">
-                                <th class="text-truncate" style="min-width: 200px;">Requisition Details</th>
-                                <!-- <th class="text-truncate" style="min-width: 130px;">Asset Type</th> -->
-                                <th class="text-truncate" style="min-width: 140px;">Asset Brand</th>
-                                <th class="text-truncate" style="min-width: 110px;">Asset Model</th>
-                                <th class="text-truncate" style="min-width: 100px;">Purchase Date</th>
-                                <th class="text-truncate" style="min-width: 110px;">Status</th>
-                                <th class="text-truncate" style="min-width: 70px;">Quantity</th>
-                                <th class="text-truncate" style="min-width: 100px;">Item Price</th>
-                                <th class="text-truncate" style="min-width: 100px;">Discount</th>
-                                <th class="text-truncate" style="min-width: 35px;"></th>
+                                <th class="text-truncate" style="width: 100px;">Requisition Details</th>
+                                <th class="text-truncate" style="width: 120px;">Asset Brand</th>
+                                <th class="text-truncate" style="width: 100px;">Asset Model</th>
+                                <th class="text-truncate" style="width: 80px;">Purchase Date</th>
+                                <th class="text-truncate" style="width: 80px;">Status</th>
+                                <th class="text-truncate" style="width: 40px;">Quantity</th>
+                                <th class="text-truncate" style="width: 75px;">Item Price</th>
+                                <th class="text-truncate" style="width: 75px;">Gross Total</th>
+                                <th class="text-truncate" style="width: 75px;">Discount</th>
+                                <th class="text-truncate" style="width: 75px;">Net Total</th>
+                                <th class="text-truncate" style="width: 35px;"></th>
                             </tr>
                         </thead>
 
@@ -167,16 +162,9 @@
 
                 <input type="hidden" id="purchaseItemsJson" name="purchase_items_json" />
 
-                <!-- <div class="d-flex justify-content-end align-items-center mt-2">
-                    <button type="button" class="btn btn-sm btn-primary" id="addRowBtn">
-                        <i class="fa fa-plus"></i> Add
-                    </button>
-                </div> -->
-
                 <div class="row">
                     <div class="col-md-7">
                         <div class="mb-3 mt-2">
-                            <!-- <label for="remarks" class="form-label"><strong>Remarks</strong></label> -->
                             <textarea placeholder="Remarks.." id="remarks" name="remarks" class="form-control form-control-sm" style="height:auto; min-height: 6.8rem; border-radius: 0.4rem;" oninput="this.style.height='auto'; this.style.height = this.scrollHeight + 'px'"></textarea>
                         </div>
                     </div>
@@ -206,7 +194,6 @@
 
                     </div>
                     <div class="d-flex justify-content-between align-items-center">
-                        <!-- Submit button (left) -->
                         <button type="submit" class="btn btn-sm btn-primary">
                             <i class="fa fa-check"></i> Submit
                         </button>
@@ -256,15 +243,30 @@ $(document).ready(async function () {
     }
 
     function updateTotals() {
-        let totalPrice = 0, totalDiscount = 0;
+        let totalGross = 0, totalDiscount = 0, totalNet = 0;
+
         $("#purchaseTable tbody tr").each(function () {
-            totalPrice += parseFloat($(this).find("input.item_price_input").val()) || 0;
-            totalDiscount += parseFloat($(this).find("input.item_discount_input").val()) || 0;
+            const $tr = $(this);
+            const quantity = parseFloat($tr.find("input.quantity_input").val()) || 0;
+            const price = parseFloat($tr.find("input.item_price_input").val()) || 0;
+            const discount = parseFloat($tr.find("input.item_discount_input").val()) || 0;
+
+            const gross = quantity * price;
+            const net = gross - discount;
+
+            $tr.find(".item_gross_total").text(gross.toFixed(2));
+            $tr.find(".item_net_total").text(net.toFixed(2));
+
+            totalGross += gross;
+            totalDiscount += discount;
+            totalNet += net;
         });
-        $("#summaryTotalPrice").text(totalPrice.toFixed(2));
+
+        $("#summaryTotalPrice").text(totalGross.toFixed(2));
         $("#summaryTotalDiscount").text(totalDiscount.toFixed(2));
-        $("#summaryTotalPayable").html(`<strong style="color: #544dc9;">${(totalPrice - totalDiscount).toFixed(2)}</strong>`);
+        $("#summaryTotalPayable").html(`<strong style="color: #544dc9;">${totalNet.toFixed(2)}</strong>`);
     }
+
 
     async function createRow(disableDelete = false) {
         if (requisitionOptions === `<option value="">Select</option>`) await loadRequisitionOptions();
@@ -306,14 +308,16 @@ $(document).ready(async function () {
                 <td>
                     <select class="form-select form-select-sm select_custom receive_status" required>
                         <option value=""></option>
-                        [[for receive_status in receive_status:]]
-                            <option value="[[=receive_status['text']]]">[[=receive_status['text']]]</option>
+                        [[for pur_stat in purchase_status:]]
+                            <option value="[[=pur_stat['text']]]">[[=pur_stat['text']]]</option>
                         [[pass]]
                     </select>
                 </td>
                 <td><input type="number" class="form-control form-control-sm quantity_input" required></td>
                 <td><input type="number" class="form-control form-control-sm item_price_input" required></td>
+                <td style="color: #544dc9;" class="item_gross_total" readonly>0.00</td>
                 <td><input type="number" class="form-control form-control-sm item_discount_input"></td>
+                <td style="color: #544dc9;" class="item_net_total" readonly>0.00</td>
                 <td>${deleteBtn}</td>
             </tr>
         `;
@@ -323,7 +327,7 @@ $(document).ready(async function () {
 
         initSelect2($row);
         $row.find(".datepicker").flatpickr({ dateFormat: "Y-m-d" });
-        $row.find("input.item_price_input, input.item_discount_input").on('input', updateTotals);
+        $(document).on('input', 'input.quantity_input, input.item_price_input, input.item_discount_input', updateTotals);
 
         $row.find(".req_id_select").on("change", function () {
             const selected = $(this).val();
@@ -424,18 +428,11 @@ $(document).ready(async function () {
                 receive_status: $tr.find(".receive_status").val(),
                 quantity: $tr.find("input.quantity_input").val(),
                 item_price: $tr.find("input.item_price_input").val(),
-                item_discount: $tr.find("input.item_discount_input").val()
+                item_gross_total: $tr.find(".item_gross_total").val(),
+                item_discount: $tr.find("input.item_discount_input").val(),
+                item_net_total: $tr.find(".item_net_total").val(),
             };
         }).get();
-
-        // // Duplicate check
-        // const reqIds = items.map(i => i.req_id).filter(v => v);
-        // const duplicates = reqIds.filter((id, idx) => reqIds.indexOf(id) !== idx);
-        // if (duplicates.length > 0) {
-        //     alert("You can't add same requisition twice.");
-        //     e.preventDefault();
-        //     return;
-        // }
 
         $("#purchaseItemsJson").val(JSON.stringify(items));
     });

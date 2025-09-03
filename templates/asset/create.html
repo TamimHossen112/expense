@@ -53,7 +53,7 @@
                                     </select>
                                 </div>
                                 <div class="col-md-6 mb-2">
-                                    <label for="purchase_details_import" class="form-label"><strong>Purchase Detail ID | Type | Brand | Model</strong></label>
+                                    <label for="purchase_details_import" class="form-label"><strong>Purchase Detail ID | Type | Brand | Model | Available</strong></label>
                                     <select id="purchase_details_import" class="form-select form-select-sm select_custom text-primary custom-select-primary">
                                         <option value="" selected disabled hidden>Click to load assets</option>
                                     </select>
@@ -181,13 +181,6 @@
 
                     <div class="col-md-3">
                         <div class="row">
-                            <!-- <div class="mb-2">
-                                <label for="emp_id" class="form-label"><strong>User</strong></label>
-                                <select class="form-select form-select-sm select_custom" id="emp_id" name="emp_id">
-                                    <option value="">Select User</option>
-                                </select>
-                            </div> -->
-
                             <div class="mb-2">
                                 <label for="current_location" class="form-label"><strong>Current Location</strong></label>
                                 <input type="text" class="form-control form-control-sm" id="current_location" name="current_location">
@@ -266,7 +259,6 @@ $(document).ready(function() {
 
     $('#collapseImport').on('hidden.bs.collapse', function () {
         importSwitch.checked = false;
-        resetAssetFields();
     });
 
     $('#importSwitch').on('change', function() {
@@ -287,7 +279,7 @@ $(document).ready(function() {
                 resp.results.forEach(function(item) {
                     $detailsDropdown.append($('<option>', { 
                         value: item.purchase_details_id, 
-                        text: `${item.purchase_details_id ?? ''} | ${item.asset_type ?? ''} | ${item.asset_brand ?? ''} | ${item.asset_model ?? ''}` 
+                        text: `${item.purchase_details_id ?? ''} | ${item.asset_type ?? ''} | ${item.asset_brand ?? ''} | ${item.asset_model ?? ''} | ${item.available_to_create ?? ''}` 
                     }));
                 });
             });
@@ -303,18 +295,15 @@ $(document).ready(function() {
 
             // Set asset_type/brand/model and lock
             $('#asset_type').html(`<option value="${selectedItem.asset_type}">${selectedItem.asset_type}</option>`)
-                .val(selectedItem.asset_type).prop('disabled', true)
-                .after(`<input type="hidden" name="asset_type" value="${selectedItem.asset_type}">`);
+                .val(selectedItem.asset_type);
 
             $('#asset_brand').html(`<option value="${selectedItem.asset_brand}">${selectedItem.asset_brand}</option>`)
-                .val(selectedItem.asset_brand).prop('disabled', true)
-                .after(`<input type="hidden" name="asset_brand" value="${selectedItem.asset_brand}">`);
+                .val(selectedItem.asset_brand);
 
             $('#asset_model').html(`<option value="${selectedItem.asset_model}">${selectedItem.asset_model}</option>`)
-                .val(selectedItem.asset_model).prop('disabled', true)
-                .after(`<input type="hidden" name="asset_model" value="${selectedItem.asset_model}">`);
+                .val(selectedItem.asset_model);
 
-            $('#purchase_price').val(selectedItem.item_price).prop('readonly', true);
+            $('#purchase_price').val(selectedItem.item_price);
 
             // Hidden fields for purchase
             $('#req_id').val(selectedItem.req_id);
@@ -328,7 +317,6 @@ $(document).ready(function() {
         }
     });
 
-    // Asset type → load brands
     $('#asset_type').on('change', function() {
         if (!manualAssetChange) return;
         const type = $(this).val();
@@ -365,21 +353,6 @@ $(document).ready(function() {
         }
     });
 
-    function resetAssetFields() {
-        // Reset asset_type/brand/model dropdowns
-        // $('#asset_type').prop('disabled', false).val('');
-        // $('#asset_brand').prop('disabled', false).val('');
-        // $('#asset_model').prop('disabled', false).val('');
-        // $('#purchase_price').val('').prop('readonly', false);
-
-        // $('#req_id').val('');
-        // $('#purchase_head_id').val('');
-        // $('#purchase_details_id').val('');
-
-        // // Optional: clear selects in import
-        // $('#purchase_import').val('');
-        // $('#purchase_details_import').val('');
-    }
 });
 </script>
 [[end]]

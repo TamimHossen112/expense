@@ -1,5 +1,5 @@
 import json
-from py4web import action, request, response, URL
+from py4web import action, request, URL
 from py4web.core import redirect
 from ..common import db, session, T, flash
 from datetime import datetime
@@ -24,6 +24,14 @@ def generate_purchase_details_id(asset_type):
     return generate_id("purchase_details", "purchase_details_id", "P", type_char)
 
 # ---------- Helpers ----------
+def parse_date(value):
+    if value and str(value).strip():
+        try:
+            return datetime.strptime(value.strip(), "%Y-%m-%d").date()
+        except ValueError:
+            return None
+    return None
+
 def get_combo_list(key):
     row = db(db.combo_settings.key == key).select(db.combo_settings.value).first()
     if not row or not row.value:
@@ -34,13 +42,43 @@ def get_distinct_field_list(table_field):
     rows = db(table_field != None).select(table_field, distinct=True)
     return [{"id": r[table_field.name], "text": r[table_field.name]} for r in rows]
 
-def parse_date(value):
-    if value and str(value).strip():
-        try:
-            return datetime.strptime(value.strip(), "%Y-%m-%d").date()
-        except ValueError:
-            return None
-    return None
+def parse_vendor(vendor_value):
+    if "|" in vendor_value:
+        vid, vname = vendor_value.split("|", 1)
+        return vid.strip(), vname.strip()
+    return vendor_value, ""
+
+def calculate_item_totals(item):
+    qty = int(item.get('quantity') or 0)
+    price = float(item.get('item_price') or 0)
+    discount = float(item.get('item_discount') or 0)
+    gross = qty * price
+    net = gross - discount
+    item.update({
+        "quantity": qty,
+        "item_price": price,
+        "item_discount": discount,
+        "item_gross_total": gross,
+        "item_net_total": net
+    })
+    return gross, discount, net
+
+def validate_items(items):
+    errors = []
+    if not items:
+        errors.append("At least one purchase item is required.")
+        return errors
+
+    for i, item in enumerate(items, start=1):
+        if not item.get('req_id'): errors.append(f"Item {i}: req_id is required.")
+        if not item.get('asset_type'): errors.append(f"Item {i}: asset_type is required.")
+        if not item.get('asset_brand'): errors.append(f"Item {i}: asset_brand is required.")
+        if not item.get('asset_model'): errors.append(f"Item {i}: asset_model is required.")
+        if item.get('quantity') is None or int(item.get('quantity') or 0) <= 0:
+            errors.append(f"Item {i}: quantity must be greater than 0.")
+        if item.get('item_price') is None or float(item.get('item_price') or 0) < 0:
+            errors.append(f"Item {i}: item_price must be >= 0.")
+    return errors
 
 # ---------- Pages ----------
 @action('purchase/index')
@@ -53,7 +91,6 @@ def purchase_index():
 def purchase_create():
     vendors = db(db.vendor.vendor_name != None).select(db.vendor.id, db.vendor.vendor_name, distinct=True).as_list()
     vendor_results = [{"id": v["id"], "text": v["vendor_name"]} for v in vendors if v["vendor_name"]]
-
     return dict(
         vendors=vendor_results,
         payment_status=get_combo_list("payment_status"),
@@ -69,117 +106,160 @@ def purchase_create():
 @action('purchase/submit')
 @action.uses(db, session, flash)
 def purchase_submit():
-    vendor_value = request.forms.get('vendor_id', '').strip()
-    bill_no = request.forms.get('bill_no', '').strip()
-    purchase_date = request.forms.get('purchase_date', '').strip()
-    payment_type = request.forms.get('payment_type', '').strip()
+    # ---------- Form Data ----------
+    vendor_value   = request.forms.get('vendor_id', '').strip()
+    bill_no        = request.forms.get('bill_no', '').strip()
+    purchase_date  = request.forms.get('purchase_date', '').strip()
+    payment_type   = request.forms.get('payment_type', '').strip()
     payment_status = request.forms.get('payment_status', '').strip()
-    purchase_status = request.forms.get('purchase_status', '').strip()
-    remarks = request.forms.get('remarks', '').strip()
+    remarks        = request.forms.get('remarks', '').strip()
     purchase_items_json = request.forms.get('purchase_items_json', '').strip()
 
-    # ✅ Extract vendor_id and vendor_name
-    vendor_id, vendor_name = (
-        vendor_value.split('|', 1)[0].strip(),
-        vendor_value.split('|', 1)[1].strip()
-    ) if '|' in vendor_value else (vendor_value, '')
+    # ---------- Validation ----------
+    errors = []
+    if not vendor_value:   errors.append("Vendor is required.")
+    if not bill_no:        errors.append("Bill number is required.")
+    if not purchase_date:  errors.append("Purchase date is required.")
+    if not payment_type:   errors.append("Payment type is required.")
+    if not payment_status: errors.append("Payment status is required.")
 
-    # ✅ Parse items JSON
     try:
         purchase_items = json.loads(purchase_items_json) if purchase_items_json else []
     except Exception as e:
-        flash.set(f"Invalid purchase items JSON: {e}", "danger")
+        flash.set(f"Bad purchase items JSON: {e}", "danger")
         redirect(URL('purchase/create'))
 
-    # ✅ Validation: If purchase marked 'received', ensure all items are received
-    if purchase_status.lower() == 'received':
-        not_received_items = [
-            item for item in purchase_items
-            if (item.get('receive_status') or '').lower() != 'received'
-        ]
-        if not_received_items:
-            flash.set(
-                "Cannot mark purchase as 'Received'. "
-                "All purchase items must have status 'Received'.",
-                "warning"
-            )
-            redirect(URL('purchase/create'))
+    errors += validate_items(purchase_items)
+    if errors:
+        flash.set(" ".join(errors), "danger")
+        redirect(URL('purchase/create'))
 
-    # ✅ Totals
-    total_price = sum(float(item.get('item_price') or 0) for item in purchase_items)
-    total_discount = sum(float(item.get('item_discount') or 0) for item in purchase_items)
-    total_payable = total_price - total_discount
+    vendor_id, vendor_name = parse_vendor(vendor_value)
 
-    # ✅ Insert Purchase Head
-    purchase_head_id = generate_purchase_head_id()
-    db.purchase_head.insert(
-        cid="SKF",
-        purchase_head_id=purchase_head_id,
-        vendor_id=vendor_id,
-        vendor_name=vendor_name,
-        bill_no=bill_no,
-        total_price=total_price,
-        total_discount=total_discount,
-        total_payable=total_payable,
-        purchase_date=parse_date(purchase_date),
-        payment_type=payment_type,
-        payment_status=payment_status,
-        purchase_status=purchase_status,
-        remarks=remarks,
-    )
+    try:
+        # ------------------------------------------------------
+        # Step 1: Aggregate requisition quantities
+        # ------------------------------------------------------
+        req_totals = {}
+        for item in purchase_items:
+            req_id = item['req_id']
+            req_totals[req_id] = req_totals.get(req_id, 0) + int(item['quantity'])
 
-    # ✅ Insert Purchase Details with quantity validation
-    for index, item in enumerate(purchase_items, start=1):
-        req_id = item.get('req_id')
-        quantity = int(item.get('quantity') or 0)
+        # ------------------------------------------------------
+        # Step 2: Validate against requisition table
+        # ------------------------------------------------------
+        req_ids = list(req_totals.keys())
+        placeholders = ",".join(["%s"] * len(req_ids))
 
-        # 🔎 Check available quantity for this requisition
-        row = db.executesql(f"""
-            SELECT r.quantity, COALESCE(SUM(p.quantity), 0) AS purchased_quantity
+        rows = db.executesql(
+            f"""
+            SELECT r.req_id,
+                   r.quantity AS req_quantity,
+                   COALESCE(SUM(p.quantity), 0) AS purchased_qty
             FROM requisition r
-            LEFT JOIN purchase_details p ON r.req_id = p.req_id
-            WHERE r.req_id = '{req_id}'
-            GROUP BY r.quantity
-        """, as_dict=True)
-
-        if not row:
-            flash.set(f"Invalid requisition ID: {req_id}", "danger")
-            redirect(URL('purchase/create'))
-
-        max_quantity = int(row[0]['quantity']) - int(row[0]['purchased_quantity'])
-
-        if quantity > max_quantity:
-            flash.set(
-                f"Cannot purchase {quantity} units for ReqID {req_id}. "
-                f"Max allowed is {max_quantity}.",
-                "warning"
-            )
-            redirect(URL('purchase/create'))
-
-        # ✅ Insert record if valid
-        db.purchase_details.insert(
-            cid="SKF",
-            purchase_head_id=purchase_head_id,
-            purchase_details_id=f"{purchase_head_id}{index:03d}",
-            req_id=req_id,
-            asset_type=item.get('asset_type'),
-            asset_brand=item.get('asset_brand'),
-            asset_model=item.get('asset_model'),
-            receive_status=item.get('receive_status') or "Pending",
-            purchase_date=parse_date(item.get('purchase_date')),
-            received_date=parse_date(item.get('received_date')),
-            item_price=float(item.get('item_price') or 0),
-            item_discount=float(item.get('item_discount') or 0),
-            quantity=quantity,
-            asset_created=0
+            LEFT JOIN purchase_details p
+              ON r.req_id = p.req_id
+            WHERE r.req_id IN ({placeholders})
+            GROUP BY r.req_id
+            """,
+            req_ids,
+            as_dict=True
         )
 
-    # ✅ Commit everything at once
-    db.commit()
-    flash.set("Purchase submitted successfully!", "success")
+        db_data = {row['req_id']: row for row in rows}
+
+        for req_id, total_qty in req_totals.items():
+            if req_id not in db_data:
+                raise Exception(f"Invalid requisition ID: {req_id}")
+
+            req_qty = int(db_data[req_id]['req_quantity'])
+            already_purchased = int(db_data[req_id]['purchased_qty'])
+            max_allowed = req_qty - already_purchased
+
+            if total_qty > max_allowed:
+                raise Exception(
+                    f"Cannot purchase {total_qty} units for ReqID {req_id}. "
+                    f"Max allowed is {max_allowed}."
+                )
+
+        # ------------------------------------------------------
+        # Step 3: Insert purchase head
+        # ------------------------------------------------------
+        total_gross = total_discount = total_payable = 0
+        for item in purchase_items:
+            gross, discount, net = calculate_item_totals(item)
+            total_gross    += gross
+            total_discount += discount
+            total_payable  += net
+
+        purchase_head_id = generate_purchase_head_id()
+        db.purchase_head.insert(
+            cid="SKF",
+            purchase_head_id=purchase_head_id,
+            vendor_id=vendor_id,
+            vendor_name=vendor_name,
+            bill_no=bill_no,
+            total_price=total_gross,
+            total_discount=total_discount,
+            total_payable=total_payable,
+            purchase_date=parse_date(purchase_date),
+            payment_type=payment_type,
+            payment_status=payment_status,
+            purchase_status="pending",
+            remarks=remarks,
+        )
+
+        # ------------------------------------------------------
+        # Step 4: Insert purchase details
+        # ------------------------------------------------------
+        all_statuses = []
+        purchase_details = []
+        for i, item in enumerate(purchase_items, start=1):
+            status = (item.get('receive_status') or "pending").lower()
+            all_statuses.append(status)
+
+            purchase_details.append({
+                'cid': "SKF",
+                'purchase_head_id': purchase_head_id,
+                'purchase_details_id': f"{purchase_head_id}{i:03d}",
+                'req_id': item['req_id'],
+                'asset_type': item.get('asset_type'),
+                'asset_brand': item.get('asset_brand'),
+                'asset_model': item.get('asset_model'),
+                'receive_status': status,
+                'purchase_date': parse_date(item.get('purchase_date')),
+                'received_date': parse_date(item.get('received_date')),
+                'item_price': item['item_price'],
+                'item_gross_total': item['item_gross_total'],
+                'item_discount': item['item_discount'],
+                'item_net_total': item['item_net_total'],
+                'quantity': item['quantity'],
+                'asset_created': int(item.get('item_asset_created') or 0),
+            })
+
+        db.purchase_details.bulk_insert(purchase_details)
+
+        # ------------------------------------------------------
+        # Step 5: Finalize purchase head status
+        # ------------------------------------------------------
+        final_status = all_statuses[0] if all(all_statuses[0] == s for s in all_statuses) else "pending"
+        db(db.purchase_head.purchase_head_id == purchase_head_id).update(
+            purchase_status=final_status
+        )
+
+        db.commit()
+        flash.set("Purchase submitted successfully!", "success")
+
+    except Exception as e:
+        db.rollback()
+        flash.set(str(e), "danger")
+        redirect(URL('purchase/create'))
+
     redirect(URL('purchase/index'))
 
 
+
+# ---------- Edit ----------
 @action('purchase/edit')
 @action.uses("purchase/edit.html", db, session, flash)
 def purchase_edit():
@@ -191,11 +271,7 @@ def purchase_edit():
     if not row:
         return dict(error='Purchase Entry not found.')
 
-    vendors = (
-        db(db.vendor.vendor_name != None)
-        .select(db.vendor.id, db.vendor.vendor_name, distinct=True)
-        .as_list()
-    )
+    vendors = db(db.vendor.vendor_name != None).select(db.vendor.id, db.vendor.vendor_name, distinct=True).as_list()
     vendor_results = [{"id": v["id"], "text": v["vendor_name"]} for v in vendors]
 
     purchase_items = [
@@ -208,160 +284,184 @@ def purchase_edit():
             asset_model=pi.asset_model,
             purchase_date=pi.purchase_date.isoformat() if pi.purchase_date else None,
             receive_status=pi.receive_status,
-            received_date=pi.received_date.isoformat()
-            if pi.received_date
-            else None,
-            quantity=pi.quantity,  # ✅ include quantity
+            received_date=pi.received_date.isoformat() if pi.received_date else None,
+            quantity=pi.quantity,
             item_price=pi.item_price,
+            item_gross_total=pi.item_gross_total,
             item_discount=pi.item_discount,
+            item_net_total=pi.item_net_total,
             item_asset_created=pi.asset_created,
         )
         for pi in db(db.purchase_details.purchase_head_id == row.purchase_head_id).select()
     ]
 
     return dict(
-        notdata=row,  # ✅ return Row, not dict
+        notdata=row,
         entrys_json=json.dumps(purchase_items),
         asset_types=get_distinct_field_list(db.asset_master.asset_type),
         asset_brands=get_distinct_field_list(db.asset_master.asset_brand),
         asset_models=get_distinct_field_list(db.asset_master.asset_model),
         payment_type_combos=get_combo_list("payment_type"),
         payment_status_combos=get_combo_list("payment_status"),
-        purchase_status_combos=get_combo_list("purchase_status"),
-        receive_status=get_combo_list("receive_status"),
+        receive_status=get_combo_list("purchase_status"),
         vendor_results=vendor_results,
         selected_vendor=f"{row.vendor_id} | {row.vendor_name}",
         selected_payment_type=row.payment_type,
         selected_payment_status=row.payment_status,
-        selected_purchase_status=row.purchase_status,
     )
 
 @action('purchase/update')
 @action.uses(db, session, flash)
 def purchase_update():
-    purchase_head_id = request.query.get('id') or request.forms.get('id')
-    if not purchase_head_id:
-        flash.set("Missing purchase_head_id.", "danger")
+    record_id = request.query.get('id') or request.forms.get('id')
+    if not record_id:
+        flash.set("Missing purchase ID.", "danger")
         redirect(URL('purchase/index'))
 
-    head_record = db(db.purchase_head.id == purchase_head_id).select().first()
+    head_record = db(db.purchase_head.id == record_id).select().first()
     if not head_record:
         flash.set("Purchase head not found.", "danger")
         redirect(URL('purchase/index'))
 
-    vendor_value = request.forms.get('vendor_id', '').strip()
-    vendor_id, vendor_name = (
-        vendor_value.split('|', 1)[0].strip(),
-        vendor_value.split('|', 1)[1].strip()
-    ) if '|' in vendor_value else (vendor_value, '')
+    purchase_head_id = head_record.purchase_head_id
 
-    bill_no = request.forms.get('bill_no', '').strip()
-    purchase_date = parse_date(request.forms.get('purchase_date', '').strip())
-    payment_type = request.forms.get('payment_type', '').strip()
+    vendor_value   = request.forms.get('vendor_id', '').strip()
+    bill_no        = request.forms.get('bill_no', '').strip()
+    purchase_date  = request.forms.get('purchase_date', '').strip()
+    payment_type   = request.forms.get('payment_type', '').strip()
     payment_status = request.forms.get('payment_status', '').strip()
-    purchase_status = request.forms.get('purchase_status', '').strip()
-    remarks = request.forms.get('remarks', '').strip()
+    remarks        = request.forms.get('remarks', '').strip()
     purchase_items_json = request.forms.get('purchase_items_json', '').strip()
+
+    errors = []
+    if not vendor_value:   errors.append("Vendor is required.")
+    if not bill_no:        errors.append("Bill number is required.")
+    if not purchase_date:  errors.append("Purchase date is required.")
+    if not payment_type:   errors.append("Payment type is required.")
+    if not payment_status: errors.append("Payment status is required.")
 
     try:
         purchase_items = json.loads(purchase_items_json) if purchase_items_json else []
     except Exception as e:
-        flash.set(f"Invalid purchase items JSON: {e}", "danger")
-        redirect(URL('purchase/index'))
+        flash.set(f"Bad purchase items JSON: {e}", "danger")
+        redirect(URL('purchase/edit', vars=dict(id=record_id)))
 
-    # ✅ Validation: If head marked as received, all items must be received
-    if purchase_status.lower() == 'received':
-        not_received_items = [
-            item for item in purchase_items
-            if (item.get('receive_status') or '').lower() != 'received'
-        ]
-        if not_received_items:
-            flash.set(
-                "Cannot mark purchase as 'Received'. All items must have receive status 'Received'.",
-                "warning"
-            )
-            redirect(URL('purchase/edit', vars=dict(id=purchase_head_id)))
+    errors += validate_items(purchase_items)
+    if errors:
+        flash.set(" ".join(errors), "danger")
+        redirect(URL('purchase/edit', vars=dict(id=record_id)))
 
-    # ✅ Totals
-    total_price = sum(float(item.get('item_price') or 0) for item in purchase_items)
-    total_discount = sum(float(item.get('item_discount') or 0) for item in purchase_items)
-    total_payable = total_price - total_discount
+    vendor_id, vendor_name = parse_vendor(vendor_value)
 
     try:
-        # ---------- Transaction Start ----------
-        # ✅ Update head
-        db(db.purchase_head.id == purchase_head_id).update(
+
+        req_totals = {}
+        for item in purchase_items:
+            req_id = item['req_id']
+            req_totals[req_id] = req_totals.get(req_id, 0) + int(item['quantity'])
+
+        rows = db.executesql(
+            f"""
+            SELECT r.req_id,
+                   r.quantity AS req_quantity,
+                   COALESCE(SUM(p.quantity), 0) AS purchased_qty
+            FROM requisition r
+            LEFT JOIN purchase_details p
+              ON r.req_id = p.req_id
+             -- exclude current purchase head to avoid double counting during edit
+             AND p.purchase_head_id != %(head_id)s
+            WHERE r.req_id IN %(req_ids)s
+            GROUP BY r.req_id
+            """,
+            dict(head_id=purchase_head_id, req_ids=tuple(req_totals.keys())),
+            as_dict=True
+        )
+
+        req_lookup = {row['req_id']: row for row in rows}
+
+        validation_errors = []
+        for req_id, total_qty in req_totals.items():
+            row = req_lookup.get(req_id)
+            if not row:
+                validation_errors.append(f"Invalid requisition ID: {req_id}")
+                continue
+
+            req_qty = int(row['req_quantity'])
+            already_purchased = int(row['purchased_qty'])
+            max_allowed = req_qty - already_purchased
+
+            if total_qty > max_allowed:
+                validation_errors.append(
+                    f"Requisition ID {req_id}: requested {total_qty} quantity, {max_allowed} is max allowed "
+                )
+
+        if validation_errors:
+            flash.set(" ; ".join(validation_errors), "danger")
+            redirect(URL('purchase/edit', vars=dict(id=record_id)))
+
+        total_gross = total_discount = total_payable = 0
+        all_statuses = []
+        purchase_details = []
+
+        for i, item in enumerate(purchase_items, start=1):
+            gross, discount, net = calculate_item_totals(item)
+            total_gross    += gross
+            total_discount += discount
+            total_payable  += net
+
+            status = (item.get('receive_status') or "pending").lower()
+            all_statuses.append(status)
+
+            purchase_details.append({
+                'cid': "SKF",
+                'purchase_head_id': purchase_head_id,
+                'purchase_details_id': f"{purchase_head_id}{i:03d}",
+                'req_id': item['req_id'],
+                'asset_type': item.get('asset_type'),
+                'asset_brand': item.get('asset_brand'),
+                'asset_model': item.get('asset_model'),
+                'receive_status': status,
+                'purchase_date': parse_date(item.get('purchase_date')),
+                'received_date': parse_date(item.get('received_date')),
+                'item_price': item['item_price'],
+                'item_gross_total': item['item_gross_total'],
+                'item_discount': item['item_discount'],
+                'item_net_total': item['item_net_total'],
+                'quantity': item['quantity'],
+                'asset_created': int(item.get('item_asset_created') or 0)
+            })
+
+        final_status = all_statuses[0] if all(all_statuses[0] == s for s in all_statuses) else "pending"
+
+        db(db.purchase_details.purchase_head_id == purchase_head_id).delete()
+
+        db(db.purchase_head.purchase_head_id == purchase_head_id).update(
             vendor_id=vendor_id,
             vendor_name=vendor_name,
             bill_no=bill_no,
-            total_price=total_price,
+            total_price=total_gross,
             total_discount=total_discount,
             total_payable=total_payable,
-            purchase_date=purchase_date,
+            purchase_date=parse_date(purchase_date),
             payment_type=payment_type,
             payment_status=payment_status,
-            purchase_status=purchase_status,
             remarks=remarks,
+            purchase_status=final_status
         )
 
-        # ✅ Delete old details
-        db(db.purchase_details.purchase_head_id == head_record.purchase_head_id).delete()
-
-        # ✅ Insert all details with validation
-        for idx, item in enumerate(purchase_items, start=1):
-            req_id = item.get('req_id')
-            quantity = int(item.get('quantity') or 0)
-
-            row = db.executesql(f"""
-                SELECT r.quantity, COALESCE(SUM(p.quantity), 0) AS purchased_quantity
-                FROM requisition r
-                LEFT JOIN purchase_details p ON r.req_id = p.req_id
-                WHERE r.req_id = '{req_id}'
-                GROUP BY r.quantity
-            """, as_dict=True)
-
-            if not row:
-                raise ValueError(f"Invalid requisition ID: {req_id}")
-
-            max_quantity = int(row[0]['quantity']) - int(row[0]['purchased_quantity'])
-            if quantity > max_quantity:
-                raise ValueError(
-                    f"Cannot purchase {quantity} units for ReqID {req_id}. "
-                    f"Max allowed is {max_quantity}."
-                )
-
-            db.purchase_details.insert(
-                cid="SKF",
-                purchase_head_id=head_record.purchase_head_id,
-                purchase_details_id=f"{head_record.purchase_head_id}{idx:03d}",
-                req_id=req_id,
-                asset_type=item.get('asset_type'),
-                asset_brand=item.get('asset_brand'),
-                asset_model=item.get('asset_model'),
-                purchase_date=parse_date(item.get('purchase_date')),
-                receive_status=item.get('receive_status') or "Pending",
-                received_date=parse_date(item.get('received_date')),
-                quantity=quantity,
-                item_price=float(item.get('item_price') or 0),
-                item_discount=float(item.get('item_discount') or 0),
-                asset_created=int(item.get('item_asset_created') or 0)
-            )
-
-        # ✅ Commit only if all inserts succeed
+        db.purchase_details.bulk_insert(purchase_details)
         db.commit()
         flash.set("Purchase updated successfully!", "success")
 
     except Exception as e:
         db.rollback()
         flash.set(str(e), "danger")
+        redirect(URL('purchase/edit', vars=dict(id=record_id)))
 
     redirect(URL('purchase/index'))
 
 
 
-
-
-# ---------- Data Fetch ----------
 @action('purchase/get_data', method=['GET'])
 @action.uses(db)
 def purchase_get_data():
@@ -412,3 +512,39 @@ def purchase_get_data():
         recordsFiltered=total_rows,
         draw=int(request.query.get('draw') or 1)
     )
+
+
+@action('purchase/delete', method=['GET', 'POST'])
+@action.uses(db, session, flash)
+def purchase_delete():
+    purchase_id = request.query.get('id')
+    if not purchase_id:
+        flash.set('Missing purchase ID.', 'danger')
+        redirect(URL('purchase/index'))
+
+    try:
+        head_record = db(db.purchase_head.id == purchase_id).select().first()
+        if not head_record:
+            flash.set('Purchase not found.', 'warning')
+            redirect(URL('purchase/index'))
+
+        purchase_head_id = head_record.purchase_head_id
+
+        asset_count = db(db.asset.purchase_head_id == purchase_head_id).count()
+        if asset_count > 0:
+            flash.set(
+                f"Cannot delete purchase '{purchase_head_id}' because it is used in {asset_count} asset(s).",
+                'warning'
+            )
+            redirect(URL('purchase/edit', vars=dict(id=purchase_id)))
+
+        db(db.purchase_details.purchase_head_id == purchase_head_id).delete()
+
+        db(db.purchase_head.id == purchase_id).delete()
+
+        flash.set('Purchase deleted successfully.', 'success')
+
+    except Exception as e:
+        flash.set(f'Error while deleting purchase: {str(e)}', 'danger')
+
+    redirect(URL('purchase/index'))

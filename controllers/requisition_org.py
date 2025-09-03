@@ -65,7 +65,7 @@ def requisition_org_create():
 # Submit Endpoint
 # -----------------------------
 @action('requisition_org/submit', method=['POST'])
-@action.uses(db, session)
+@action.uses(db, session, flash)
 def requisition_org_submit():
     form = request.forms
 
@@ -89,10 +89,11 @@ def requisition_org_submit():
         )
         db.commit()
 
-        return dict(status="success", message=f"Requisition {req_id} submitted successfully.")
+        flash.set(f"Requisition {req_id} created successfully.", "success")
+        redirect(URL('requisition_org', 'index'))
     except Exception as e:
-        db.rollback()
-        return dict(status="error", message=str(e))
+        flash.set(f"Error creating requisition: {str(e)}", "error")
+        redirect(URL('requisition_org', 'create'))
 
 
 # -----------------------------
@@ -213,4 +214,44 @@ def requisition_org_update():
         db.rollback()
         flash.set(f"Error updating requisition: {str(e)}", "error")
         redirect(URL('requisition_org', 'edit', vars=dict(id=req_id)))
+
+
+@action('requisition_org/delete', method=['GET', 'POST'])
+@action.uses(db, session, flash)
+def delete_requisition_org():
+    # Get the `id` from the query
+    requisition_id = request.query.get('id')
+    if not requisition_id:
+        flash.set('Missing requisition ID.', 'danger')
+        redirect(URL('requisition_org/index'))
+
+    try:
+        # Fetch the record from the requisition_org table using `id`
+        record = db(db.requisition.id == requisition_id).select().first()
+        if not record:
+            flash.set('Requisition not found.', 'warning')
+            redirect(URL('requisition_org/index'))
+
+        # Get the `req_id` from the record
+        req_id = record.req_id
+
+        # Check if the `req_id` is used in the purchase_details table
+        used_count = db(db.purchase_details.req_id == req_id).count()
+        if used_count > 0:
+            flash.set(
+                f"Cannot delete requisition '{req_id}' because it is used in {used_count} purchase(s).",
+                'warning'
+            )
+
+            redirect(URL('requisition_org/edit', vars=dict(id=requisition_id)))
+
+        db((db.doc_metadata.trans_type == 'requisition') & (db.doc_metadata.trans_id == requisition_id)).delete()
+        db(db.requisition.id == requisition_id).delete()
+        flash.set('Requisition deleted successfully.', 'success')
+
+    except Exception as e:
+        flash.set(f'Error while deleting requisition: {str(e)}', 'danger')
+
+    redirect(URL('requisition_org/index'))
+
 

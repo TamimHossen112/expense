@@ -11,17 +11,22 @@
     }
 
     .locked-row {
-        background-color: #FFFFFF!important; /* soft purple */
-        color: #FFFFFF!important; /* darker text for readability */
+        background-color: #FFFFFF!important;
+        color: #FFFFFF!important;
+    }
+    .item_gross_total, .item_net_total {
+        background-color: #9b9b9b; 
+        text-align: center; 
+        vertical-align: middle;
+        font-weight: bold;
     }
 
     .locked-row select
     {
-        background-color: #FFFFFF !important; /* lighter shade for form fields */
+        background-color: #FFFFFF !important;
         color: #FFFFFF !important;
     }
-    
-    /* Cross-browser lighter italic placeholder */
+
     .quantity_input::-webkit-input-placeholder {
         color: #bbb !important;
         font-style: italic;
@@ -29,7 +34,7 @@
     .quantity_input:-moz-placeholder {
         color: #bbb !important;
         font-style: italic;
-        opacity: 1; /* Firefox requires this */
+        opacity: 1;
     }
     .quantity_input::-moz-placeholder {
         color: #bbb !important;
@@ -160,36 +165,23 @@
                             [[pass]]
                         </select>
                     </div>
-
-                    <div class="col-md-3 mb-2 custom_input">
-                        <label for="purchase_status" class="form-label"><strong>Purchase Status</strong></label>
-                        <select class="form-select form-select-sm select_custom" id="purchase_status" name="purchase_status">
-                            <option value="">Select Purchase Status</option>
-                            [[for purchase_status in purchase_status_combos:]]
-                                <option value="[[=purchase_status['text']]]"
-                                    [[if str(purchase_status['text']) == str(selected_purchase_status):]]Selected[[pass]]>
-                                    [[=purchase_status['text']]]
-                                </option>
-                            [[pass]]
-                        </select>
-                    </div>
                 </div>
 
                 <div class="table-responsive mt-2" style="margin-bottom: 0 !important; margin-bottom: 0 !important; padding-bottom: 0 !important;">
                     <table class="table table-bordered table-sm align-middle" id="purchaseTable" style="margin-bottom: 0 !important;">
                         <thead>
                             <tr style="background-color: #ccc9fa;">
-                                <th class="text-truncate" style="min-width: 200px;">Requisition Details</th>
-                                <!-- <th class="text-truncate" style="min-width: 110px;">Asset Type</th> -->
-                                <th class="text-truncate" style="min-width: 110px;">Asset Brand</th>
-                                <th class="text-truncate" style="min-width: 130px;">Asset Model</th>
-                                <th class="text-truncate" style="min-width: 100px;">Purchase Date</th>
-                                <!-- <th class="text-truncate" style="min-width: 100px;">Received Date</th> -->
-                                <th class="text-truncate" style="min-width: 110px;">Status</th> 
-                                <th class="text-truncate" style="min-width: 70px;">Quantity</th>
-                                <th class="text-truncate" style="min-width: 100px;">Item Price</th>
-                                <th class="text-truncate" style="min-width: 70px;">Discount</th>
-                                <th class="text-truncate" style="min-width: 35px;"></th>
+                                <th class="text-truncate" style="width: 100px;">Requisition Details</th>
+                                <th class="text-truncate" style="width: 120px;">Asset Brand</th>
+                                <th class="text-truncate" style="width: 100px;">Asset Model</th>
+                                <th class="text-truncate" style="width: 80px;">Purchase Date</th>
+                                <th class="text-truncate" style="width: 80px;">Status</th>
+                                <th class="text-truncate" style="width: 40px;">Quantity</th>
+                                <th class="text-truncate" style="width: 75px;">Item Price</th>
+                                <th class="text-truncate" style="width: 75px;">Gross Total</th>
+                                <th class="text-truncate" style="width: 75px;">Discount</th>
+                                <th class="text-truncate" style="width: 75px;">Net Total</th>
+                                <th class="text-truncate" style="width: 35px;"></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -303,18 +295,28 @@ $(document).ready(async function(){
     }
 
     function updateTotals() {
-        let totalPrice = 0;
-        let totalDiscount = 0;
-        $("#purchaseTable tbody tr").each(function() {
-            const qty = parseFloat($(this).find("input[name='quantity[]']").val()) || 0;
-            const price = parseFloat($(this).find("input[name='item_price[]']").val()) || 0;
-            const discount = parseFloat($(this).find("input[name='item_discount[]']").val()) || 0;
-            totalPrice += qty * price;
+        let totalGross = 0, totalDiscount = 0, totalNet = 0;
+
+        $("#purchaseTable tbody tr").each(function () {
+            const $tr = $(this);
+            const quantity = parseFloat($tr.find("input.quantity_input").val()) || 0;
+            const price = parseFloat($tr.find("input.item_price_input").val()) || 0;
+            const discount = parseFloat($tr.find("input.item_discount_input").val()) || 0;
+
+            const gross = quantity * price;
+            const net = gross - discount;
+
+            $tr.find(".item_gross_total").text(gross.toFixed(2));
+            $tr.find(".item_net_total").text(net.toFixed(2));
+
+            totalGross += gross;
             totalDiscount += discount;
+            totalNet += net;
         });
-        $("#summaryTotalPrice").text(totalPrice.toFixed(2));
+
+        $("#summaryTotalPrice").text(totalGross.toFixed(2));
         $("#summaryTotalDiscount").text(totalDiscount.toFixed(2));
-        $("#summaryTotalPayable").html(`<strong style="color: #544dc9;">${(totalPrice - totalDiscount).toFixed(2)}</strong>`);
+        $("#summaryTotalPayable").html(`<strong style="color: #544dc9;">${totalNet.toFixed(2)}</strong>`);
     }
 
     async function createRow(data = null, disableDelete = false, editable = false, locked=false) {
@@ -371,7 +373,9 @@ $(document).ready(async function(){
                 </td>
                 <td class="${inputClass}"><input type="number" step="1" min="0" class="form-control form-control-sm no-border-input quantity_input" name="quantity[]" value="" required ${islocked}></td>
                 <td class="${inputClass}"><input type="number" step="0.01" class="form-control form-control-sm no-border-input item_price_input" name="item_price[]" required ${islocked}></td>
+                <td class="item_gross_total ${islocked}" style="color: #544dc9;" readonly>0.00</td>
                 <td class="${inputClass}"><input type="number" step="0.01" class="form-control form-control-sm no-border-input item_discount_input" name="item_discount[]" ${islocked}></td>
+                <td class="item_net_total ${islocked}" style="color: #544dc9;" readonly>0.00</td>
                 <td class="${inputClass}">${deleteBtn}</td>
             </tr>
         `;
@@ -388,13 +392,20 @@ $(document).ready(async function(){
             $row.find(".asset_brand_select").val(data.asset_brand).trigger('change');
             $row.find(".asset_model_select").val(data.asset_model).trigger('change');
             $row.find(".receive_status").val(data.receive_status).trigger('change');
-            $row.find("input[name='purchase_date[]']").flatpickr().setDate(data.purchase_date, true);
-            if(data.received_date) $row.find("input[name='received_date[]']").flatpickr().setDate(data.received_date, true);
+            $row.find("input.purchase_date_input").flatpickr().setDate(data.purchase_date, true);
+            if(data.received_date) $row.find("input.received_date_input").flatpickr().setDate(data.received_date, true);
 
-            $row.find("input[name='quantity[]']").val(data.quantity || "");
-            $row.find("input[name='item_price[]']").val(data.item_price);
-            $row.find("input[name='item_discount[]']").val(data.item_discount);
+            $row.find("input.quantity_input").val(data.quantity || "");
+            $row.find("input.item_price_input").val(data.item_price);
+            $row.find("input.item_discount_input").val(data.item_discount);
+
+            // Set gross/net totals
+            $row.find(".item_gross_total").text(parseFloat(data.item_gross_total || 0).toFixed(2));
+            $row.find(".item_net_total").text(parseFloat(data.item_net_total || 0).toFixed(2));
+
+            updateTotals(); // <-- recalc totals for table summary
         }
+
 
         $row.find(".req_id_select").on("change", function () {
             const selectedReqId = $(this).val();
@@ -494,6 +505,8 @@ $(document).ready(async function(){
                 received_date: $tr.find("input.received_date_input").val() || "",
                 quantity: $tr.find("input.quantity_input").val() || "0",
                 item_price: $tr.find("input.item_price_input").val() || "0",
+                item_gross_total: $tr.find(".item_gross_total").text() || "0",
+                item_net_total: $tr.find(".item_net_total").text() || "0",
                 item_discount: $tr.find("input.item_discount_input").val() || "0",
                 item_asset_created: $tr.find("input[name='item_asset_created[]']").val() || "0"
             };

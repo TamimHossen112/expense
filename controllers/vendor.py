@@ -4,17 +4,14 @@ from py4web.core import redirect
 from ..common import db, session, T, flash
 
 # ---------------- Helper Functions ---------------- #
-# ---------------- Helper Functions ---------------- #
-# ---------------- Helper Functions ---------------- #
 
 def flash_redirect(message, type_, endpoint, vars=None):
-    """Flash message and redirect."""
+
     flash.set(message, type_)
     redirect(URL(endpoint, vars=vars or {}))
 
 
 def validate_vendor_data(vendor_name, contact, vendor_address, trade_license_no):
-    """Validate vendor form data."""
     errors = []
     if not vendor_name:
         errors.append("Vendor name is required.")
@@ -28,7 +25,6 @@ def validate_vendor_data(vendor_name, contact, vendor_address, trade_license_no)
 
 
 def vendor_exists(vendor_name, vendor_address, exclude_id=None):
-    """Check if a vendor with same name + address exists."""
     query = (db.vendor.vendor_name == vendor_name) & (db.vendor.vendor_address == vendor_address)
     if exclude_id:
         query &= (db.vendor.id != exclude_id)
@@ -36,7 +32,6 @@ def vendor_exists(vendor_name, vendor_address, exclude_id=None):
 
 
 def get_vendor_or_redirect(vendor_id):
-    """Fetch vendor record or redirect if not found."""
     if not vendor_id or not str(vendor_id).isdigit():
         flash_redirect("Invalid request. Vendor ID is required.", "danger", "vendor/index")
     record = db.vendor[vendor_id]
@@ -44,12 +39,6 @@ def get_vendor_or_redirect(vendor_id):
         flash_redirect("Vendor not found.", "warning", "vendor/index")
     return record
 
-
-
-
-
-# ---------------- Vendor Actions ---------------- #
-# ---------------- Vendor Actions ---------------- #
 # ---------------- Vendor Actions ---------------- #
 
 @action('vendor/index')
@@ -139,7 +128,6 @@ def get_vendor_data():
     start = int(request.query.get('start') or 0)
     length = int(request.query.get('length') or 15)
 
-    # Sorting
     sort_col_index = request.query.get('order[0][column]')
     if sort_col_index is None:
         sort_col_name = 'id'
@@ -151,7 +139,6 @@ def get_vendor_data():
         if sort_dir not in ['asc', 'desc']:
             sort_dir = 'desc'
 
-    # Build dynamic WHERE clause using raw SQL
     where_clauses = ["1=1"]
     if vendor_name:
         where_clauses.append(f"vendor_name LIKE '%{vendor_name}%'")
@@ -188,7 +175,7 @@ def delete_vendor():
     linked_purchases = db(db.purchase_head.vendor_id == int(vendor_id)).count()
     if linked_purchases > 0:
         flash_redirect(
-            f"Cannot delete vendor (linked to {linked_purchases} purchase(s)).",
+            f"Cannot delete vendor (linked to {linked_purchases} purchase).",
             'warning',
             'vendor/edit',
             vars=dict(id=vendor_id)

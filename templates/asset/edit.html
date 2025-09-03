@@ -47,54 +47,49 @@
             <div id="custom_form">
                 <input type="hidden" name="id" value="[[=request.query.get('id')]]">
                 <div class="row">
-
-                    <!-- First column -->
                     <div class="col-md-3">
                         <div class="row">
                             <div class="mb-2 custom_input">
                                 <label for="asset_type_display" class="form-label">
                                     <strong>Asset Type <span class="is_required">*</span></strong>
                                 </label>
-                                <select class="form-select form-select-sm select_custom" id="asset_type_display" disabled>
+                                <select class="form-select form-select-sm select_custom" id="asset_type" name="asset_type">
                                     <option value="">Asset Type</option>
                                     [[for asset_type in asset_type_list:]]
                                         <option value="[[=asset_type]]" [[if str(asset_type) == str(selected_asset_type):]]selected[[pass]]>[[=asset_type]]</option>
                                     [[pass]]
                                 </select>
-                                <input type="hidden" id="asset_type" name="asset_type" value="[[=selected_asset_type]]">
                             </div>
 
                             <div class="mb-2 custom_input">
                                 <label for="asset_brand_display" class="form-label">
                                     <strong>Asset Brand <span class="is_required">*</span></strong>
                                 </label>
-                                <select class="form-select form-select-sm select_custom" id="asset_brand_display" disabled>
+                                <select class="form-select form-select-sm select_custom" id="asset_brand" name="asset_brand">
                                     <option value="">Asset Brand</option>
                                     [[for asset_brand in asset_brand_list:]]
                                         <option value="[[=asset_brand]]" [[if str(asset_brand) == str(selected_asset_brand):]]selected[[pass]]>[[=asset_brand]]</option>
                                     [[pass]]
                                 </select>
-                                <input type="hidden" id="asset_brand" name="asset_brand" value="[[=selected_asset_brand]]">
                             </div>
 
                             <div class="mb-2 custom_input">
                                 <label for="asset_model_display" class="form-label">
                                     <strong>Asset Model <span class="is_required">*</span></strong>
                                 </label>
-                                <select class="form-select form-select-sm select_custom" id="asset_model_display" disabled>
+                                <select class="form-select form-select-sm select_custom" id="asset_model" name="asset_model">
                                     <option value="">Asset Model</option>
                                     [[for asset_model in asset_model_list:]]
                                         <option value="[[=asset_model]]" [[if str(asset_model) == str(selected_asset_model):]]selected[[pass]]>[[=asset_model]]</option>
                                     [[pass]]
                                 </select>
-                                <input type="hidden" id="asset_model" name="asset_model" value="[[=selected_asset_model]]">
                             </div>
 
                             <div class="mb-2 custom_input">
                                 <label for="purchase_price_display" class="form-label">
                                     <strong>Purchase Price</strong>
                                 </label>
-                                <input type="number" class="form-control form-control-sm" id="purchase_price_display" value="[[=record['purchase_price']]]" disabled>
+                                <input type="number" class="form-control form-control-sm" id="purchase_price_display" value="[[=record['purchase_price']]]">
                                 <input type="hidden" id="purchase_price" name="purchase_price" value="[[=record['purchase_price']]]">
                             </div>
                         </div>

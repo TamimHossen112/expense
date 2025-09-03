@@ -165,6 +165,8 @@ def asset_update():
     flash.set('Asset updated successfully.', 'success')
     redirect(URL('asset_type/index'))
 
+
+
 @action('asset_type/delete', method=['GET', 'POST'])
 @action.uses(db, session, flash)
 def asset_delete():
@@ -176,13 +178,29 @@ def asset_delete():
 
     try:
         record = db.asset_master(record_id)
-        if record:
-            db(db.asset_master.id == record_id).delete()
-            flash.set('Asset deleted successfully.', 'success')
-        else:
+        if not record:
             flash.set('Asset not found.', 'warning')
+            redirect(URL('asset_type/index'))
+        used_count = db(
+            (db.purchase_details.asset_type == record.asset_type) &
+            (db.purchase_details.asset_brand == record.asset_brand) &
+            (db.purchase_details.asset_model == record.asset_model)
+        ).count()
+
+        if used_count > 0:
+            flash.set(
+                f"Cannot delete '{record.asset_type} | {record.asset_brand} | {record.asset_model}' "
+                f"because it is used in {used_count} purchase.",
+                'warning'
+            )
+            redirect(URL('asset_type/index'))
+
+        db(db.asset_master.id == record_id).delete()
+        flash.set('Asset deleted successfully.', 'success')
+
     except Exception as e:
         flash.set(f'Error while deleting asset: {str(e)}', 'danger')
 
     redirect(URL('asset_type/index'))
+
 

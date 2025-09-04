@@ -48,72 +48,80 @@
             <div class="row g-3">
               [[for field in section_fields:]]
                 [[readonly_attr = 'readonly' if str(field.get('readonly','')).lower()=='yes' else '']]
-                <div class="col-md-6 col-sm-12">
-                  <label for="[[=field['key']]]" class="form-label fw-bold">
-                    [[=field['caption']]]
-                  </label>
 
-                  [[if field['value_type'] in ('string','integer'):]]
-                    <input type="[[='number' if field['value_type']=='integer' else 'text']]" 
-                           class="form-control form-control-sm"
-                           id="[[=field['key']]]" 
-                           name="[[=field['key']]]" 
-                           value="[[=field['default_value'] or '']]" 
-                           [[=readonly_attr]]>
+                [[if field['value_type'] == 'hidden':]]
+                  <!-- Hidden field goes directly without column wrapper -->
+                  <input type="hidden" 
+                        id="[[=field['key']]]" 
+                        name="[[=field['key']]]" 
+                        value="[[=field['default_value'] or '']]" >
+                [[else:]]
+                  <div class="col-md-3 col-sm-12">
+                    <label for="[[=field['key']]]" class="form-label fw-bold">
+                      [[=field['caption']]]
+                    </label>
 
-                  [[elif field['value_type'] == 'date':]]
-                    <div class="flatpickr-wrapper position-relative">
-                      <input type="text" 
-                             class="form-control form-control-sm datepicker"
-                             id="[[=field['key']]]"
-                             name="[[=field['key']]]"
-                             value="[[=field['default_value'] or '']]" 
-                             placeholder="Select Date"
-                             [[=readonly_attr]]>
-                      <i class="fa fa-calendar calendar-icon text-secondary calendar-toggle"></i>
-                    </div>
-
-                  [[elif field['value_type'] == 'dropdown':]]
-                    <select class="form-select form-select-sm select_custom"
-                            id="[[=field['key']]]"
-                            name="[[=field['key']]]"
+                    [[if field['value_type'] in ('string','integer'):]]
+                      <input type="[[='number' if field['value_type']=='integer' else 'text']]" 
+                            class="form-control form-control-sm"
+                            id="[[=field['key']]]" 
+                            name="[[=field['key']]]" 
+                            value="[[=field['default_value'] or '']]" 
                             [[=readonly_attr]]>
-                      <option value="">Select [[=field['caption']]]</option>
 
-                      [[# If dependency_fields exist → show keys of value_list dict]]
-                      [[if field.get('dependency_fields'):]]
-                        [[for k in (field['value_list'] or {}).keys():]]
-                          <option value="[[=k]]" [[='selected' if k==field['default_value'] else '' ]]>
-                            [[=k]]
-                          </option>
-                        [[pass]]
+                    [[elif field['value_type'] == 'date':]]
+                      <div class="flatpickr-wrapper ">
+                        <input type="text" 
+                              class="form-control form-control-sm date-picker"
+                              id="[[=field['key']]]"
+                              name="[[=field['key']]]"
+                              value="[[=field['default_value'] or '']]" 
+                              placeholder="Select Date"
+                              [[=readonly_attr]]>
+                        <i class="fa fa-calendar calendar-icon text-secondary calendar-toggle"></i>
+                      </div>
 
-                      [[else:]]
-                        [[for val in (field['value_list'] or []):]]
-                          [[if isinstance(val, dict):]]
-                            <option value="[[=val['value']]]" [[='selected' if val['value']==field['default_value'] else '' ]]>
-                              [[=val['label']]]
-                            </option>
-                          [[else:]]
-                            <option value="[[=val]]" [[='selected' if val==field['default_value'] else '' ]]>
-                              [[=val]]
+                    [[elif field['value_type'] == 'dropdown':]]
+                      <select class="form-select form-select-sm select_custom"
+                              id="[[=field['key']]]"
+                              name="[[=field['key']]]"
+                              [[=readonly_attr]]>
+                        <option value="">Select [[=field['caption']]]</option>
+
+                        [[if field.get('dependency_fields'):]]
+                          [[for k in (field['value_list'] or {}).keys():]]
+                            <option value="[[=k]]" [[='selected' if k==field['default_value'] else '' ]]>
+                              [[=k]]
                             </option>
                           [[pass]]
+                        [[else:]]
+                          [[for val in (field['value_list'] or []):]]
+                            [[if isinstance(val, dict):]]
+                              <option value="[[=val['value']]]" [[='selected' if val['value']==field['default_value'] else '' ]]>
+                                [[=val['label']]]
+                              </option>
+                            [[else:]]
+                              <option value="[[=val]]" [[='selected' if val==field['default_value'] else '' ]]>
+                                [[=val]]
+                              </option>
+                            [[pass]]
+                          [[pass]]
                         [[pass]]
-                      [[pass]]
-                    </select>
+                      </select>
 
-                  [[else:]]
-                    <input type="text" class="form-control form-control-sm"
-                           id="[[=field['key']]]"
-                           name="[[=field['key']]]"
-                           value="[[=field['default_value'] or '']]" 
-                           [[=readonly_attr]]>
-                  [[pass]]
-                </div>
+                    [[else:]]
+                      <input type="text" class="form-control form-control-sm"
+                            id="[[=field['key']]]"
+                            name="[[=field['key']]]"
+                            value="[[=field['default_value'] or '']]" 
+                            [[=readonly_attr]]>
+                    [[pass]]
+                  </div>
+                [[pass]]
               [[pass]]
             </div>
           </div>
+
         [[pass]]
       [[pass]]
 

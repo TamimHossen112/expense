@@ -200,7 +200,7 @@ db.define_table('tr_config',
     Field('value_list', 'string', length=500),
     Field('default_value', 'string', length=255),
     Field('readonly', 'string', length=3, default='no', requires=IS_IN_SET(['yes', 'no'])),
-    Field('hidden', 'string', length=3, default='no', requires=IS_IN_SET(['yes', 'no'])),
+
     signature,
     migrate=False
 )

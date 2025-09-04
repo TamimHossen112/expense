@@ -90,6 +90,7 @@ def transaction_submit():
         flash.set("❌ Missing asset_id or asset_type")
         redirect(URL("transaction/index"))
 
+    # Insert into tr_head
     db.executesql(
         f"""
         INSERT INTO tr_head (cid, trans_type, asset_id, asset_type, status, tr_date)
@@ -98,24 +99,125 @@ def transaction_submit():
     )
     head_id = db.executesql("SELECT LAST_INSERT_ID() AS id", as_dict=True)[0]['id']
 
+    details_list = []
+    approval_flag = False
+    employee_id = ""
+    employee_name = ""
+
     for key in form.keys():
-        if key not in ("asset_id", "asset_type"):
-            db.executesql(
-                f"""
-                INSERT INTO tr_details (cid, tr_head_id, `key`, value)
-                VALUES ('{cid}', {head_id}, '{key}', '{form.get(key)}')
-                """
-            )
+        value = form.get(key)
+
+        # Track approval and employee info for allocation/transfer
+        if str(trans_type).lower() in ("allocation", "transfer"):
+            if key in ("allocation_status", "approval_status") and value == "approved":
+                approval_flag = True
+            if key == "emp_id":
+                employee_id = value
+            if key == "to_name":
+                employee_name = value
+
+        # Add every form field to tr_details
+        details_list.append({
+            "cid": cid,
+            "tr_head_id": head_id,
+            "key": key,
+            "value": value
+        })
+
+    # Also add the main tr_head fields to tr_details
+    tr_head_fields = {
+        "cid": cid,
+        "trans_type": trans_type,
+        "asset_id": asset_id,
+        "asset_type": asset_type,
+        "status": "pending",
+        "tr_date": str(date.today())
+    }
+    for key, value in tr_head_fields.items():
+        details_list.append({
+            "cid": cid,
+            "tr_head_id": head_id,
+            "key": key,
+            "value": value
+        })
+
+    # Bulk insert into tr_details
+    db.tr_details.bulk_insert(details_list)
+
+    # Update asset if approved
+    if approval_flag and employee_id and employee_name and asset_id:
+        db.executesql(
+            f"""
+            UPDATE asset
+            SET user_id = {employee_id},
+                user_name = '{employee_name}'
+            WHERE asset_id = '{asset_id}'
+            """
+        )
 
     flash.set("Transfer submitted successfully!", "success")
     redirect(URL("transaction/index", vars=dict(type=trans_type)))
 
 
+@action('transaction/view', method=['GET'])
+@action.uses("transaction/view.html", db, session, flash)
+def transaction_view():
+    tr_head_id = request.query.get('id')
+    if not tr_head_id:
+        return dict(status="error", message="Missing transaction id", details=[], fields_json="[]")
+
+    try:
+        tr_head_id = int(tr_head_id)
+    except ValueError:
+        return dict(status="error", message="Invalid transaction id", details=[], fields_json="[]")
+
+    # Fetch transaction header
+    head_rows = db.executesql(f"SELECT * FROM tr_head WHERE id = {tr_head_id}", as_dict=True)
+    if not head_rows:
+        return dict(status="error", message="Transaction not found", details=[], fields_json="[]")
+    
+    head_row = head_rows[0]
+
+    # Fetch configs for this transaction type
+    configs = db.executesql(f"""
+        SELECT * FROM tr_config 
+        WHERE tr_type = '{head_row['trans_type']}' 
+        ORDER BY sl, `order`
+    """, as_dict=True)
+
+    # Fetch details for this transaction
+    details = db.executesql(f"SELECT * FROM tr_details WHERE tr_head_id = {tr_head_id}", as_dict=True)
+    details_map = {d['key']: d['value'] for d in details}
+
+    merged = []
+    for cfg in configs:
+        if cfg.get("hidden") in ("yes", "true", True):
+            continue
+
+        value = details_map.get(cfg['key'], cfg.get('value') or cfg.get('default_value') or "")
+        merged.append({
+            "key": cfg['key'],
+            "caption": cfg['caption'],
+            "section": cfg.get('section', ''),
+            "value": str(value),
+            "readonly": "yes",
+            "value_type": "string",
+            "sl": cfg.get('sl', 0),        # added sl
+            "order": cfg.get('order', 0)   # added order
+        })
+
+    return dict(
+        status="success",
+        head=head_row,
+        details=merged,
+        fields_json=json.dumps(merged, default=str)
+    )
 
 
-# # ------------------------------
-# # Edit Page
-# # ------------------------------
+
+# # # ------------------------------
+# # # Edit Page
+# # # ------------------------------
 # @action('transfer/edit', method=['GET'])
 # @action.uses("transfer/edit.html", db)
 # def transfer_edit():

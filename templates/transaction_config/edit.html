@@ -30,62 +30,69 @@
                 </div>
             </div>
 
-            <div class="table-wrapper" style="overflow-x:auto;">
-                <table class="table table-bordered table-striped align-middle" id="entriesTable" style="min-width:1500px;">
+            <style>
+.table-wrapper {
+    overflow-x: auto;
+    max-height: 500px; /* Set max height to enable vertical scrolling */
+}
+
+.table-wrapper table thead th {
+    position: sticky;
+    top: 0;
+    background-color: #f8f9fa; /* Same as Bootstrap's table-light */
+    z-index: 10;
+}
+
+</style>
+            <div class="table-wrapper" style="overflow-x:auto; height: 400px;">
+                <table class="table table-bordered table-striped align-middle" id="entriesTable" style="width:3000px; table-layout: fixed;">
                     <thead class="table-light">
                         <tr>
-                            <th>SL</th>
-                            <th>Section</th>
-                            <th>Order</th>
-                            <th>Key</th>
-                            <th>Caption</th>
-                            <th>Value</th>
-                            <th>Value Type</th>
-                            <th>Dependent Fields</th>
-                            <th>Readonly</th>
-                            <th>Hidden</th>
-                            <th>Source API</th>
-                            <th>Dependent Fields Source Api</th>
-                            <th>Value List</th>
-                            <th>Default Value</th>
-                            <th class="text-center">Action</th>
+                            <th style="width:60px;">SL</th>
+                            <th style="width:150px;">Section</th>
+                            <th style="width:80px;">Order</th>
+                            <th style="width:250px;">Key</th>
+                            <th style="width:250px;">Caption</th>
+                            <th style="width:200px;">Value</th>
+                            <th style="width:150px;">Value Type</th>
+                            <th style="width:250px;">Dependent Fields</th>
+                            <th style="width:90px;">Readonly</th>
+                            <th style="width:200px;">Source API</th>
+                            <th style="width:200px;">Dependent Fields Source Api</th>
+                            <th style="width:250px;">Value List</th>
+                            <th style="width:150px;">Default Value</th>
+                            <th style="width:100px;" class="text-center">Action</th>
                         </tr>
                     </thead>
                     <tbody>
                         [[for row in rows:]]
                         <tr>
-                            <td><input type="number" class="form-control" name="sl[]" value="[[=row.get('sl','')]]"></td>
-                            <td><input type="text" class="form-control" name="section[]" value="[[=row.get('section','') or '']]"></td>
-                            <td><input type="number" class="form-control" name="order[]" value="[[=row.get('order','') or '']]"></td>
-                            <td><input type="text" class="form-control" name="key[]" value="[[=row.get('key','') or '']]"></td>
-                            <td><input type="text" class="form-control" name="caption[]" value="[[=row.get('caption','') or '']]"></td>
-                            <td><input type="text" class="form-control" name="value[]" value="[[=row.get('value','') or '']]"></td>
-                            <td>
-                                <select class="form-select value_type_select" name="value_type[]">
+                            <td style="width:60px;"><input type="number" class="form-control" name="sl[]" value="[[=row.get('sl','')]]" style="width:100%;"></td>
+                            <td style="width:170px;"><input type="text" class="form-control" name="section[]" value="[[=row.get('section','') or '']]" style="width:100%;"></td>
+                            <td style="width:60px;"><input type="number" class="form-control" name="order[]" value="[[=row.get('order','') or '']]" style="width:100%;"></td>
+                            <td style="width:180px;"><input type="text" class="form-control" name="key[]" value="[[=row.get('key','') or '']]" style="width:100%;"></td>
+                            <td style="width:180px;"><input type="text" class="form-control" name="caption[]" value="[[=row.get('caption','') or '']]" style="width:100%;"></td>
+                            <td style="width:100px;"><input type="text" class="form-control" name="value[]" value="[[=row.get('value','') or '']]" style="width:100%;"></td>
+                            <td style="width:100px;">
+                                <select class="form-select value_type_select" name="value_type[]" style="width:100%;">
                                     <option value="">Select or add Value Type</option>
                                     [[for vt in value_type_list:]]
                                         <option value="[[=vt]]" [[if row.get('value_type','')==vt:]]selected[[pass]]>[[=vt]]</option>
                                     [[pass]]
                                 </select>
                             </td>
-                            <td><input type="text" class="form-control" name="dependent_fields[]" value="[[=row.get('dependent_fields','') or '']]"></td>
-                            <td>
-                                <select class="form-select readonly_select" name="readonly[]">
+                            <td style="width:250px;"><textarea class="form-control" name="dependent_fields[]" rows="2" style="width:100%;">[[=row.get('dependent_fields','') or '']]</textarea></td>
+                            <td style="width:80px;">
+                                <select class="form-select readonly_select" name="readonly[]" style="width:100%;">
                                     <option value="no" [[if row.get('readonly','')=='no':]]selected[[pass]]>no</option>
                                     <option value="yes" [[if row.get('readonly','')=='yes':]]selected[[pass]]>yes</option>
                                 </select>
                             </td>
-                            <td>
-                                <select class="form-select hidden_select" name="hidden[]">
-                                    <option value="no" [[if row.get('hidden','')=='no':]]selected[[pass]]>no</option>
-                                    <option value="yes" [[if row.get('hidden','')=='yes':]]selected[[pass]]>yes</option>
-                                </select>
-                            </td>
-                            <td><input type="text" class="form-control" name="source_api[]" value="[[=row.get('source_api','') or '']]"></td>
-                            <td><input type="text" class="form-control" name="dependent_fields_source_api[]" value="[[=row.get('dependent_fields_source_api','') or '']]"></td>
-                            <td><input type="text" class="form-control" name="value_list[]" value="[[=row.get('value_list','') or '']]"></td>
-                            <td><input type="text" class="form-control" name="default_value[]" value="[[=row.get('default_value','') or '']]"></td>
-                            <td class="text-center">
+                            <td style="width:200px;"><textarea class="form-control" name="source_api[]" rows="2" style="width:100%;">[[=row.get('source_api','') or '']]</textarea></td>
+                            <td style="width:200px;"><textarea class="form-control" name="dependent_fields_source_api[]" rows="2" style="width:100%;">[[=row.get('dependent_fields_source_api','') or '']]</textarea></td>
+                            <td style="width:250px;"><textarea class="form-control" name="value_list[]" rows="2" style="width:100%;">[[=row.get('value_list','') or '']]</textarea></td>
+                            <td style="width:80px;"><input type="text" class="form-control" name="default_value[]" value="[[=row.get('default_value','') or '']]" style="width:100%;"></td>
+                            <td style="width:40px;" class="text-center">
                                 <button type="button" class="btn btn-sm btn-danger removeRow">
                                     <i class="fa-solid fa-trash"></i>
                                 </button>
@@ -128,7 +135,7 @@
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
 <script>
-$(function () {
+$(document).ready(function () {
     function initSelect2(context) {
         $(context).find('.value_type_select').select2({tags:true,width:'100%',placeholder:"Select or add new"});
         $(context).find('.readonly_select').select2({tags:true,width:'100%'});
@@ -144,25 +151,20 @@ $(function () {
         [[pass]]
 
         let row = `<tr>
-            <td><input type="number" class="form-control" name="sl[]" value=""></td>
-            <td><input type="text" class="form-control" name="section[]" value=""></td>
-            <td><input type="number" class="form-control" name="order[]" value=""></td>
-            <td><input type="text" class="form-control" name="key[]" value=""></td>
-            <td><input type="text" class="form-control" name="caption[]" value=""></td>
-            <td><input type="text" class="form-control" name="value[]" value=""></td>
-            <td><select class="form-select value_type_select" name="value_type[]">` + vtOptions + `</select></td>
-            <td><input type="text" class="form-control" name="dependent_fields[]" value=""></td>
-            <td><select class="form-select readonly_select" name="readonly[]"><option value="no">no</option><option value="yes">yes</option></select></td>
-            <td><select class="form-select hidden_select" name="hidden[]"><option value="no">no</option><option value="yes">yes</option></select></td>
-            <td><input type="text" class="form-control" name="source_api[]" value=""></td>
-            <td><input type="text" class="form-control" name="dependent_fields_source_api[]" value=""></td>
-            <td><input type="text" class="form-control" name="value_list[]" value=""></td>
-            <td><input type="text" class="form-control" name="default_value[]" value=""></td>
-            <td class="text-center">
-                <button type="button" class="btn btn-sm btn-danger removeRow d-inline-flex align-items-center justify-content-center">
-                    <i class="fas fa-trash"></i>
-                </button>
-            </td>
+            <td style="width:60px;"><input type="number" class="form-control" name="sl[]" style="width:100%;"></td>
+            <td style="width:150px;"><input type="text" class="form-control" name="section[]" style="width:100%;"></td>
+            <td style="width:80px;"><input type="number" class="form-control" name="order[]" style="width:100%;"></td>
+            <td style="width:250px;"><input type="text" class="form-control" name="key[]" style="width:100%;"></td>
+            <td style="width:250px;"><input type="text" class="form-control" name="caption[]" style="width:100%;"></td>
+            <td style="width:200px;"><input type="text" class="form-control" name="value[]" style="width:100%;"></td>
+            <td style="width:150px;"><select class="form-select value_type_select" name="value_type[]" style="width:100%;">` + vtOptions + `</select></td>
+            <td style="width:250px;"><textarea class="form-control" name="dependent_fields[]" rows="2" style="width:100%;"></textarea></td>
+            <td style="width:90px;"><select class="form-select readonly_select" name="readonly[]" style="width:100%;"><option value="no">no</option><option value="yes">yes</option></select></td>
+            <td style="width:200px;"><textarea class="form-control" name="source_api[]" rows="2" style="width:100%;"></textarea></td>
+            <td style="width:200px;"><textarea class="form-control" name="dependent_fields_source_api[]" rows="2" style="width:100%;"></textarea></td>
+            <td style="width:250px;"><textarea class="form-control" name="value_list[]" rows="2" style="width:100%;"></textarea></td>
+            <td style="width:150px;"><input type="text" class="form-control" name="default_value[]" style="width:100%;"></td>
+            <td style="width:100px;" class="text-center"><button type="button" class="btn btn-sm btn-danger removeRow"><i class="fa-solid fa-trash"></i></button></td>
         </tr>`;
 
         $('#entriesTable tbody').append(row);

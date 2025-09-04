@@ -135,14 +135,21 @@ $(document).ready(function() {
             { title: 'Asset Type', data: 'asset_type', render: d => d ?? '-' },
             { title: 'Date', data: 'tr_date', render: d => d ?? '-' },
             {
-                title: '', data: 'id', render: function(id) {
-                    return `
-                        <a class="text-secondary" href="" title="Edit">
-                            <i class="fas fa-edit"></i>
-                        </a>
-                    `;
-                }
+                title: '', 
+                data: 'id', 
+                render: function(id) {
+                let tr_type = $("#tr_type").val();  // get the transaction type
+                return `
+                    <a class="text-primary me-2" href="/expense/transaction/view?id=${id}&type=${tr_type}" title="View">
+                        <i class="fas fa-eye"></i>
+                    </a>
+                    <a class="text-secondary" href="/expense/transaction/edit?id=${id}&type=${tr_type}" title="Edit">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                `;
             }
+            }
+
         ]
     });
 

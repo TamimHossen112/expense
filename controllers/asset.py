@@ -36,9 +36,19 @@ def get_distinct_master_fields(fields):
     results = {f.name: sorted({getattr(row, f.name) for row in rows if getattr(row, f.name)}) for f in fields}
     return results
 
+def get_date(key):
+    """Parse date string from request.forms into a Python date object."""
+    value = request.forms.get(key)
+    if value and value.strip():
+        value = value.strip()
+        for fmt in ("%Y-%m-%d", "%Y-%m-%d %H:%M:%S"):
+            try:
+                return datetime.strptime(value, fmt).date()
+            except ValueError:
+                continue
+    return None
 
-# ------------------ ENDPOINTS ------------------
-# ------------------ ENDPOINTS ------------------
+
 # ------------------ ENDPOINTS ------------------
 
 @action('asset/index')
@@ -83,7 +93,7 @@ def asset_submit():
         engine_info = (form.get("engine_info") or "").strip()
         chassis_number = (form.get("chasis_no") or "").strip()
         current_location = (form.get("current_location") or "").strip()
-        first_issue_date_raw = (form.get("first_issue_date") or "").strip()
+        first_issue_date = get_date("first_issue_date")
         owner = (form.get("owner") or "SKF").strip()
 
         req_id = (form.get("req_id") or "").strip()
@@ -106,15 +116,6 @@ def asset_submit():
             flash.set("Purchase Price must be a number", "warning", sanitize=True)
             redirect(URL("asset/create"))
 
-        import datetime
-        first_issue_date = None
-        if first_issue_date_raw:
-            try:
-                first_issue_date = datetime.datetime.strptime(first_issue_date_raw, "%Y-%m-%d").date()
-            except ValueError:
-                flash.set("First Issue Date must be in YYYY-MM-DD format", "warning", sanitize=True)
-                redirect(URL("asset/create"))
-
         # ---------- Check purchase_details availability ----------
         if purchase_details_id:
             pd_row = db(db.purchase_details.purchase_details_id == purchase_details_id).select().first()
@@ -126,11 +127,9 @@ def asset_submit():
             existing_assets_count = db(db.asset.purchase_details_id == purchase_details_id).count()
 
             if existing_assets_count >= pd_quantity:
-                # Already reached or exceeded the quantity
                 flash.set(f"No remaining quantity to create asset for Purchase Details ID {purchase_details_id}.", "warning", sanitize=True)
                 redirect(URL("asset/create"))
             elif existing_assets_count == pd_quantity - 1:
-                # This asset will complete the quantity, mark asset_created
                 db(db.purchase_details.purchase_details_id == purchase_details_id).update(asset_created=1)
 
         # ---------- Generate Asset Code ----------
@@ -167,28 +166,6 @@ def asset_submit():
         redirect(URL("asset/index"))
 
 
-
-
-@action('asset/get_brands_by_type')
-@action.uses(db)
-def get_brands_by_type():
-    asset_type = request.params.get('asset_type', '')
-    if not asset_type: 
-        return dict(results=[])
-    brands = db(db.asset_master.asset_type == asset_type).select(db.asset_master.asset_brand, distinct=True)
-    return dict(results=[row.asset_brand for row in brands])
-
-@action('asset/get_models_by_brand')
-@action.uses(db)
-def get_models_by_type_brand():
-    asset_type = request.params.get('asset_type', '')
-    asset_brand = request.params.get('asset_brand', '')
-    if not asset_type or not asset_brand: 
-        return dict(results=[])
-    models = db((db.asset_master.asset_type==asset_type)&(db.asset_master.asset_brand==asset_brand))\
-               .select(db.asset_master.asset_model, distinct=True)
-    return dict(results=[row.asset_model for row in models])
-
 @action('asset/edit')
 @action.uses("asset/edit.html", db, session, flash)
 def asset_edit():
@@ -196,7 +173,6 @@ def asset_edit():
     if not asset_id:
         return dict(error="Asset ID is required")
     
-    # Cast to int to prevent SQL injection
     try:
         asset_id = int(asset_id)
     except ValueError:
@@ -212,15 +188,12 @@ def asset_edit():
     """
 
     rows = db.executesql(sql_asset, as_dict=True)
-
     if not rows:
         return dict(error="Asset not found")
     main_row = rows[0]
 
-    # Employee string
     selected_emp = f"{main_row['user_id']} | {main_row['user_name']}" if main_row['user_id'] else ""
 
-    # Distinct fields from asset_master
     asset_type_list = [r['asset_type'] for r in db.executesql("SELECT DISTINCT asset_type FROM asset_master WHERE asset_type IS NOT NULL", as_dict=True)]
     asset_brand_list = [r['asset_brand'] for r in db.executesql("SELECT DISTINCT asset_brand FROM asset_master WHERE asset_brand IS NOT NULL", as_dict=True)]
     asset_model_list = [r['asset_model'] for r in db.executesql("SELECT DISTINCT asset_model FROM asset_master WHERE asset_model IS NOT NULL", as_dict=True)]
@@ -241,8 +214,6 @@ def asset_edit():
         owner_list = get_combo_values("organizations"),
         selected_owner = main_row['owner'] or ""
     )
-
-
 
 
 @action('asset/update', method=['POST'])
@@ -271,17 +242,10 @@ def asset_update():
         except ValueError:
             return None
 
-    def get_date(key):
-        value = request.forms.get(key)
-        if value and value.strip():
-            try:
-                return datetime.datetime.strptime(value.strip(), "%Y-%m-%d").date()
-            except Exception:
-                return None
-        return None
-
+    # Extract employee ID and name
     emp_id, user_name = parse_employee(get_text('emp_id'))
 
+    # Validation
     errors = []
     if not get_text('asset_type'):
         errors.append("Asset Type is required.")
@@ -291,21 +255,23 @@ def asset_update():
         errors.append("Asset Model is required.")
     if not get_text('purchase_price'):
         errors.append("Purchase Price is required.")    
+
     if errors:
         flash.set(' | '.join(errors), "warning")
         redirect(URL('asset/edit', vars=dict(id=asset_id_code)))
 
+    # 🔹 Update Asset
     db(db.asset.id == asset_id_code).update(
         asset_type=get_text('asset_type'),
         asset_brand=get_text('asset_brand'),
         asset_model=get_text('asset_model'),
         asset_name=get_text('asset_name'),
         asset_desc=get_text('asset_desc'),
-        model_year=get_text('model_year'),
-        reg_number=get_text('reg_number'),
-        engine_number=get_text('engine_number'),
+        model_year=get_text('asset_model_year'),
+        reg_number=get_text('registration_no'),
+        engine_number=get_text('engine_no'),
         engine_info=get_text('engine_info'),
-        chassis_number=get_text('chassis_number'),
+        chassis_number=get_text('chasis_no'),
         purchase_price=get_number('purchase_price'),
         user_id=emp_id,
         user_name=user_name,
@@ -319,6 +285,9 @@ def asset_update():
 
     flash.set("Asset updated successfully!", "success")
     redirect(URL('asset/index'))
+
+
+
 
 
 

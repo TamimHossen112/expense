@@ -198,7 +198,7 @@ def get_transfer_asset_details(asset_id=None):
     placeholders = ",".join(["%s"] * len(asset_ids))
     rows = db.executesql(
         f"""
-        SELECT asset_id, asset_type, asset_name, user_id, first_issue_date
+        SELECT asset_id, asset_type, asset_model, asset_brand, asset_name, user_id, first_issue_date
         FROM asset
         WHERE asset_id IN ({placeholders})
         """,
@@ -215,11 +215,14 @@ def get_transfer_asset_details(asset_id=None):
     asset_info = {
         "asset_type": row.get("asset_type") or "",
         "asset_name": row.get("asset_name") or "",
+        "asset_model": row.get("asset_model") or "",
+        "asset_brand": row.get("asset_brand") or "",
         "first_issue_date": safe_date(row.get("first_issue_date")),
         "using_from": row.get("using_from") or "",
         "from_emp_id": "",
         "from_emp_tr_code": "",
-        "from_desg": ""
+        "from_desg": "",
+        "from_emp_base_hq": ""
     }
 
     if emp_id:
@@ -232,7 +235,8 @@ def get_transfer_asset_details(asset_id=None):
                 asset_info.update({
                     "from_emp_id": f"{emp.get('employee_id', '')} | {emp.get('employee_name', '')}",
                     "from_emp_tr_code": emp.get("territory_code", ""),
-                    "from_desg": emp.get("designation", "")
+                    "from_desg": emp.get("designation", ""),
+                    "from_emp_base_hq": emp.get("head_office", "")
                 })
         except Exception as e:
             print(f"⚠️ Failed to fetch employee {emp_id}: {e}")
@@ -348,8 +352,12 @@ def get_transaction_employee_details():
                 return json.dumps({}, default=str)
             emp = employees[0] if isinstance(employees, list) else employees
             result = {
+                "to_name": emp.get("employee_name", ""),
                 "to_desg": emp.get("designation", ""),
-                "to_mobile": emp.get("mobile", "")
+                "to_mobile": emp.get("mobile", ""),
+                "to_joining_date": safe_date(emp.get("joining_date")),
+                "to_tr_code": emp.get("territory_code", ""),
+                "to_base_hq": emp.get("head_office", ""),
             }
         else:
             # No emp_id → return all for Select2

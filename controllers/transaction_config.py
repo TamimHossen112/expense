@@ -19,7 +19,7 @@ def transaction_config_index():
 def transaction_config_create():
     # Example lists for dropdowns
     tr_type_list = ["Allocation", "Transfer", "Ownership Transfer", "Maintenance","Incident"]
-    value_type_list = ["integer", "string", "date", "dropdown"]
+    value_type_list = ["integer", "float", "string", "date", "dropdown","hidden"]
 
     return dict(tr_type_list=tr_type_list, value_type_list=value_type_list)
 
@@ -37,7 +37,6 @@ def transaction_config_submit():
         flash.set("Transaction Type is required.", "danger")
         redirect(URL('transaction_config', 'create'))
 
-    # Collect lists from POST (ensure always list)
     sections       = request.forms.get('section[]') or []
     orders         = request.forms.get('order[]') or []
     keys           = request.forms.get('key[]') or []
@@ -49,14 +48,13 @@ def transaction_config_submit():
     default_values = request.forms.get('default_value[]') or []
     sls            = request.forms.get('sl[]') or []
     readonlys      = request.forms.get('readonly[]') or []
-    hiddens        = request.forms.get('hidden[]') or []
     dependent_fields = request.forms.get('dependent_fields[]') or []
 
-    # If those come as strings, wrap into list
+
     wrap = lambda v: [v] if isinstance(v, str) else v
     sections, orders, keys, captions, values = map(wrap, [sections, orders, keys, captions, values])
     value_types, source_apis, value_lists, default_values = map(wrap, [value_types, source_apis, value_lists, default_values])
-    sls, readonlys, hiddens = map(wrap, [sls, readonlys, hiddens])
+    sls, readonlys = map(wrap, [sls, readonlys,])
 
     try:
         for i in range(len(sections)):
@@ -76,7 +74,6 @@ def transaction_config_submit():
                 default_value=default_values[i].strip() if default_values[i] else None,
                 sl=int(sls[i]) if i < len(sls) and sls[i] else None,
                 readonly=readonlys[i].strip() if i < len(readonlys) and readonlys[i] else None,
-                hidden=hiddens[i].strip() if i < len(hiddens) and hiddens[i] else None,
                 dependent_fields=dependent_fields[i].strip() if i < len(dependent_fields) and dependent_fields[i] else None
             )
 
@@ -101,12 +98,12 @@ def transaction_config_edit():
     if not tr_type:
         redirect(URL('transaction_config', 'index'))
 
-    value_type_list = ["integer", "string", "date", "dropdown"]
+    value_type_list = ["integer", "float", "string", "date", "dropdown","hidden"]
 
     rows = db.executesql(f"""
         SELECT id, tr_type, section, `order`, `key`, caption, value,
                value_type, source_api, value_list, default_value,
-               sl, readonly, hidden, dependent_fields, dependent_fields_source_api
+               sl, readonly, dependent_fields, dependent_fields_source_api
         FROM tr_config
         WHERE tr_type = '{tr_type}'
         ORDER BY sl ASC, `order` ASC
@@ -128,9 +125,8 @@ def transaction_config_update():
         redirect(URL('transaction_config','index'))
 
     fields = ['section','order','key','caption','value','value_type','dependent_fields',
-              'readonly','hidden','source_api','dependent_fields_source_api','value_list','default_value','sl']
+              'readonly','source_api','dependent_fields_source_api','value_list','default_value','sl']
 
-    # Collect lists safely
     data = {}
     for f in fields:
         value = request.forms.get(f"{f}[]")
@@ -155,7 +151,6 @@ def transaction_config_update():
             value_type=data['value_type'][i].strip() if i<len(data['value_type']) else '',
             dependent_fields=data['dependent_fields'][i].strip() if i<len(data['dependent_fields']) else '',
             readonly=data['readonly'][i].strip() if i<len(data['readonly']) else '',
-            hidden=data['hidden'][i].strip() if i<len(data['hidden']) else '',
             source_api=data['source_api'][i].strip() if i<len(data['source_api']) else '',
             dependent_fields_source_api=data['dependent_fields_source_api'][i].strip() if i<len(data['dependent_fields_source_api']) else '',
             value_list=data['value_list'][i].strip() if i<len(data['value_list']) else '',

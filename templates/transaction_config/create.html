@@ -36,25 +36,61 @@
                 </div>
             </div>
 
-            <div class="table-wrapper" style="overflow-x:auto;">
-                <table class="table table-bordered table-striped align-middle" id="entriesTable" style="min-width:1500px;">
+            <!-- ✅ Same style as edit.html -->
+            <style>
+            .table-wrapper {
+                overflow-x: auto;
+                max-height: 500px; /* enables vertical scroll */
+            }
+
+            .table-wrapper table thead th {
+                position: sticky;
+                top: 0;
+                background-color: #f8f9fa;
+                z-index: 10;
+            }
+
+            /* 👉 Optional: freeze first 5 columns */
+            .table-wrapper table th:nth-child(1),
+            .table-wrapper table td:nth-child(1) {
+                position: sticky; left: 0; background: #fff; z-index: 15;
+            }
+            .table-wrapper table th:nth-child(2),
+            .table-wrapper table td:nth-child(2) {
+                position: sticky; left: 60px; background: #fff; z-index: 15;
+            }
+            .table-wrapper table th:nth-child(3),
+            .table-wrapper table td:nth-child(3) {
+                position: sticky; left: 210px; background: #fff; z-index: 15;
+            }
+            .table-wrapper table th:nth-child(4),
+            .table-wrapper table td:nth-child(4) {
+                position: sticky; left: 290px; background: #fff; z-index: 15;
+            }
+            .table-wrapper table th:nth-child(5),
+            .table-wrapper table td:nth-child(5) {
+                position: sticky; left: 540px; background: #fff; z-index: 15;
+            }
+            </style>
+
+            <div class="table-wrapper">
+                <table class="table table-bordered table-striped align-middle" id="entriesTable" style="table-layout: fixed; width:3000px;">
                     <thead class="table-light">
                         <tr>
-                            <th>SL</th>
-                            <th>Section</th>
-                            <th>Order</th>
-                            <th>Key</th>
-                            <th>Caption</th>
-                            <th>Value</th>
-                            <th>Value Type</th>
-                            <th>Dependent Fields</th>
-                            <th>Readonly</th>
-                            <th>Hidden</th>
-                            <th>Source API</th>
-                            <th>Dependent Fields Source Api</th>
-                            <th>Value List</th>
-                            <th>Default Value</th>
-                            <th class="text-center">Action</th>
+                            <th style="width:60px;">SL</th>
+                            <th style="width:150px;">Section</th>
+                            <th style="width:80px;">Order</th>
+                            <th style="width:250px;">Key</th>
+                            <th style="width:250px;">Caption</th>
+                            <th style="width:200px;">Value</th>
+                            <th style="width:150px;">Value Type</th>
+                            <th style="width:250px;">Dependent Fields</th>
+                            <th style="width:90px;">Readonly</th>
+                            <th style="width:200px;">Source API</th>
+                            <th style="width:200px;">Dependent Fields Source Api</th>
+                            <th style="width:250px;">Value List</th>
+                            <th style="width:150px;">Default Value</th>
+                            <th style="width:100px;" class="text-center">Action</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -94,24 +130,9 @@
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
-<style>
-    .table-wrapper {
-        overflow-x: auto;
-    }
-    #entriesTable input,
-    #entriesTable select {
-        width: 100%;
-        min-width: 120px;
-    }
-</style>
-
 <script>
 $(document).ready(function () {
-    $('#tr_type').select2({
-        tags: true,
-        width: '100%',
-        placeholder: "Select or add new"
-    });
+    $('#tr_type').select2({ tags: true, width: '100%', placeholder: "Select or add new" });
 
     let valueTypeOptions = `
         <option value="">Select or add Value Type</option>
@@ -119,7 +140,6 @@ $(document).ready(function () {
             <option value="[[=vt]]">[[=vt]]</option>
         [[pass]]
     `;
-
     let yesNoOptions = `
         <option value="no">no</option>
         <option value="yes">yes</option>
@@ -128,57 +148,39 @@ $(document).ready(function () {
     $('#addRow').on('click', function () {
         let row = `
         <tr>
-            <td><input type="number" class="form-control" name="sl[]"></td>
-            <td><input type="text" class="form-control" name="section[]"></td>
-            <td><input type="number" class="form-control" name="order[]"></td>
-            <td><input type="text" class="form-control" name="key[]"></td>
-            <td><input type="text" class="form-control" name="caption[]"></td>
-            <td><input type="text" class="form-control" name="value[]"></td>
-            <td>
-                <select class="form-select value_type_select" name="value_type[]">
+            <td style="width:60px;"><input type="number" class="form-control" name="sl[]" style="width:100%;"></td>
+            <td style="width:150px;"><input type="text" class="form-control" name="section[]" style="width:100%;"></td>
+            <td style="width:80px;"><input type="number" class="form-control" name="order[]" style="width:100%;"></td>
+            <td style="width:250px;"><input type="text" class="form-control" name="key[]" style="width:100%;"></td>
+            <td style="width:250px;"><input type="text" class="form-control" name="caption[]" style="width:100%;"></td>
+            <td style="width:200px;"><input type="text" class="form-control" name="value[]" style="width:100%;"></td>
+            <td style="width:150px;">
+                <select class="form-select value_type_select" name="value_type[]" style="width:100%;">
                     ${valueTypeOptions}
                 </select>
             </td>
-            <td><input type="text" class="form-control" name="dependent_fields[]"></td>
-            <td>
-                <select class="form-select readonly_select" name="readonly[]">
+            <td style="width:250px;"><textarea class="form-control" name="dependent_fields[]" rows="2" style="width:100%;"></textarea></td>
+            <td style="width:90px;">
+                <select class="form-select readonly_select" name="readonly[]" style="width:100%;">
                     ${yesNoOptions}
                 </select>
             </td>
-            <td>
-                <select class="form-select hidden_select" name="hidden[]">
-                    ${yesNoOptions}
-                </select>
-            </td>
-            <td><input type="text" class="form-control" name="source_api[]"></td>
-            <td><input type="text" class="form-control" name="dependent_fields_source_api[]"></td>
-            <td><input type="text" class="form-control" name="value_list[]"></td>
-            <td><input type="text" class="form-control" name="default_value[]"></td>
-            <td class="text-center">
+            <td style="width:200px;"><textarea class="form-control" name="source_api[]" rows="2" style="width:100%;"></textarea></td>
+            <td style="width:200px;"><textarea class="form-control" name="dependent_fields_source_api[]" rows="2" style="width:100%;"></textarea></td>
+            <td style="width:250px;"><textarea class="form-control" name="value_list[]" rows="2" style="width:100%;"></textarea></td>
+            <td style="width:150px;"><input type="text" class="form-control" name="default_value[]" style="width:100%;"></td>
+            <td style="width:100px;" class="text-center">
                 <button type="button" class="btn btn-sm btn-danger removeRow">
                     <i class="fa-solid fa-trash"></i>
                 </button>
             </td>
-        </tr>`;
+        </tr>
+        `;
+
         $('#entriesTable tbody').append(row);
 
-        $('#entriesTable tbody tr:last .value_type_select').select2({
-            tags: true,
-            width: '100%',
-            placeholder: "Select or add new"
-        });
-
-        $('#entriesTable tbody tr:last .readonly_select').select2({
-            tags: true,
-            width: '100%',
-            placeholder: "Select or add new"
-        });
-
-        $('#entriesTable tbody tr:last .hidden_select').select2({
-            tags: true,
-            width: '100%',
-            placeholder: "Select or add new"
-        });
+        $('#entriesTable tbody tr:last .value_type_select').select2({tags: true, width: '100%', placeholder: "Select or add new"});
+        $('#entriesTable tbody tr:last .readonly_select').select2({tags: true, width: '100%'});
     });
 
     $(document).on('click', '.removeRow', function () {

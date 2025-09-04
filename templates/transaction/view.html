@@ -1,0 +1,74 @@
+[[extend 'layout.html']]
+
+[[block header]]
+[[icon='fa-solid fa-eye']]
+[[breadcamp = 'View Transfer']]
+[[end]]
+
+[[block content]]
+<div class="container-section">
+    <div class="d-flex justify-content-between align-items-center border-bottom mx-2">
+        <span class="icon-text icon-text-bold">
+            <i class="fa-solid fa-eye"></i>
+            <span>View Transaction</span>
+        </span>
+        <div class="d-flex justify-content-end">
+            <div class="p-1">
+                <a href="[[=URL('transaction/index', vars={'type': request.query.get('type')})]]" 
+                   class="btn btn-sm btn-light">
+                    <i class="fa-solid fa-arrow-left"></i> <span class="ms-2">Back</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="container py-3">
+        [[# Group fields by section]]
+        [[section_map = {}]]
+        [[for f in details:]]
+            [[section_map.setdefault(f['section'], []).append(f)]]
+        [[pass]]
+
+        [[# Sort sections by minimum sl in that section]]
+        [[sorted_sections = sorted(section_map.items(), key=lambda kv: min(f['sl'] for f in kv[1]))]]
+
+        [[for section, section_fields in sorted_sections:]]
+            <div class="form-section mb-4">
+                <div class="section-header mb-3">[[=section]]</div>
+                <div class="row g-3">
+                    [[# Sort fields within section by order]]
+                    [[sorted_fields = sorted(section_fields, key=lambda f: f['order'])]]
+                    [[for field in sorted_fields:]]
+                        <div class="col-md-3 col-sm-12">
+                            <label class="form-label fw-bold">[[=field['caption']]]</label>
+                            <input type="text" 
+                                   class="form-control form-control-sm" 
+                                   value="[[=field['value']]]" 
+                                   readonly>
+                        </div>
+                    [[pass]]
+                </div>
+            </div>
+        [[pass]]
+    </div>
+</div>
+
+<style>
+.container-section {
+    margin: auto;
+    padding-top: 20px;
+}
+.section-header {
+    background-color: #ccc9fa; /* same purple style */
+    color: #544dc9;
+    font-weight: bold;
+    padding: 8px 12px;
+    border-bottom: 2px solid #9490e1;
+    margin-bottom: 15px;
+    border-radius: 4px;
+}
+.form-label {
+    margin-bottom: 5px;
+}
+</style>
+[[end]]

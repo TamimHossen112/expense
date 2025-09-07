@@ -435,3 +435,38 @@ def get_purchase_details_map():
 
     return dict(results=results)
 
+
+
+# 1. Get brands by asset type
+@action('asset/get_brands_by_type')
+@action.uses(db)
+def get_brands_by_type():
+    asset_type = request.query.get('asset_type')
+    if not asset_type:
+        return {"results": []}
+
+    rows = db(db.asset_master.asset_type == asset_type).select(
+        db.asset_master.asset_brand, distinct=True
+    )
+    brands = [row.asset_brand for row in rows if row.asset_brand]
+    return {"results": brands}
+
+
+# 2. Get models by brand + type
+@action('asset/get_models_by_brand')
+@action.uses(db)
+def get_models_by_brand():
+    asset_type = request.query.get('asset_type')
+    asset_brand = request.query.get('asset_brand')
+    if not asset_type or not asset_brand:
+        return {"results": []}
+
+    rows = db(
+        (db.asset_master.asset_type == asset_type) &
+        (db.asset_master.asset_brand == asset_brand)
+    ).select(db.asset_master.asset_model, distinct=True)
+
+    models = [row.asset_model for row in rows if row.asset_model]
+    return {"results": models}
+
+

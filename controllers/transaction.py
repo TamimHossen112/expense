@@ -111,7 +111,7 @@ def transaction_submit():
         if str(trans_type).lower() in ("allocation", "transfer"):
             if key in ("allocation_status", "approval_status") and value == "approved":
                 approval_flag = True
-            if key == "emp_id":
+            if key == "emp_id" or key == "to_emp_id":
                 employee_id = value
             if key == "to_name":
                 employee_name = value

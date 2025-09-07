@@ -76,14 +76,10 @@
 [[block scripts]]
 <script>
 $(document).ready(function() {
-    // Toggle filter form
     $("#filter").click(function() {
         $("#custom_form").fadeToggle("slow");
     });
 
-
-
-    // Initialize DataTable
     var table = $('#myTable').DataTable({
         dom: "Bfrt<'d-flex justify-content-between'<l><i><p>>",
         buttons: [{
@@ -129,13 +125,11 @@ $(document).ready(function() {
         ]
     });
 
-    // Search button
     $("#submit").click(function(e){
         e.preventDefault();
         table.ajax.reload();
     });
 
-    // Reset button
     $("#reset").click(function(e){
         e.preventDefault();
         $("select[name='tr_type']").val(null).trigger('change');

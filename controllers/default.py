@@ -45,6 +45,9 @@ def get_requisition_details_with_asset_details():
 
         max_quantity = row['quantity'] - row['purchased_quantity']
 
+        if max_quantity <= 0:
+            continue
+
         results.append({
             "req_id": row['req_id'],
             "asset_type": asset_type,
@@ -52,6 +55,7 @@ def get_requisition_details_with_asset_details():
         })
 
     return dict(results=results)
+
 
 
 @action("default/get_asset_brands")

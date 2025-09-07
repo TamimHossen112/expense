@@ -3,6 +3,23 @@
 [[block header]]
 [[icon='fa-solid fa-cogs']]
 [[breadcamp = 'Create Transaction Config']]
+<style>
+/* Highlight entire row when any input/select/textarea inside it is focused */
+#entriesTable tbody tr:focus-within {
+    border: 2px solid #750dfd !important;  /* Bootstrap blue */
+    background-color: #f0f8ff !important;  /* light highlight */
+}
+.table-wrapper {
+    overflow-x: auto;
+    max-height: 400px;
+}
+.table-wrapper table thead th {
+    position: sticky;
+    top: 0;
+    background-color: #f8f9fa;
+    z-index: 10;
+}
+</style>
 [[end]]
 
 [[block content]]
@@ -35,43 +52,6 @@
                     </select>
                 </div>
             </div>
-
-            <!-- ✅ Same style as edit.html -->
-            <style>
-            .table-wrapper {
-                overflow-x: auto;
-                max-height: 500px; /* enables vertical scroll */
-            }
-
-            .table-wrapper table thead th {
-                position: sticky;
-                top: 0;
-                background-color: #f8f9fa;
-                z-index: 10;
-            }
-
-            /* 👉 Optional: freeze first 5 columns */
-            .table-wrapper table th:nth-child(1),
-            .table-wrapper table td:nth-child(1) {
-                position: sticky; left: 0; background: #fff; z-index: 15;
-            }
-            .table-wrapper table th:nth-child(2),
-            .table-wrapper table td:nth-child(2) {
-                position: sticky; left: 60px; background: #fff; z-index: 15;
-            }
-            .table-wrapper table th:nth-child(3),
-            .table-wrapper table td:nth-child(3) {
-                position: sticky; left: 210px; background: #fff; z-index: 15;
-            }
-            .table-wrapper table th:nth-child(4),
-            .table-wrapper table td:nth-child(4) {
-                position: sticky; left: 290px; background: #fff; z-index: 15;
-            }
-            .table-wrapper table th:nth-child(5),
-            .table-wrapper table td:nth-child(5) {
-                position: sticky; left: 540px; background: #fff; z-index: 15;
-            }
-            </style>
 
             <div class="table-wrapper">
                 <table class="table table-bordered table-striped align-middle" id="entriesTable" style="table-layout: fixed; width:3000px;">

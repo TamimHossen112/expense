@@ -87,7 +87,7 @@ $(document).ready(function() {
             filename: 'Transfer_Transactions',
             exportOptions: { columns: ':visible' }
         }],
-        order: [0, 'desc'],
+        order: [6, 'desc'],
         searching: false,
         paging: true,
         serverSide: true,
@@ -140,16 +140,15 @@ $(document).ready(function() {
                 render: function(id) {
                 let tr_type = $("#tr_type").val();  // get the transaction type
                 return `
-                    <a class="text-primary me-2" href="/expense/transaction/view?id=${id}&type=${tr_type}" title="View">
+                    <a class="text-primary me-2" href="/expense/transaction/view?type=${tr_type}&id=${id}" title="View">
                         <i class="fas fa-eye"></i>
                     </a>
-                    <a class="text-secondary" href="/expense/transaction/edit?id=${id}&type=${tr_type}" title="Edit">
+                    <a class="text-secondary" href="/expense/transaction/edit?type=${tr_type}&id=${id}" title="Edit">
                         <i class="fas fa-edit"></i>
                     </a>
                 `;
             }
             }
-
         ]
     });
 

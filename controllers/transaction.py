@@ -6,9 +6,9 @@ from ..common_fn import check_role
 from datetime import date  
 
 @action('transaction/index')
-@action.uses("transaction/index.html", session, flash)
+@action.uses("transaction/index.html",db, session, flash)
 def transaction_index():
-    task_id='transaction_config_view'
+    task_id='transaction_view'
     access_permission=check_role(task_id)  
     if ((access_permission==False)):
         flash.set("Access is Denied !", 'warning')
@@ -32,7 +32,7 @@ def fetch_from_api(endpoint, params=None):
     return []
 
 @action("transaction/create")
-@action.uses("transaction/create.html", session, flash)
+@action.uses("transaction/create.html",db, session, flash)
 def transaction_create():
     task_id='transaction_create'
     access_permission=check_role(task_id)  
@@ -89,7 +89,7 @@ def transaction_create():
 
 
 @action("transaction/submit", method=["POST"])
-@action.uses(db, flash)
+@action.uses(db, session, flash)
 def transaction_submit():
     task_id='transaction_create'
     access_permission=check_role(task_id)  
@@ -176,6 +176,7 @@ def transaction_view():
     if ((access_permission==False)):
         flash.set("Access is Denied !", 'warning')
         redirect (URL('dashboard','index'))
+        
     tr_head_id = request.query.get('id')
     if not tr_head_id:
         return dict(status="error", message="Missing transaction id", details=[], fields_json="[]")
@@ -231,11 +232,11 @@ def transaction_view():
 
 
 @action("transaction/edit")
-@action.uses("transaction/edit.html", session, flash)  
+@action.uses("transaction/edit.html", db, session, flash)  
 def transaction_edit():
     task_id = 'transaction_edit'
     access_permission = check_role(task_id)  
-    if not access_permission:
+    if access_permission==False:
         flash.set("Access is Denied !", 'warning')
         redirect(URL('dashboard', 'index'))
 
@@ -298,13 +299,14 @@ def transaction_edit():
 
 
 @action("transaction/update", method=["POST"])
-@action.uses(db, flash) 
+@action.uses(db, session, flash)
 def transaction_update():
     task_id='transaction_edit'
     access_permission=check_role(task_id)  
-    if ((access_permission==False)):
+    if (access_permission==False):
         flash.set("Access is Denied !", 'warning')
         redirect (URL('dashboard','index'))
+        
     cid = "SKF"
     form = request.forms
     tr_head_id = request.query.get("id")

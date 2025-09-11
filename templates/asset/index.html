@@ -51,7 +51,9 @@
                         Action
                     </button>
                     <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                        [[ if check_role('asset_create') == True: ]]
                         <a class="dropdown-item" href="[[=URL('asset/create')]]"><i class="fas fa-add me-1"></i> Add</a>
+                        [[ pass ]]
                         <button class="dropdown-item" id="ExportExcel"><i class="fas fa-file-excel me-1"></i> Excel</button>
                     </div>
                 </div>
@@ -170,7 +172,7 @@
                 {
                     title: '', data: 'id', render: function (data) {
                         return `
-                            <a class="text-secondary" href="[[=URL('asset/edit')]]?id=${data}"
+                            <a class="text-secondary [[ if check_role('asset_edit') == False: ]] d-none [[ pass ]]" href="[[=URL('asset/edit')]]?id=${data}"
                                data-bs-toggle="tooltip" data-bs-placement="top" title="Update">
                                 <i class="fas fa-edit"></i>
                             </a>`;

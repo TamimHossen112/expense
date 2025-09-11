@@ -5,6 +5,7 @@
 [[breadcamp = 'Vendor']]
 [[end]]
 
+
 [[block content]]
 
 <div class="container-section mx-2">
@@ -66,7 +67,9 @@
                         Action
                     </button>
                     <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                        [[if check_role("vendor_create")==True:]]
                         <a class="dropdown-item" href="[[=URL('vendor/create')]]"><i class="fas fa-add me-1"></i> Add</a>
+                        [[pass]]
                         <button class="dropdown-item" id="ExportExcel"><i class="fas fa-cog me-1"></i> Excel</button>
                     </div>
                 </div>
@@ -173,7 +176,7 @@
                 { title: 'Trade License', data: 'trade_license_no', render: function(data){ return data ?? '-'; }},
                 { title: '', data: 'id', render: function(data, type, row) {
                     return `
-                        <a class="text-secondary" href="[[=URL('vendor/edit')]]?id=${data}"
+                        <a class="text-secondary [[if check_role("vendor_edit")==False:]] d-none [[pass]]" href="[[=URL('vendor/edit')]]?id=${data}"
                            data-bs-toggle="tooltip" data-bs-placement="top" title="Update">
                             <i class="fas fa-edit"></i>
                         </a>`;

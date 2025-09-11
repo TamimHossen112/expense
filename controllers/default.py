@@ -9,10 +9,11 @@ import json
 @action("index")
 @action.uses("index.html", session, flash, db)
 def index():
+    if session.get('status')!='success':
+        return dict(redirect(URL('login', 'index')))
     return dict(redirect(URL('dashboard', 'index')))
 
 
-# Vendors
 @action("default/get_vendors_filter")
 @action.uses(db)
 def get_vendors_filter():

@@ -2,12 +2,17 @@ import json
 import requests
 from py4web import action, request, redirect, URL
 from ..common import db, session, T, flash
-
+from ..common_fn import check_role
 from datetime import date  
 
 @action('transaction/index')
 @action.uses("transaction/index.html", session, flash)
 def transaction_index():
+    task_id='transaction_config_view'
+    access_permission=check_role(task_id)  
+    if ((access_permission==False)):
+        flash.set("Access is Denied !", 'warning')
+        redirect (URL('dashboard','index'))
     tr_type = request.query.get('type')
     return locals()
 
@@ -21,14 +26,19 @@ def fetch_from_api(endpoint, params=None):
         if resp.status_code == 200:
             return resp.json()
         else:
-            print(f"⚠️ API {url} returned {resp.status_code}")
+            print(f"API {url} returned {resp.status_code}")
     except Exception as e:
-        print(f"⚠️ Failed to fetch {url}: {e}")
+        print(f"Failed to fetch {url}: {e}")
     return []
 
 @action("transaction/create")
 @action.uses("transaction/create.html", session, flash)
-def transaction_initiate():
+def transaction_create():
+    task_id='transaction_create'
+    access_permission=check_role(task_id)  
+    if ((access_permission==False)):
+        flash.set("Access is Denied !", 'warning')
+        redirect (URL('dashboard','index'))
     tr_type = request.query.get("type", "").strip()
 
     if not tr_type:
@@ -81,13 +91,18 @@ def transaction_initiate():
 @action("transaction/submit", method=["POST"])
 @action.uses(db, flash)
 def transaction_submit():
+    task_id='transaction_create'
+    access_permission=check_role(task_id)  
+    if ((access_permission==False)):
+        flash.set("Access is Denied !", 'warning')
+        redirect (URL('dashboard','index'))
     cid = "SKF"
     form = request.forms
 
     trans_type = request.query.get("type")
     asset_id, asset_type = form.get("asset_id"), form.get("asset_type")
     if not asset_id or not asset_type:
-        flash.set("❌ Missing asset_id or asset_type")
+        flash.set("Missing asset_id or asset_type")
         redirect(URL("transaction/index"))
 
     db.executesql(
@@ -156,6 +171,11 @@ def transaction_submit():
 @action('transaction/view', method=['GET'])
 @action.uses("transaction/view.html", db, session, flash)
 def transaction_view():
+    task_id='transaction_view'
+    access_permission=check_role(task_id)  
+    if ((access_permission==False)):
+        flash.set("Access is Denied !", 'warning')
+        redirect (URL('dashboard','index'))
     tr_head_id = request.query.get('id')
     if not tr_head_id:
         return dict(status="error", message="Missing transaction id", details=[], fields_json="[]")
@@ -205,23 +225,32 @@ def transaction_view():
     )
 
 
-
 # # # ------------------------------
 # # # Edit Page
 # # # ------------------------------
+
+
 @action("transaction/edit")
-@action.uses("transaction/edit.html", session, flash)  # Reuse create template
+@action.uses("transaction/edit.html", session, flash)  
 def transaction_edit():
+    task_id = 'transaction_edit'
+    access_permission = check_role(task_id)  
+    if not access_permission:
+        flash.set("Access is Denied !", 'warning')
+        redirect(URL('dashboard', 'index'))
+
     tr_id = request.query.get("id", "").strip()
+    tr_type_param = request.query.get("type", "").strip()
+
     if not tr_id:
-        flash.set("Missing transaction ID.", "danger")
-        redirect(URL("transaction/index"))
+        flash.set("Missing transaction ID.", "warning")
+        redirect(URL("transaction", "index", vars=dict(type=tr_type_param)))
 
     # Get the transaction header
     tr_head = db(db.tr_head.id == tr_id).select().first()
     if not tr_head:
-        flash.set("Transaction not found.", "danger")
-        redirect(URL("transaction/index"))
+        flash.set("Transaction not found.", "warning")
+        redirect(URL("transaction", "index", vars=dict(type=tr_type_param)))
 
     tr_type = tr_head.trans_type
 
@@ -243,7 +272,7 @@ def transaction_edit():
             else:
                 value_list = values
 
-        # Determine current value: check tr_head first, then tr_details, then default
+        # Determine current value
         current_value = getattr(tr_head, row.key, None) or details_map.get(row.key) or row.default_value or ""
 
         fields.append({
@@ -254,11 +283,11 @@ def transaction_edit():
             "caption": row.caption or "",
             "value_type": row.value_type or "",
             "value_list": value_list or "",
-            "value": current_value,  # actual value from DB
+            "value": current_value,
             "source_api": row.source_api or "",
             "dependent_fields_source_api": row.dependent_fields_source_api or "",
             "readonly": row.readonly or "no",
-            "hidden": "",  # If you have a hidden field column, map it here
+            "hidden": "",
             "dependent_fields": row.dependent_fields or "",
         })
 
@@ -268,23 +297,27 @@ def transaction_edit():
     )
 
 
-
 @action("transaction/update", method=["POST"])
 @action.uses(db, flash) 
 def transaction_update():
+    task_id='transaction_edit'
+    access_permission=check_role(task_id)  
+    if ((access_permission==False)):
+        flash.set("Access is Denied !", 'warning')
+        redirect (URL('dashboard','index'))
     cid = "SKF"
     form = request.forms
     tr_head_id = request.query.get("id")
     trans_type = request.query.get("type")
 
     if not tr_head_id:
-        flash.set("❌ Missing transaction ID", "danger")
+        flash.set("Missing transaction ID", "danger")
         redirect(URL("transaction/index", vars=dict(type=trans_type)))
 
     asset_id = form.get("asset_id")
     asset_type = form.get("asset_type")
     if not asset_id or not asset_type:
-        flash.set("❌ Missing asset_id or asset_type", "danger")
+        flash.set("Missing asset_id or asset_type", "danger")
         redirect(URL("transaction/index", vars=dict(type=trans_type)))
 
     # Delete existing tr_details for this transaction
@@ -314,7 +347,7 @@ def transaction_update():
             "value": value
         })
 
-    # Also store main tr_head fields in details
+    # store main tr_head fields in details
     tr_head_fields = {
         "cid": cid,
         "trans_type": trans_type,
@@ -353,9 +386,15 @@ def transaction_update():
 # ------------------------------
 # Get Distinct Transactions for Datatable
 # ------------------------------
+
 @action('transfer/get_data', method=['GET'])
-@action.uses(db)
+@action.uses(db,session,flash)
 def transfer_get_data():
+    task_id='transaction_view'
+    access_permission=check_role(task_id)  
+    if ((access_permission==False)):
+        flash.set("Access is Denied !", 'warning')
+        redirect (URL('dashboard','index'))
     q = request.query
     type = q.get('type')
     start, length = int(q.get('start', 0)), int(q.get('length', 15))

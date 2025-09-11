@@ -51,9 +51,11 @@
                         Action
                     </button>
                     <div class="dropdown-menu">
+                        [[if check_role("transaction_config_create")==True:]]
                         <a class="dropdown-item" href="[[=URL('transaction_config/create')]]">
                             <i class="fas fa-add me-1"></i> Add
                         </a>
+                        [[pass]]
                         <button class="dropdown-item" id="ExportExcel">
                             <i class="fas fa-file-excel me-1"></i> Excel
                         </button>
@@ -119,7 +121,7 @@ $(document).ready(function() {
             { title: 'Transaction Type', data: 'tr_type', render: d => d ?? '-' },
             {
                 title: '', data: 'tr_type', render: function(id) {
-                    return `<a class="text-secondary" href="[[=URL('transaction_config/edit')]]?id=${id}" title="Edit"><i class="fas fa-edit"></i></a>`;
+                    return `<a class="text-secondary [[if check_role("transaction_config_edit")==False:]] d-none [[pass]]" href="[[=URL('transaction_config/edit')]]?id=${id}" title="Edit"><i class="fas fa-edit"></i></a>`;
                 }
             }
         ]

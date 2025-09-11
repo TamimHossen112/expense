@@ -2,6 +2,7 @@ import json
 from py4web import action, request, redirect, URL, response
 from ..common import db, session, T, flash
 from ..common_fn import IMAGE_UPLOAD_API, IMAGE_DOWNLOAD_API
+from ..common_fn import check_role
 import requests
 
 # -----------------------------
@@ -56,12 +57,22 @@ def fetch_uploaded_files(trans_type, trans_id):
 @action('requisition_individual/index')
 @action.uses("requisition_individual/index.html", session, flash)
 def requisition_individual_index():
+    task_id='requisition_individual_view'
+    access_permission=check_role(task_id)  
+    if ((access_permission==False)):
+        flash.set("Access is Denied !", 'warning')
+        redirect (URL('dashboard','index'))
     return locals()
 
 
 @action('requisition_individual/create')
 @action.uses('requisition_individual/create.html', db, session, flash)
 def requisition_individual_create():
+    task_id='requisition_individual_create'
+    access_permission=check_role(task_id)  
+    if ((access_permission==False)):
+        flash.set("Access is Denied !", 'warning')
+        redirect (URL('dashboard','index'))
     return dict(
         IMAGE_UPLOAD_API=IMAGE_UPLOAD_API,
         IMAGE_DOWNLOAD_API=IMAGE_DOWNLOAD_API,
@@ -71,16 +82,31 @@ def requisition_individual_create():
     )
 
 
+
 @action('requisition_individual/edit')
 @action.uses('requisition_individual/edit.html', db, session, flash)
 def requisition_individual_edit():
+    task_id = 'requisition_individual_edit'
+    access_permission = check_role(task_id)  
+    if not access_permission:
+        flash.set("Access is Denied !", 'warning')
+        redirect(URL('dashboard', 'index'))
+
     req_id = request.query.get('id')
     if not req_id:
-        return dict(error='Missing requisition ID.')
+        flash.set("Missing requisition ID!", 'warning')
+        redirect(URL('requisition_individual', 'index'))
+
+    try:
+        req_id = int(req_id)  # ✅ ensure it's an integer (prevents SQL injection)
+    except ValueError:
+        flash.set("Invalid requisition ID!", 'warning')
+        redirect(URL('requisition_individual', 'index'))
 
     row = db(db.requisition.id == req_id).select().first()
     if not row:
-        return dict(error='Requisition not found.')
+        flash.set("Requisition not found!", 'warning')
+        redirect(URL('requisition_individual', 'index'))
 
     file_metadata = fetch_uploaded_files('requisition', row.id)
     combo_results = get_combo_values("requisition_doc_type")
@@ -98,7 +124,6 @@ def requisition_individual_edit():
         asset_type_list=asset_type_list,
         selected_asset_type=row.asset_type
     )
-
 
 # -----------------------------
 # Submit / Update
@@ -120,6 +145,11 @@ def parse_uploaded_files():
 @action('requisition_individual/submit', method=['POST'])
 @action.uses(db, session, flash)
 def requisition_individual_submit():
+    task_id='requisition_individual_create'
+    access_permission=check_role(task_id)  
+    if ((access_permission==False)):
+        flash.set("Access is Denied !", 'warning')
+        redirect (URL('dashboard','index'))
     asset_type = request.forms.get('asset_type')
     emp_id = request.forms.get('emp_id')
     emp_name = request.forms.get('emp_name')
@@ -191,6 +221,11 @@ def requisition_individual_submit():
 @action('requisition_individual/update', method=["POST"])
 @action.uses(db, session, flash)
 def requisition_individual_update():
+    task_id='requisition_individual_edit'
+    access_permission=check_role(task_id)  
+    if ((access_permission==False)):
+        flash.set("Access is Denied !", 'warning')
+        redirect (URL('dashboard','index'))
     req_id = request.query.get('id') or request.forms.get('id')
     if not req_id:
         flash.set("Missing requisition ID.", 'danger')
@@ -258,8 +293,13 @@ def requisition_individual_update():
 
 
 @action('requisition_individual/get_data', method=['GET'])
-@action.uses(db)
+@action.uses(db,session,flash)
 def requisition_individual_get_data():
+    task_id='requisition_individual_view'
+    access_permission=check_role(task_id)  
+    if ((access_permission==False)):
+        flash.set("Access is Denied !", 'warning')
+        redirect (URL('dashboard','index'))
     q = request.query
     start, length = int(q.get('start', 0)), int(q.get('length', 15))
     sort_col_index = q.get('order[0][column]')
@@ -308,6 +348,11 @@ def requisition_individual_get_data():
 @action('requisition_individual/delete', method=['GET', 'POST'])
 @action.uses(db, session, flash)
 def delete_requisition_individual():
+    task_id='requisition_individual_delete'
+    access_permission=check_role(task_id)  
+    if ((access_permission==False)):
+        flash.set("Access is Denied !", 'warning')
+        redirect (URL('dashboard','index'))
     # Get the `id` from the query
     requisition_id = request.query.get('id')
     if not requisition_id:

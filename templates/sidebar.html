@@ -49,7 +49,7 @@ pass
           <li class="menu-header">
             <span> Master Setup </span>
           </li>
-
+          [[if check_role("vendor_view")==True:]]
           <li class="menu-item [[if _controller_name=='vendor':]]active_link[[pass]]">
               <a href="[[=URL('vendor/index')]]">
                   <span class="menu-icon">
@@ -58,7 +58,10 @@ pass
                   <span class="menu-title">Vendor</span>
               </a>
           </li>
+          [[pass]]
 
+
+          [[if check_role("asset_type_view")==True:]]
           <li class="menu-item [[if _controller_name=='asset_type':]]active_link[[pass]]">
               <a href="[[=URL('asset_type/index')]]">
                   <span class="menu-icon">
@@ -67,7 +70,10 @@ pass
                   <span class="menu-title">Asset Type</span>
               </a>
           </li>
+          [[pass]]
 
+
+          [[if check_role("transaction_config_view")==True:]]
           <li class="menu-item sub-menu [[if _controller_name in ['transaction_config']:]]open[[pass]]">
             <a href="#">
               <span class="menu-icon">
@@ -86,11 +92,13 @@ pass
               </ul>
             </div>
           </li>
-          
+          [[pass]]
+
           <li class="menu-header">
             <span> Operations </span>
           </li>
 
+          [[if check_role("requisition_individual_view") and check_role("requisition_org_view") :]]
           <li class="menu-item sub-menu [[if _controller_name in ['requisition_individual','requisition_org']:]]open[[pass]]">
             <a href="#">
               <span class="menu-icon">
@@ -100,26 +108,32 @@ pass
             </a>
             <div class="sub-menu-list">
               <ul>
+                [[if check_role("requisition_individual_view")==True:]]
                 <li class="menu-item [[if _controller_name=='requisition_individual':]]active_link[[pass]]">
                   <a href="[[=URL('requisition_individual/index')]]">
                     <span class="menu-icon"><i class="fa-solid fa-warehouse"></i></span>
                     <span class="menu-title">Individual</span>
                   </a>
                 </li>
+                [[pass]]
               </ul>
             </div>
             <div class="sub-menu-list">
               <ul>
+                [[if check_role("requisition_org_view")==True:]]
                 <li class="menu-item [[if _controller_name=='requisition_org':]]active_link[[pass]]">
                   <a href="[[=URL('requisition_org/index')]]">
                     <span class="menu-icon"><i class="fa-solid fa-warehouse"></i></span>
                     <span class="menu-title">Organization</span>
                   </a>
                 </li>
+                [[pass]]
               </ul>
             </div>
           </li>
+          [[pass]]
 
+          [[if check_role("purchase_view")==True:]]
           <li class="menu-item [[if _controller_name=='purchase':]]active_link[[pass]]">
               <a href="[[=URL('purchase/index')]]">
                   <span class="menu-icon">
@@ -128,7 +142,9 @@ pass
                   <span class="menu-title">Purchase</span>
               </a>
           </li>
+          [[pass]]
 
+          [[if check_role("asset_view")==True:]]
           <li class="menu-item [[if _controller_name=='asset':]]active_link[[pass]]">
               <a href="[[=URL('asset/index')]]">
                   <span class="menu-icon">
@@ -137,12 +153,14 @@ pass
                   <span class="menu-title">Asset</span>
               </a>
           </li>
+          [[pass]]
+
 
           <li class="menu-header">
             <span> Transaction </span>
           </li>
 
-
+          [[if check_role("transaction_view")==True:]]
           <li class="menu-item sub-menu [[if _controller_name in ['allocation','transfer', 'ownership_transfer']:]]open[[pass]]">
             <a href="#">
               <span class="menu-icon">
@@ -172,10 +190,7 @@ pass
             [[pass]]
 
           </li>
-
-
-          
-
+          [[pass]]
         </ul>
       </nav>
     </div>

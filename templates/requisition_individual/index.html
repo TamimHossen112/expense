@@ -7,16 +7,6 @@
 
 [[block content]]
 
-<!-- <style>
-    .asset-type-column {
-        min-width: 100px;
-        max-width: 140px;      /* set max width as you want */
-        white-space: normal !important;  /* allow wrapping */
-        word-wrap: break-word;
-        overflow-wrap: break-word;
-        vertical-align: middle;
-    }
-</style> -->
 
 <div class="container-section mx-2">
     <div class="row">
@@ -89,7 +79,9 @@
                         Action
                     </button>
                     <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                        [[if check_role("requisition_individual_create")==True:]]
                         <a class="dropdown-item" href="[[=URL('requisition_individual/create')]]"><i class="fas fa-add me-1"></i> Add</a>
+                        [[pass]]
                         <button class="dropdown-item" id="ExportExcel"><i class="fas fa-file-excel me-1"></i> Excel</button>
                     </div>
                 </div>
@@ -254,7 +246,7 @@
                 {
                     title: '', data: 'id', render: function (data) {
                         return `
-                            <a class="text-secondary" href="[[=URL('requisition_individual/edit')]]?id=${data}"
+                            <a class="text-secondary [[if check_role("requisition_individual_edit")==False:]] d-none [[pass]]" href="[[=URL('requisition_individual/edit')]]?id=${data}"
                                data-bs-toggle="tooltip" data-bs-placement="top" title="Update">
                                 <i class="fas fa-edit"></i>
                             </a>`;

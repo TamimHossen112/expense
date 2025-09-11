@@ -3,7 +3,7 @@ from py4web import action, request, URL
 from py4web.core import redirect
 from ..common import db, session, T, flash
 from datetime import datetime
-
+from ..common_fn import check_role
 # ---------- ID Generators ----------
 def generate_id(table, field, prefix, type_char=None):
     last_row = db.executesql(
@@ -84,11 +84,22 @@ def validate_items(items):
 @action('purchase/index')
 @action.uses("purchase/index.html", session, flash)
 def purchase_index():
-    return {}
+    task_id='purchase_view'
+    access_permission=check_role(task_id)  
+    if ((access_permission==False)):
+        flash.set("Access is Denied !", 'warning')
+        redirect (URL('dashboard','index'))
+    return locals()
 
 @action('purchase/create')
 @action.uses("purchase/create.html", db, session, flash)
 def purchase_create():
+    task_id='purchase_create'
+    access_permission=check_role(task_id)  
+    if ((access_permission==False)):
+        flash.set("Access is Denied !", 'warning')
+        redirect (URL('dashboard','index'))
+
     vendors = db(db.vendor.vendor_name != None).select(db.vendor.id, db.vendor.vendor_name, distinct=True).as_list()
     vendor_results = [{"id": v["id"], "text": v["vendor_name"]} for v in vendors if v["vendor_name"]]
     return dict(
@@ -106,6 +117,13 @@ def purchase_create():
 @action('purchase/submit')
 @action.uses(db, session, flash)
 def purchase_submit():
+
+    task_id='purchase_create'
+    access_permission=check_role(task_id)  
+    if ((access_permission==False)):
+        flash.set("Access is Denied !", 'warning')
+        redirect (URL('dashboard','index'))
+
     # ---------- Form Data ----------
     vendor_value   = request.forms.get('vendor_id', '').strip()
     bill_no        = request.forms.get('bill_no', '').strip()
@@ -263,15 +281,33 @@ def purchase_submit():
 @action('purchase/edit')
 @action.uses("purchase/edit.html", db, session, flash)
 def purchase_edit():
+    task_id = 'purchase_edit'
+    access_permission = check_role(task_id)  
+    if not access_permission:
+        flash.set("Access is Denied !", 'warning')
+        redirect(URL('dashboard', 'index'))
+
     purchase_head_id = request.query.get('id')
     if not purchase_head_id:
-        return dict(error='Missing Purchase Head ID')
+        flash.set("Missing Purchase Head ID!", 'warning')
+        redirect(URL('purchase', 'index'))
+
+    try:
+        purchase_head_id = int(purchase_head_id)  
+    except ValueError:
+        flash.set("Invalid Purchase Head ID!", 'warning')
+        redirect(URL('purchase', 'index'))
 
     row = db(db.purchase_head.id == purchase_head_id).select().first()
     if not row:
-        return dict(error='Purchase Entry not found.')
+        flash.set("Purchase Entry not found!", 'warning')
+        redirect(URL('purchase', 'index'))
 
-    vendors = db(db.vendor.vendor_name != None).select(db.vendor.id, db.vendor.vendor_name, distinct=True).as_list()
+    vendors = (
+        db(db.vendor.vendor_name != None)
+        .select(db.vendor.id, db.vendor.vendor_name, distinct=True)
+        .as_list()
+    )
     vendor_results = [{"id": v["id"], "text": v["vendor_name"]} for v in vendors]
 
     purchase_items = [
@@ -310,9 +346,16 @@ def purchase_edit():
         selected_payment_status=row.payment_status,
     )
 
+
+
 @action('purchase/update')
 @action.uses(db, session, flash)
 def purchase_update():
+    task_id='purchase_edit'
+    access_permission=check_role(task_id)  
+    if ((access_permission==False)):
+        flash.set("Access is Denied !", 'warning')
+        redirect (URL('dashboard','index'))
     record_id = request.query.get('id') or request.forms.get('id')
     if not record_id:
         flash.set("Missing purchase ID.", "danger")
@@ -463,8 +506,14 @@ def purchase_update():
 
 
 @action('purchase/get_data', method=['GET'])
-@action.uses(db)
+@action.uses(db,session,flash)
 def purchase_get_data():
+    task_id='purchase_view'
+    access_permission=check_role(task_id)  
+    if ((access_permission==False)):
+        flash.set("Access is Denied !", 'warning')
+        redirect (URL('dashboard','index'))
+
     filters = {
         'vendor_name': request.query.get('vendor_name', '').strip(),
         'payment_status': request.query.get('payment_status', '').strip(),
@@ -517,6 +566,12 @@ def purchase_get_data():
 @action('purchase/delete', method=['GET', 'POST'])
 @action.uses(db, session, flash)
 def purchase_delete():
+    task_id='purchase_delete'
+    access_permission=check_role(task_id)  
+    if ((access_permission==False)):
+        flash.set("Access is Denied !", 'warning')
+        redirect (URL('dashboard','index'))
+
     purchase_id = request.query.get('id')
     if not purchase_id:
         flash.set('Missing purchase ID.', 'danger')

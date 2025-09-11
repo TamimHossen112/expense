@@ -71,7 +71,9 @@
                         Action
                     </button>
                     <div class="dropdown-menu">
+                        [[if check_role("asset_type_create")==True:]]
                         <a class="dropdown-item" href="[[=URL('asset_type/create')]]"><i class="fas fa-add me-1"></i> Add</a>
+                        [[pass]]
                         <button class="dropdown-item" id="ExportExcel"><i class="fas fa-file-excel me-1"></i> Excel</button>
                     </div>
                 </div>
@@ -181,7 +183,7 @@ $(document).ready(function() {
                 title: '', 
                 data: 'id', 
                 render: function(id) {
-                    return `<a class="text-secondary" href="[[=URL('asset_type/edit')]]?id=${id}" title="Edit"><i class="fas fa-edit"></i></a>`;
+                    return `<a class="text-secondary [[if check_role("asset_type_edit")==False:]] d-none [[pass]]" href="[[=URL('asset_type/edit')]]?id=${id}" title="Edit"><i class="fas fa-edit"></i></a>`;
                 }
             }
         ]

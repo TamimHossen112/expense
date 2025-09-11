@@ -3,6 +3,7 @@ from py4web import action, request, URL
 from py4web.core import redirect
 from ..common import db, session, T, flash
 from datetime import datetime
+from ..common_fn import check_role
 
 # ------------------ UTILS ------------------
 def generate_asset_code(asset_type):
@@ -54,11 +55,22 @@ def get_date(key):
 @action('asset/index')
 @action.uses("asset/index.html", session, flash)
 def asset_index():
+    task_id='asset_view'
+    access_permission=check_role(task_id)  
+    if ((access_permission==False)):
+        flash.set("Access is Denied !", 'warning')
+        redirect (URL('dashboard','index'))
     return locals()
 
 @action('asset/create')
 @action.uses("asset/create.html", session, flash)
 def asset_create():
+    task_id='asset_create'
+    access_permission=check_role(task_id)  
+    if ((access_permission==False)):
+        flash.set("Access is Denied !", 'warning')
+        redirect (URL('dashboard','index'))
+
     distinct_fields = get_distinct_master_fields([
         db.asset_master.asset_type, 
         db.asset_master.asset_brand, 
@@ -77,6 +89,11 @@ def asset_create():
 @action('asset/submit', method=["POST"])
 @action.uses(db, session, flash)
 def asset_submit():
+    task_id='asset_create'
+    access_permission=check_role(task_id)  
+    if ((access_permission==False)):
+        flash.set("Access is Denied !", 'warning')
+        redirect (URL('dashboard','index'))
     try:
         form = request.forms
 
@@ -166,17 +183,26 @@ def asset_submit():
         redirect(URL("asset/index"))
 
 
+
 @action('asset/edit')
 @action.uses("asset/edit.html", db, session, flash)
 def asset_edit():
+    task_id='asset_edit'
+    access_permission=check_role(task_id)  
+    if ((access_permission==False)):
+        flash.set("Access is Denied !", 'warning')
+        redirect (URL('dashboard','index'))
+
     asset_id = request.query.get('id')
     if not asset_id:
-        return dict(error="Asset ID is required")
+        flash.set("Asset ID is required", sanitize=True)
+        redirect(URL('asset/index'))   # or wherever your list page is
     
     try:
         asset_id = int(asset_id)
     except ValueError:
-        return dict(error="Invalid Asset ID")
+        flash.set("Invalid Asset ID", sanitize=True)
+        redirect(URL('asset/index'))
 
     sql_asset = f"""
         SELECT asset_type, asset_brand, asset_model, purchase_price,
@@ -186,12 +212,13 @@ def asset_edit():
         FROM asset
         WHERE id = {asset_id}
     """
-
     rows = db.executesql(sql_asset, as_dict=True)
-    if not rows:
-        return dict(error="Asset not found")
-    main_row = rows[0]
 
+    if not rows:
+        flash.set("Asset not found", "warning", sanitize=True)
+        redirect(URL('asset/index'))
+
+    main_row = rows[0]
     selected_emp = f"{main_row['user_id']} | {main_row['user_name']}" if main_row['user_id'] else ""
 
     asset_type_list = [r['asset_type'] for r in db.executesql("SELECT DISTINCT asset_type FROM asset_master WHERE asset_type IS NOT NULL", as_dict=True)]
@@ -219,6 +246,12 @@ def asset_edit():
 @action('asset/update', method=['POST'])
 @action.uses(db, session, flash)
 def asset_update():
+    task_id='asset_edit'
+    access_permission=check_role(task_id)  
+    if ((access_permission==False)):
+        flash.set("Access is Denied !", 'warning')
+        redirect (URL('dashboard','index'))
+
     asset_id_code = request.forms.get('id')
     if not asset_id_code:
         return dict(error='Missing asset ID.')
@@ -287,13 +320,14 @@ def asset_update():
     redirect(URL('asset/index'))
 
 
-
-
-
-
 @action('asset/get_data', method=['GET'])
-@action.uses(db)
+@action.uses(db,session,flash)
 def asset_get_data():
+    task_id='asset_view'
+    access_permission=check_role(task_id)  
+    if ((access_permission==False)):
+        flash.set("Access is Denied !", 'warning')
+        redirect (URL('dashboard','index'))
     params = request.query
     asset_name = params.get('asset_name', '').strip()
     asset_type = params.get('asset_type', '').strip()
@@ -380,7 +414,6 @@ def get_purchase_map():
 def get_purchase_details_map():
     purchase_head_id = str(request.params.get('purchase_head_id'))
 
-    # Step 1: Get all purchase_details for this purchase_head_id
     sql = """
         SELECT 
             pd.purchase_details_id,
@@ -441,6 +474,11 @@ def get_purchase_details_map():
 @action('asset/get_brands_by_type')
 @action.uses(db)
 def get_brands_by_type():
+    task_id='asset_edit'
+    access_permission=check_role(task_id)  
+    if ((access_permission==False)):
+        flash.set("Access is Denied !", 'warning')
+        redirect (URL('dashboard','index'))
     asset_type = request.query.get('asset_type')
     if not asset_type:
         return {"results": []}
@@ -456,6 +494,12 @@ def get_brands_by_type():
 @action('asset/get_models_by_brand')
 @action.uses(db)
 def get_models_by_brand():
+    task_id='asset_edit'
+    access_permission=check_role(task_id)  
+    if ((access_permission==False)):
+        flash.set("Access is Denied !", 'warning')
+        redirect (URL('dashboard','index'))
+        
     asset_type = request.query.get('asset_type')
     asset_brand = request.query.get('asset_brand')
     if not asset_type or not asset_brand:

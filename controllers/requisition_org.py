@@ -2,6 +2,7 @@ import json
 import datetime
 from py4web import action, request, redirect, URL, response
 from ..common import db, session, T, flash, auth
+from ..common_fn import check_role
 import requests
 
 # -----------------------------
@@ -48,12 +49,22 @@ def get_asset_types():
 @action('requisition_org/index')
 @action.uses("requisition_org/index.html", session, flash)
 def requisition_org_index():
+    task_id='requisition_org_view'
+    access_permission=check_role(task_id)  
+    if ((access_permission==False)):
+        flash.set("Access is Denied !", 'warning')
+        redirect (URL('dashboard','index'))
     return locals()
 
 
 @action('requisition_org/create')
 @action.uses('requisition_org/create.html', db, session, flash)
 def requisition_org_create():
+    task_id='requisition_org_create'
+    access_permission=check_role(task_id)  
+    if ((access_permission==False)):
+        flash.set("Access is Denied !", 'warning')
+        redirect (URL('dashboard','index'))
     return dict(
         requisition_status_combos=get_combo_values("requisition_status"),
         asset_types=get_asset_types(),
@@ -67,6 +78,11 @@ def requisition_org_create():
 @action('requisition_org/submit', method=['POST'])
 @action.uses(db, session, flash)
 def requisition_org_submit():
+    task_id='requisition_org_create'
+    access_permission=check_role(task_id)  
+    if ((access_permission==False)):
+        flash.set("Access is Denied !", 'warning')
+        redirect (URL('dashboard','index'))
     form = request.forms
 
     org_name = form.get('org_name')
@@ -100,8 +116,13 @@ def requisition_org_submit():
 # Data Endpoint (For DataTable)
 # -----------------------------
 @action('requisition_org/get_data', method=['GET'])
-@action.uses(db)
+@action.uses(db,session,flash)
 def requisition_org_get_data():
+    task_id='requisition_org_view'
+    access_permission=check_role(task_id)  
+    if ((access_permission==False)):
+        flash.set("Access is Denied !", 'warning')
+        redirect (URL('dashboard','index'))
     q = request.query
     start, length = int(q.get('start', 0)), int(q.get('length', 15))
     sort_col_index = q.get('order[0][column]')
@@ -153,18 +174,33 @@ def requisition_org_get_data():
 # Edit Endpoint (GET)
 # -----------------------------
 @action('requisition_org/edit', method=['GET'])
-@action.uses("requisition_org/edit.html", db)
+@action.uses("requisition_org/edit.html", db, session, flash)
 def requisition_org_edit():
+    task_id = 'requisition_org_edit'
+    access_permission = check_role(task_id)  
+    if not access_permission:
+        flash.set("Access is Denied !", 'warning')
+        redirect(URL('dashboard', 'index'))
+
     req_id = request.query.get('id')
     if not req_id:
-        return dict(status="error", message="Missing requisition id")
+        flash.set("Missing requisition id!", 'warning')
+        redirect(URL('requisition_org', 'index'))
+
+    try:
+        req_id = int(req_id)  # ✅ ensure it's safe
+    except ValueError:
+        flash.set("Invalid requisition id!", 'warning')
+        redirect(URL('requisition_org', 'index'))
 
     rows = db.executesql(
-        f"SELECT * FROM requisition WHERE id = {req_id}",
+        f"""SELECT * FROM requisition WHERE id = {req_id}""",
         as_dict=True
     )
     if not rows:
-        return dict(status="error", message="Requisition not found")
+        flash.set("Requisition not found!", 'warning')
+        redirect(URL('requisition_org', 'index'))
+
     requisition = rows[0]
 
     return dict(
@@ -173,11 +209,12 @@ def requisition_org_edit():
         organizations=get_combo_values("organizations"),
         asset_type_list=[r['text'] for r in get_asset_types()],
         requisition_status_combos=get_combo_values("requisition_status"),
-        selected_asset_type=requisition['asset_type'] , 
+        selected_asset_type=requisition['asset_type'],
         selected_org=requisition['org_name'],
-        org_list = get_combo_values("organizations"),
-        selected_requisition_status = requisition['req_status']
+        org_list=get_combo_values("organizations"),
+        selected_requisition_status=requisition['req_status']
     )
+
 
 # -----------------------------
 # Update Endpoint (POST)
@@ -185,6 +222,13 @@ def requisition_org_edit():
 @action('requisition_org/update', method=['POST'])
 @action.uses(db, session, flash)  # <-- Added flash here
 def requisition_org_update():
+
+    task_id='requisition_org_edit'
+    access_permission=check_role(task_id)  
+    if ((access_permission==False)):
+        flash.set("Access is Denied !", 'warning')
+        redirect (URL('dashboard','index'))
+
     form = request.forms
 
     req_id = form.get('id')
@@ -219,14 +263,17 @@ def requisition_org_update():
 @action('requisition_org/delete', method=['GET', 'POST'])
 @action.uses(db, session, flash)
 def delete_requisition_org():
-    # Get the `id` from the query
+    task_id='requisition_org_delete'
+    access_permission=check_role(task_id)  
+    if ((access_permission==False)):
+        flash.set("Access is Denied !", 'warning')
+        redirect (URL('dashboard','index'))
     requisition_id = request.query.get('id')
     if not requisition_id:
         flash.set('Missing requisition ID.', 'danger')
         redirect(URL('requisition_org/index'))
 
     try:
-        # Fetch the record from the requisition_org table using `id`
         record = db(db.requisition.id == requisition_id).select().first()
         if not record:
             flash.set('Requisition not found.', 'warning')

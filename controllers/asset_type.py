@@ -2,17 +2,27 @@ import json
 from py4web import action, request, response, URL
 from py4web.core import redirect
 from ..common import db, session, T, flash
-
+from ..common_fn import check_role
 
 @action('asset_type/index')
-@action.uses("asset_type/index.html",session, flash, )
+@action.uses("asset_type/index.html",session, flash )
 def asset_type_index():
+    task_id='asset_type_view'
+    access_permission=check_role(task_id)  
+    if ((access_permission==False)):
+        flash.set("Access is Denied !", 'warning')
+        redirect (URL('dashboard','index'))
     return locals()
 
 
 @action('asset_type/create')
 @action.uses("asset_type/create.html", session, flash)
 def asset_type_create():
+    task_id='asset_type_create'
+    access_permission=check_role(task_id)  
+    if ((access_permission==False)):
+        flash.set("Access is Denied !", 'warning')
+        redirect (URL('dashboard','index'))
     asset_types = [row.asset_type for row in db(db.asset_master).select(db.asset_master.asset_type, distinct=True)]
     asset_brands = [row.asset_brand for row in db(db.asset_master).select(db.asset_master.asset_brand, distinct=True)]
     asset_models = [row.asset_model for row in db(db.asset_master).select(db.asset_master.asset_model, distinct=True)]
@@ -29,6 +39,11 @@ def asset_type_create():
 @action('asset_type/submit', method=['POST'])
 @action.uses(db, session, flash)
 def asset_type_submit():
+    task_id='asset_type_create'
+    access_permission=check_role(task_id)  
+    if ((access_permission==False)):
+        flash.set("Access is Denied !", 'warning')
+        redirect (URL('dashboard','index'))
     asset_type = (request.forms.get('asset_type') or '').strip()
     asset_brand = (request.forms.get('asset_brand') or '').strip()
     asset_model = (request.forms.get('asset_model') or '').strip()
@@ -36,7 +51,6 @@ def asset_type_submit():
     asset_status = request.forms.get('status')
     asset_status = 'active' if asset_status == 'active' else 'inactive'
 
-    # Validation: must not be blank
     if not asset_type:
         flash.set("Asset Type is required.", 'warning')
         redirect(URL('asset_type/create'))
@@ -48,7 +62,6 @@ def asset_type_submit():
         redirect(URL('asset_type/create'))
 
     try:
-        # 🔎 Check if same type+brand+model already exists
         exists = db(
             (db.asset_master.asset_type == asset_type) &
             (db.asset_master.asset_brand == asset_brand) &
@@ -59,7 +72,6 @@ def asset_type_submit():
             flash.set("This Asset Type + Brand + Model already exists.", 'warning')
             redirect(URL('asset_type/create'))
 
-        # Insert if not exists
         db.asset_master.insert(
             asset_type=asset_type.upper(),
             asset_brand=asset_brand,
@@ -78,8 +90,13 @@ def asset_type_submit():
 
 
 @action('asset_type/get_data', method=['GET'])
-@action.uses(db)
+@action.uses(db,session,flash)
 def get_asset_type_data():
+    task_id='asset_type_view'
+    access_permission=check_role(task_id)  
+    if ((access_permission==False)):
+        flash.set("Access is Denied !", 'warning')
+        redirect (URL('dashboard','index'))
     asset_type = request.query.get('asset_type', '').strip()
     asset_brand = request.query.get('asset_brand', '').strip()
 
@@ -123,25 +140,44 @@ def get_asset_type_data():
         draw=int(request.query.get('draw') or 1)
     )
 
-
-
 @action('asset_type/edit')
-@action.uses(db, session, T, 'asset_type/edit.html')
+@action.uses(db, session, T, flash, 'asset_type/edit.html')
 def asset_edit():
+    task_id = 'asset_type_edit'
+    access_permission = check_role(task_id)  
+    if not access_permission:
+        flash.set("Access is Denied !", 'warning')
+        redirect(URL('dashboard', 'index'))
+
     record_id = request.query.get('id')
     if not record_id:
+        flash.set("Missing asset type ID!", 'warning')
+        redirect(URL('asset_type/index'))
+
+    try:
+        record_id = int(record_id)  # ✅ ensure numeric
+    except ValueError:
+        flash.set("Invalid asset type ID!", 'warning')
         redirect(URL('asset_type/index'))
 
     record = db.asset_master(record_id)
     if not record:
+        flash.set("Asset type not found!", 'warning')
         redirect(URL('asset_type/index'))
 
     return dict(record=record)
+
+
 
 # Update form submission
 @action('asset_type/update', method=['POST'])
 @action.uses(db, session, flash)
 def asset_update():
+    task_id='asset_type_edit'
+    access_permission=check_role(task_id)  
+    if ((access_permission==False)):
+        flash.set("Access is Denied !", 'warning')
+        redirect (URL('dashboard','index'))
     record_id = request.query.get('id')
     if not record_id:
         flash.set('Missing ID', 'danger')
@@ -170,6 +206,11 @@ def asset_update():
 @action('asset_type/delete', method=['GET', 'POST'])
 @action.uses(db, session, flash)
 def asset_delete():
+    task_id='asset_type_delete'
+    access_permission=check_role(task_id)  
+    if ((access_permission==False)):
+        flash.set("Access is Denied !", 'warning')
+        redirect (URL('dashboard','index'))
     record_id = request.query.get('id')
 
     if not record_id:

@@ -32,10 +32,12 @@
                     <button class="btn btn-primary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
                         Action
                     </button>
+                    [[if check_role("asset_type_delete")==True:]]
                     <div class="dropdown-menu">
                         <a class="dropdown-item" href="delete?id=[[=request.query.get('id')]]" id="delete_btn">
                             <i class="fa-solid fa-trash-can"></i><span class="ms-2">Delete</span></a>
                     </div>
+                    [[pass]]
                 </div>
             </div>
         </div>

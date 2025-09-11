@@ -2,6 +2,7 @@ import json
 from py4web import action, request, response, URL
 from py4web.core import redirect
 from ..common import db, session, T, flash
+from ..common_fn import check_role
 
 # ---------------- Helper Functions ---------------- #
 
@@ -44,18 +45,41 @@ def get_vendor_or_redirect(vendor_id):
 @action('vendor/index')
 @action.uses("vendor/index.html", session, flash)
 def vendor_index():
+    task_id='vendor_view'
+    access_permission=check_role(task_id)  
+    if ((access_permission==False)):
+        flash.set("Access is Denied !", 'warning')
+        redirect (URL('login','index'))
+
+    # task_id='vendor_create'
+    # create_access_permission=check_role(task_id)
+    # task_id='vendor_edit'
+    # edit_access_permission=check_role(task_id)
+
     return locals()
 
 
 @action('vendor/create')
 @action.uses("vendor/create.html", session, flash)
 def vendor_create():
+    task_id='vendor_create'
+    access_permission=check_role(task_id)  
+    if ((access_permission==False)):
+        flash.set("Access is Denied !", 'warning')
+        redirect (URL('dashboard','index'))
+
     return locals()
 
 
 @action('vendor/submit', method=['POST'])
 @action.uses(db, session, T, flash)
 def submit_vendor_data():
+    task_id='vendor_create'
+    access_permission=check_role(task_id)  
+    if ((access_permission==False)):
+        flash.set("Access is Denied !", 'warning')
+        redirect (URL('dashboard','index'))
+
     vendor_name = (request.forms.get('vendor_name') or '').strip()
     contact = (request.forms.get('contact') or '').strip()
     vendor_address = (request.forms.get('vendor_address') or '').strip()
@@ -84,9 +108,14 @@ def submit_vendor_data():
 @action('vendor/edit')
 @action.uses('vendor/edit.html', db, session, flash)
 def vendor_edit():
+    task_id='vendor_edit'
+    access_permission=check_role(task_id)  
+    if ((access_permission==False)):
+        flash.set("Access is Denied !", 'warning')
+        redirect (URL('dashboard','index'))
     vendor_id = request.query.get('id')
     record = get_vendor_or_redirect(vendor_id)
-    return dict(record=record)
+    return dict(record=record,access_permission=check_role('vendor_edit'))
 
 
 @action('vendor/update', method=['POST'])
@@ -121,8 +150,13 @@ def vendor_update():
 
 
 @action('vendor/get_data', method=['GET'])
-@action.uses(db)
+@action.uses(db,session,flash)
 def get_vendor_data():
+    task_id='vendor_view'
+    access_permission=check_role(task_id)  
+    if ((access_permission==False)):
+        flash.set("Access is Denied !", 'warning')
+        redirect (URL('dashboard','index'))
     vendor_name = (request.query.get('vendor_name') or '').strip()
     address = (request.query.get('address') or '').strip()
     start = int(request.query.get('start') or 0)
@@ -169,6 +203,11 @@ def get_vendor_data():
 @action('vendor/delete', method=['POST', 'GET'])
 @action.uses(db, session, T, flash)
 def delete_vendor():
+    task_id='vendor_delete'
+    access_permission=check_role(task_id)  
+    if ((access_permission==False)):
+        flash.set("Access is Denied !", 'warning')
+        redirect (URL('dashboard','index'))
     vendor_id = request.query.get('id')
     vendor = get_vendor_or_redirect(vendor_id)
 

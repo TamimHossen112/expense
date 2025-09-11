@@ -99,11 +99,12 @@
                         aria-expanded="false">
                         Action
                     </button>
-                
+                    [[if check_role("purchase_delete")==True:]]
                     <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
                         <a class="dropdown-item" href="delete?id=[[=request.query.get('id')]]" id="delete_btn">
                             <i class="fa-solid fa-trash-can"></i><span class="ms-2">Delete</span></a>
                     </div>
+                    [[pass]]
                 </div>
             </div>
         </div>

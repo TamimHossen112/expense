@@ -2,7 +2,7 @@
 <html lang="en">
 
 <head>
-	<title>CIRCULATION</title>
+	<title>Expense</title>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="icon" type="image/x-icon" href="[[=URL('static','circulation_logo.png')]]">
@@ -150,7 +150,7 @@
 			
 		}
 		.link-primary{
-			color: #ed1f52;;
+			color: #497bde;;
 		}
 		.link-primary:hover{
 			color:rgb(249, 159, 0);;
@@ -195,20 +195,26 @@
 					<div class="container-login100">
 						<div class="wrap-login100">
 							
-							<form class="login100-form validate-form" method="post" action="[[=URL('login','index')]]">
+							<form class="login100-form validate-form" method="post" action="[[=URL('login','check_user')]]">
 
 								<span class="login100-form-title p-b-48 pb-2">
 									<!-- <img src="/login-asset/images/icons/meeting-logo-removebg-preview.png" alt=""> -->
 									<img style="width: 250px;"
-										src="[[=URL('static','prothom-alo-digital.png')]]">
+										src="[[=URL('static','TranscomLogoLG.png')]]">
 								</span>
 								
 
 
-								<div class="wrap-input100 validate-input" data-validate="Enter Email">
+								<!-- <div class="wrap-input100 validate-input" data-validate="Enter Email">
 									<input class="input100 " type="email" name="email" readonly
 										onfocus="if(this.hasAttribute('readonly')){this.removeAttribute('readonly')}">
 									<span class="focus-input100" data-placeholder="Email"></span>
+								</div> -->
+
+								<div class="wrap-input100 validate-input" data-validate="Enter Username">
+									<input class="input100 " type="text" name="username" readonly
+										onfocus="if(this.hasAttribute('readonly')){this.removeAttribute('readonly')}">
+									<span class="focus-input100" data-placeholder="Username"></span>
 								</div>
 
 								<div class="wrap-input100 validate-input" data-validate="Enter password">

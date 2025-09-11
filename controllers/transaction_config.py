@@ -1,13 +1,18 @@
 import json
 from py4web import action, request, redirect, URL
 from ..common import db, session, T, flash
-
+from ..common_fn import check_role
 # -----------------------------
 # Index Page
 # -----------------------------
 @action('transaction_config/index')
 @action.uses("transaction_config/index.html", session, flash)
 def transaction_config_index():
+    task_id='transaction_config_view'
+    access_permission=check_role(task_id)  
+    if ((access_permission==False)):
+        flash.set("Access is Denied !", 'warning')
+        redirect (URL('dashboard','index'))
     return locals()
 
 
@@ -17,6 +22,11 @@ def transaction_config_index():
 @action('transaction_config/create')
 @action.uses("transaction_config/create.html", session, flash)
 def transaction_config_create():
+    task_id='transaction_config_create'
+    access_permission=check_role(task_id)  
+    if ((access_permission==False)):
+        flash.set("Access is Denied !", 'warning')
+        redirect (URL('dashboard','index'))
     # Example lists for dropdowns
     tr_type_list = ["Allocation", "Transfer", "Ownership Transfer", "Maintenance","Incident"]
     value_type_list = ["integer", "float", "string", "date", "dropdown","hidden"]
@@ -31,6 +41,11 @@ def transaction_config_create():
 @action('transaction_config/submit', method=['POST'])
 @action.uses(session, flash, db)
 def transaction_config_submit():
+    task_id='transaction_config_create'
+    access_permission=check_role(task_id)  
+    if ((access_permission==False)):
+        flash.set("Access is Denied !", 'warning')
+        redirect (URL('dashboard','index'))
     tr_type = (request.forms.get('tr_type') or '').strip()
 
     if not tr_type:
@@ -90,8 +105,13 @@ def transaction_config_submit():
 # Edit Page (GET)
 # -----------------------------
 @action('transaction_config/edit', method=['GET'])
-@action.uses(db, 'transaction_config/edit.html')
+@action.uses(db, 'transaction_config/edit.html',flash,session)
 def transaction_config_edit():
+    task_id='transaction_config_edit'
+    access_permission=check_role(task_id)  
+    if ((access_permission==False)):
+        flash.set("Access is Denied !", 'warning')
+        redirect (URL('dashboard','index'))
     q = request.query
     tr_type = q.get('id')
 
@@ -119,6 +139,11 @@ def transaction_config_edit():
 @action('transaction_config/update', method=['POST'])
 @action.uses(db, session, flash)
 def transaction_config_update():
+    task_id='transaction_config_edit'
+    access_permission=check_role(task_id)  
+    if ((access_permission==False)):
+        flash.set("Access is Denied !", 'warning')
+        redirect (URL('dashboard','index'))
     tr_type = request.forms.get('tr_type','').strip()
     if not tr_type:
         flash.set("Transaction Type is required.", "danger")
@@ -164,13 +189,14 @@ def transaction_config_update():
 
 
 
-
-
-# Get Distinct tr_type for Datatable
-# -----------------------------
 @action('transaction_config/get_data', method=['GET'])
-@action.uses(db)
+@action.uses(db,session,flash)
 def transaction_config_get_data():
+    task_id='transaction_config_view'
+    access_permission=check_role(task_id)  
+    if ((access_permission==False)):
+        flash.set("Access is Denied !", 'warning')
+        redirect (URL('dashboard','index'))
     q = request.query
     start, length = int(q.get('start', 0)), int(q.get('length', 15))
     sort_dir = q.get('order[0][dir]', 'desc').lower()

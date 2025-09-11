@@ -205,6 +205,7 @@
     </div>
   </div>
   <div class="layout has-sidebar fixed-sidebar fixed-header">
+    [[from apps.expense.common_fn import check_role]]
     [[include 'sidebar.html']]
 
     <div id="overlay" class="overlay"></div>
@@ -224,8 +225,8 @@
         <!--  -->
         <div class="content-body">
 
+          
           [[block content]]
-
           [[end]]
         </div>
 

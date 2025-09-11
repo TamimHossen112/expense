@@ -47,7 +47,7 @@ def get_asset_types():
 # Views
 # -----------------------------
 @action('requisition_org/index')
-@action.uses("requisition_org/index.html", session, flash)
+@action.uses("requisition_org/index.html", db, session, flash)
 def requisition_org_index():
     task_id='requisition_org_view'
     access_permission=check_role(task_id)  
@@ -220,7 +220,7 @@ def requisition_org_edit():
 # Update Endpoint (POST)
 # -----------------------------
 @action('requisition_org/update', method=['POST'])
-@action.uses(db, session, flash)  # <-- Added flash here
+@action.uses(db, session, flash)  
 def requisition_org_update():
 
     task_id='requisition_org_edit'

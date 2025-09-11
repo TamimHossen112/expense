@@ -6,7 +6,7 @@ from ..common_fn import check_role
 # Index Page
 # -----------------------------
 @action('transaction_config/index')
-@action.uses("transaction_config/index.html", session, flash)
+@action.uses("transaction_config/index.html", db, session, flash)
 def transaction_config_index():
     task_id='transaction_config_view'
     access_permission=check_role(task_id)  
@@ -20,7 +20,7 @@ def transaction_config_index():
 # Create Page
 # -----------------------------
 @action('transaction_config/create')
-@action.uses("transaction_config/create.html", session, flash)
+@action.uses("transaction_config/create.html", db, session, flash)
 def transaction_config_create():
     task_id='transaction_config_create'
     access_permission=check_role(task_id)  
@@ -38,6 +38,7 @@ def transaction_config_create():
 # -----------------------------
 # Create / Submit New Config
 # -----------------------------
+
 @action('transaction_config/submit', method=['POST'])
 @action.uses(session, flash, db)
 def transaction_config_submit():
@@ -186,7 +187,6 @@ def transaction_config_update():
     db.commit()
     flash.set("Transaction Config updated successfully.","success")
     redirect(URL('transaction_config','index'))
-
 
 
 @action('transaction_config/get_data', method=['GET'])

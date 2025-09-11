@@ -43,7 +43,7 @@ def get_vendor_or_redirect(vendor_id):
 # ---------------- Vendor Actions ---------------- #
 
 @action('vendor/index')
-@action.uses("vendor/index.html", session, flash)
+@action.uses("vendor/index.html", db, session, flash)
 def vendor_index():
     task_id='vendor_view'
     access_permission=check_role(task_id)  
@@ -51,16 +51,11 @@ def vendor_index():
         flash.set("Access is Denied !", 'warning')
         redirect (URL('login','index'))
 
-    # task_id='vendor_create'
-    # create_access_permission=check_role(task_id)
-    # task_id='vendor_edit'
-    # edit_access_permission=check_role(task_id)
-
     return locals()
 
 
 @action('vendor/create')
-@action.uses("vendor/create.html", session, flash)
+@action.uses("vendor/create.html", db, session, flash)
 def vendor_create():
     task_id='vendor_create'
     access_permission=check_role(task_id)  
@@ -72,7 +67,7 @@ def vendor_create():
 
 
 @action('vendor/submit', method=['POST'])
-@action.uses(db, session, T, flash)
+@action.uses(db, session, flash)
 def submit_vendor_data():
     task_id='vendor_create'
     access_permission=check_role(task_id)  
@@ -201,7 +196,7 @@ def get_vendor_data():
 
 
 @action('vendor/delete', method=['POST', 'GET'])
-@action.uses(db, session, T, flash)
+@action.uses(db, session, flash)
 def delete_vendor():
     task_id='vendor_delete'
     access_permission=check_role(task_id)  

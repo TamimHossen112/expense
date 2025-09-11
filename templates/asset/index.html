@@ -20,9 +20,29 @@
         <!-- Filter form -->
         <div class="col-md-9 mt-2">
             <div class="row" id="custom_form" style="display: none;">
-                <div class="col-md-8">
+                <div class="col-md-2 mb-2">
+                    <div class="">
+                        <select class="form-select form-select-sm select_custom" name="asset_type" placeholder="Select Type">
+                            <option value="">Select Asset Type</option>
+                        </select>    
+                    </div>
+                </div>
+                <div class="col-md-2 mb-2">
+                    <div class="">
+                        <select class="form-select form-select-sm select_custom" name="asset_brand" placeholder="Select Brand">
+                            <option value="">Select Asset Brand</option>
+                        </select>    
+                    </div>
+                </div>
+
+                <div class="col-md-2 mb-2">
 
                 </div>
+
+                <div class="col-md-2 mb-2">
+                    
+                </div>
+                
                 <div class="col-md-4 mb-2 d-flex justify-content-end">
                     <div class="me-2">
                         <button type="submit" id="submit" class="btn btn-sm btn-primary" style="width:90px;">
@@ -74,8 +94,31 @@
 [[block scripts]]
 <script>
     $(document).ready(function () {
+        // Toggle filter form
         $("#filter").click(function () {
             $("#custom_form").fadeToggle("slow");
+        });
+
+        // Load asset_type dynamically on first open
+        $("[name='asset_type']").one('select2:open', function() {
+            $.getJSON('/expense/default/get_asset_master_types', function(data) {
+                $("[name='asset_type']").select2({
+                    data: data.results,
+                    placeholder: "Select Type",
+                    allowClear: true
+                }).select2('open');
+            });
+        });
+
+        // Load asset_brand dynamically on first open
+        $("[name='asset_brand']").one('select2:open', function() {
+            $.getJSON('/expense/default/get_asset_master_brands', function(data) {
+                $("[name='asset_brand']").select2({
+                    data: data.results,
+                    placeholder: "Select Brand",
+                    allowClear: true
+                }).select2('open');
+            });
         });
 
         // Initialize DataTable
@@ -112,10 +155,8 @@
                 type: 'GET',
                 url: '[[=URL("asset", "get_data")]]',
                 data: function (d) {
-                    d.req_status = $("select[name='req_status']").val();
                     d.asset_type = $("select[name='asset_type']").val();
-                    d.emp_id = $("select[name='emp_id']").val();
-                    d.head_office = $("input[name='head_office']").val();
+                    d.asset_brand = $("select[name='asset_brand']").val();
                 },
                 dataSrc: 'data'
             },
@@ -126,22 +167,6 @@
                     }
                 },
                 { title: 'ID', data: 'asset_id', render: d => d ?? '-' },
-                // {
-                //     title: 'Status',
-                //     data: 'req_status',
-                //     render: function(data, type, row) {
-                //         const status = data?.toLowerCase() === 'approved' ? 'approved' : 'pending';
-                //         const colorClass = status === 'approved' ? 'bg-success' : 'bg-warning text-dark';
-                //         const text = status === 'approved' ? 'APPROVED' : 'PENDING';
-
-                //         return `<div style="display:flex; justify-content:center; align-items:center; height:100%;">
-                //                 <div class="badge ${colorClass} fw-bold" style="min-width: 60px; text-align:center; display:inline-block;">
-                //                     ${text}
-                //                 </div>
-                //                 </div>`;
-                //     }
-                // },
-
                 {
                     title: 'Asset Type',
                     data: null,
@@ -159,7 +184,6 @@
                     render: function(data, type, row) {
                         const emp_id = row.user_id ?? '';
                         const emp_name = row.user_name ?? '';
-                        // const designation = row.designation ?? '';
                         if (!emp_id && !emp_name) return '-';
                         return `${emp_id} | ${emp_name}`;
                     }
@@ -190,12 +214,11 @@
         // Filter reset
         $("#reset").click(function (e) {
             e.preventDefault();
-            $("select[name='req_status']").val(null).trigger('change')
             $("select[name='asset_type']").val(null).trigger('change');
-            $("select[name='emp_id']").val(null).trigger('change');
-            $("input[name='head_office']").val('').trigger('change');
+            $("select[name='asset_brand']").val(null).trigger('change');
             table.ajax.reload();
         });
     });
 </script>
 [[end]]
+

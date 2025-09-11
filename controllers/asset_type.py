@@ -5,7 +5,7 @@ from ..common import db, session, T, flash
 from ..common_fn import check_role
 
 @action('asset_type/index')
-@action.uses("asset_type/index.html",session, flash )
+@action.uses("asset_type/index.html",db,session, flash )
 def asset_type_index():
     task_id='asset_type_view'
     access_permission=check_role(task_id)  
@@ -16,7 +16,7 @@ def asset_type_index():
 
 
 @action('asset_type/create')
-@action.uses("asset_type/create.html", session, flash)
+@action.uses("asset_type/create.html", db,session, flash)
 def asset_type_create():
     task_id='asset_type_create'
     access_permission=check_role(task_id)  
@@ -141,7 +141,7 @@ def get_asset_type_data():
     )
 
 @action('asset_type/edit')
-@action.uses(db, session, T, flash, 'asset_type/edit.html')
+@action.uses(db, session, flash, 'asset_type/edit.html')
 def asset_edit():
     task_id = 'asset_type_edit'
     access_permission = check_role(task_id)  

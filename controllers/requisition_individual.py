@@ -55,7 +55,7 @@ def fetch_uploaded_files(trans_type, trans_id):
 # Views
 # -----------------------------
 @action('requisition_individual/index')
-@action.uses("requisition_individual/index.html", session, flash)
+@action.uses("requisition_individual/index.html", db, session, flash)
 def requisition_individual_index():
     task_id='requisition_individual_view'
     access_permission=check_role(task_id)  

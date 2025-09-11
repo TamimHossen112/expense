@@ -82,7 +82,7 @@ def validate_items(items):
 
 # ---------- Pages ----------
 @action('purchase/index')
-@action.uses("purchase/index.html", session, flash)
+@action.uses("purchase/index.html", db, session, flash)
 def purchase_index():
     task_id='purchase_view'
     access_permission=check_role(task_id)  
@@ -274,7 +274,6 @@ def purchase_submit():
         redirect(URL('purchase/create'))
 
     redirect(URL('purchase/index'))
-
 
 
 # ---------- Edit ----------

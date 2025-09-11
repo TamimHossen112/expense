@@ -53,7 +53,7 @@ def get_date(key):
 # ------------------ ENDPOINTS ------------------
 
 @action('asset/index')
-@action.uses("asset/index.html", session, flash)
+@action.uses("asset/index.html", db, session, flash)
 def asset_index():
     task_id='asset_view'
     access_permission=check_role(task_id)  
@@ -63,7 +63,7 @@ def asset_index():
     return locals()
 
 @action('asset/create')
-@action.uses("asset/create.html", session, flash)
+@action.uses("asset/create.html",db, session, flash)
 def asset_create():
     task_id='asset_create'
     access_permission=check_role(task_id)  
@@ -318,42 +318,39 @@ def asset_update():
 
     flash.set("Asset updated successfully!", "success")
     redirect(URL('asset/index'))
-
-
 @action('asset/get_data', method=['GET'])
-@action.uses(db,session,flash)
+@action.uses(db, session, flash)
 def asset_get_data():
-    task_id='asset_view'
-    access_permission=check_role(task_id)  
-    if ((access_permission==False)):
+    task_id = 'asset_view'
+    access_permission = check_role(task_id)
+    if not access_permission:
         flash.set("Access is Denied !", 'warning')
-        redirect (URL('dashboard','index'))
+        redirect(URL('dashboard', 'index'))
+
     params = request.query
-    asset_name = params.get('asset_name', '').strip()
+
+    # Filters
     asset_type = params.get('asset_type', '').strip()
-    asset_status = params.get('asset_status', '').strip()
-    user_name = params.get('user_name', '').strip()
+    asset_brand = params.get('asset_brand', '').strip()
 
     filters = []
-    placeholders = {}
-    if asset_name: 
-        filters.append("asset_name = :asset_name")
-        placeholders["asset_name"] = asset_name
-    if asset_type: 
-        filters.append("asset_type = :asset_type")
-        placeholders["asset_type"] = asset_type
-    if asset_status: 
-        filters.append("asset_status = :asset_status")
-        placeholders["asset_status"] = asset_status
-    if user_name: 
-        filters.append("user_name = :user_name")
-        placeholders["user_name"] = user_name
+    values = []
+
+    if asset_type:
+        filters.append("asset_type LIKE %s")
+        values.append(f"%{asset_type}%")
+
+    if asset_brand:
+        filters.append("asset_brand LIKE %s")
+        values.append(f"%{asset_brand}%")
 
     where_sql = " AND ".join(filters) if filters else "1=1"
 
+    # Paging
     start = int(params.get('start') or 0)
     length = int(params.get('length') or 15)
 
+    # Sorting
     sort_col_index = params.get('order[0][column]')
     if sort_col_index is None:
         sort_col_name, sort_dir = 'id', 'desc'
@@ -361,11 +358,14 @@ def asset_get_data():
         sort_col_index = int(sort_col_index)
         sort_col_name = params.get(f'columns[{sort_col_index}][data]') or 'id'
         sort_dir = params.get('order[0][dir]', 'desc').lower()
-        if sort_dir not in ['asc','desc']: sort_dir = 'desc'
+        if sort_dir not in ['asc', 'desc']:
+            sort_dir = 'desc'
 
+    # Count total rows
     total_sql = f"SELECT COUNT(*) AS total FROM asset WHERE {where_sql}"
-    total_rows = db.executesql(total_sql, placeholders=placeholders, as_dict=True)[0]['total']
+    total_rows = db.executesql(total_sql, values, as_dict=True)[0]['total']
 
+    # Main query
     base_sql = f"""
         SELECT id, asset_id, asset_type, asset_brand, asset_model,
                user_id, user_name, purchase_price, current_location,
@@ -377,8 +377,9 @@ def asset_get_data():
     if length != -1:
         base_sql += f" LIMIT {length} OFFSET {start}"
 
-    data = db.executesql(base_sql, placeholders=placeholders, as_dict=True)
+    data = db.executesql(base_sql, values, as_dict=True)
 
+    # Response for DataTables
     return dict(
         data=data,
         recordsTotal=total_rows,
@@ -386,8 +387,10 @@ def asset_get_data():
         draw=int(params.get('draw') or 1)
     )
 
+
+
 @action('asset/get_purchase_map')
-@action.uses(db)
+@action.uses(db,session,flash)
 def get_purchase_map():
     sql = """
         SELECT 
@@ -410,7 +413,7 @@ def get_purchase_map():
 
 
 @action('asset/get_purchase_details_map')
-@action.uses(db)
+@action.uses(db,session,flash)
 def get_purchase_details_map():
     purchase_head_id = str(request.params.get('purchase_head_id'))
 
@@ -472,13 +475,9 @@ def get_purchase_details_map():
 
 # 1. Get brands by asset type
 @action('asset/get_brands_by_type')
-@action.uses(db)
+@action.uses(db,session,flash)
 def get_brands_by_type():
-    task_id='asset_edit'
-    access_permission=check_role(task_id)  
-    if ((access_permission==False)):
-        flash.set("Access is Denied !", 'warning')
-        redirect (URL('dashboard','index'))
+    
     asset_type = request.query.get('asset_type')
     if not asset_type:
         return {"results": []}
@@ -492,14 +491,9 @@ def get_brands_by_type():
 
 # 2. Get models by brand + type
 @action('asset/get_models_by_brand')
-@action.uses(db)
+@action.uses(db,session,flash)
 def get_models_by_brand():
-    task_id='asset_edit'
-    access_permission=check_role(task_id)  
-    if ((access_permission==False)):
-        flash.set("Access is Denied !", 'warning')
-        redirect (URL('dashboard','index'))
-        
+
     asset_type = request.query.get('asset_type')
     asset_brand = request.query.get('asset_brand')
     if not asset_type or not asset_brand:

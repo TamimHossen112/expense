@@ -230,9 +230,11 @@
     const IMAGE_DOWNLOAD_API = "[[=IMAGE_DOWNLOAD_API]]";
     const EMPLOYEE_DETAILS_API = "[[=URL('default', 'get_employee_details')]]";
 
+    // Pre-filled docs from backend
     const existingDocs = JSON.parse('[[=XML(docs_json or "[]")]]'); 
     let uploadedFiles = JSON.parse(JSON.stringify(existingDocs));
 
+    // Pre-fill values from record
     const prefill_emp_id = '[[=record["emp_id"]]]';
     const prefill_emp_name = '[[=record["emp_name"]]]';
     const prefill_designation = '[[=record["designation"]]]';
@@ -244,19 +246,22 @@
     const prefill_license_issue = "[[=record.get('license_issue_date', '')]]";
     const prefill_license_expire = "[[=record.get('license_expire_date', '')]]";
 
+    // Populate table
     function populateTable(files) {
-        console.log(IMAGE_DOWNLOAD_API)
         const $tbody = $('#uploadedFilesTable tbody').empty();
         $.each(files, function (i, file) {
             const $row = $('<tr>').append(
                 $('<td>').text(file.doc_type),
                 $('<td>').text(file.file_name),
                 $('<td>').append(
-                    `<a href="${IMAGE_DOWNLOAD_API}/expense/${file.file_path}" class="btn btn-sm btn-primary me-1" target="_blank"><i class="fa-solid fa-download"></i></a>`,
-                    $('<button class="btn btn-sm btn-danger"><i class="fa-solid fa-trash"></i></button>').click(() => {
-                        uploadedFiles.splice(i, 1);
-                        populateTable(uploadedFiles);
-                    })
+                    `<a href="${IMAGE_DOWNLOAD_API}/expense/${file.file_path}" 
+                        class="btn btn-sm btn-primary me-1" target="_blank">
+                        <i class="fa-solid fa-download"></i></a>`,
+                    $('<button class="btn btn-sm btn-danger"><i class="fa-solid fa-trash"></i></button>')
+                        .click(() => {
+                            uploadedFiles.splice(i, 1);
+                            populateTable(uploadedFiles);
+                        })
                 )
             );
             $tbody.append($row);
@@ -269,7 +274,8 @@
         const $docTypeSelect = $('#doc_type');
 
         populateTable(uploadedFiles);
-        console.log(prefill_emp_id)
+
+        // Load employees
         $.getJSON(EMPLOYEE_DETAILS_API, function (employees) {
             if (prefill_emp_id) {
                 const $opt = $('<option>')
@@ -292,7 +298,6 @@
 
             $.each(employees, function (_, emp) {
                 if (emp.employee_id === prefill_emp_id) return;
-
                 const $opt = $('<option>')
                     .val(emp.employee_id)
                     .text(`${emp.employee_id} | ${emp.employee_name}`)
@@ -303,7 +308,6 @@
                         headOffice: emp.head_office,
                         joiningDate: emp.joining_date
                     });
-
                 $empSelect.append($opt);
             });
 
@@ -323,58 +327,86 @@
             $empSelect.trigger('change');
         });
 
-
+        // On employee change
         $empSelect.change(function () {
             const data = $(this).find('option:selected').data();
-            $('#emp_name').val(record.empName || '');
-            $('#designation').val(record.designation || '');
-            $('#tr_code').val(record.territoryCode || '');
-            $('#head_office').val(record.headOffice || '');
-            $('#joining_date, #joining_date_display').val(record.joiningDate || '');
+            $('#emp_name').val(data?.empName || '');
+            $('#designation').val(data?.designation || '');
+            $('#tr_code').val(data?.territoryCode || '');
+            $('#head_office').val(data?.headOffice || '');
+            $('#joining_date, #joining_date_display').val(data?.joiningDate || '');
         });
 
+        // Init date pickers
         if (window.flatpickr) {
             flatpickr("#license_issue_date", { dateFormat: "Y-m-d", defaultDate: prefill_license_issue || null });
             flatpickr("#license_expire_date", { dateFormat: "Y-m-d", defaultDate: prefill_license_expire || null });
         }
 
-        $('#uploadBtn').click(function () {
-            const file = $('#formFile')[0].files[0];
-            const docType = $docTypeSelect.val();
-            const docTypeText = $docTypeSelect.find('option:selected').val();
-            const $uploadStatus = $('#uploadStatus').text('').removeClass('text-danger text-success');
+        $('#uploadBtn').on('click', function () {
+            const $fileInput = $('#formFile');
+            const docType = $('#doc_type').val();
+            const $uploadStatus = $('#uploadStatus');
+            const $tableBody = $('#uploadedFilesTable tbody');
 
-            if (!docType || !file) return alert(!docType ? 'Select a document type.' : 'Choose a file.');
+            $uploadStatus.text('').removeClass('text-danger text-success');
 
+            if (!docType || !$fileInput[0].files.length) {
+                alert(!docType ? 'Select a document type.' : 'Choose a file.');
+                return;
+            }
+
+            const file = $fileInput[0].files[0];
             const formData = new FormData();
-            formrecord.append('upload_file', file);
+            formData.append('upload_file', file);
 
             $.ajax({
                 url: "[[=URL('requisition_individual','upload_expense_proxy')]]",
                 method: 'POST',
                 data: formData,
-                contentType: false,
                 processData: false,
-                success: function (resp) {
-                    if (resp.res_data) {
-                        uploadedFiles.push({
-                            doc_type: docTypeText,
+                contentType: false,
+                dataType: 'json'
+            })
+                .done(function (data) {
+                    if (data.res_data) {
+                        const uploadedFileData = {
+                            doc_type: docType,
                             file_name: file.name,
-                            file_path: resp.res_record.ret_str
-                        });
-                        populateTable(uploadedFiles);
-                        $('#formFile').val('');
-                        $docTypeSelect.val('').trigger('change');
+                            file_path: data.res_data.ret_str
+                        };
+                        uploadedFiles.push(uploadedFileData);
+
+                        const $row = $('<tr>').append(
+                            $('<td>').text(uploadedFileData.doc_type),
+                            $('<td>').text(uploadedFileData.file_name),
+                            $('<td>').append(
+                                $('<button>', { class: 'btn btn-sm btn-info me-1', html: '<i class="fa-solid fa-download"></i>' })
+                                    .on('click', function () {
+                                        window.open(`${IMAGE_DOWNLOAD_API}/expense/${uploadedFileData.file_path}`, '_blank');
+                                    }),
+                                $('<button>', { class: 'btn btn-sm btn-danger', html: '<i class="fa-solid fa-trash"></i>' })
+                                    .on('click', function () {
+                                        const index = uploadedFiles.indexOf(uploadedFileData);
+                                        if (index > -1) uploadedFiles.splice(index, 1);
+                                        $row.remove();
+                                    })
+                            )
+                        );
+                        $tableBody.append($row);
+
+                        $fileInput.val('');
+                        $('#doc_type').val('').trigger('change');
                     } else {
-                        $uploadStatus.text('Upload failed: ' + (resp.detail || 'Unknown error')).addClass('text-danger');
+                        $uploadStatus.text('Upload failed: ' + (data.detail || 'Unknown error')).addClass('text-danger');
                     }
-                },
-                error: function (xhr) {
-                    $uploadStatus.text('Upload error: ' + xhr.statusText).addClass('text-danger');
-                }
-            });
+                })
+                .fail(function (xhr, status, error) {
+                    $uploadStatus.text('Upload error: ' + error).addClass('text-danger');
+                });
         });
 
+        // Reset
         $('#uploadForm').on('reset', function () {
             setTimeout(() => {
                 $empSelect.val(prefill_emp_id).trigger('change');
@@ -386,6 +418,7 @@
             }, 50);
         });
 
+        // On form submit: include uploaded files
         $('#uploadForm').submit(function () {
             const $container = $('#uploadedFilesData').empty();
             $.each(uploadedFiles, function (i, file) {
@@ -407,6 +440,7 @@
     }
 </style>
 [[end]]
+
 
 
 

@@ -100,7 +100,7 @@ def transaction_submit():
     form = request.forms
 
     trans_type = request.query.get("type")
-    asset_id, asset_type = form.get("asset_id"), form.get("asset_type")
+    asset_id, asset_type, status = form.get("asset_id"), form.get("asset_type"), form.get("approve_status")
     if not asset_id or not asset_type:
         flash.set("Missing asset_id or asset_type")
         redirect(URL("transaction/index"))
@@ -108,7 +108,7 @@ def transaction_submit():
     db.executesql(
         f"""
         INSERT INTO tr_head (cid, trans_type, asset_id, asset_type, status, tr_date)
-        VALUES ('{cid}', '{trans_type}', '{asset_id}', '{asset_type}', 'pending', '{date.today()}')
+        VALUES ('{cid}', '{trans_type}', '{asset_id}', '{asset_type}', '{status}', '{date.today()}')
         """
     )
     head_id = db.executesql("SELECT LAST_INSERT_ID() AS id", as_dict=True)[0]['id']
@@ -122,7 +122,7 @@ def transaction_submit():
         value = form.get(key)
 
         if str(trans_type).lower() in ("allocation", "transfer"):
-            if key in ("allocation_status", "approval_status") and value == "approved":
+            if key in ("allocation_status", "approve_status") and value == "approved":
                 approval_flag = True
             if key == "emp_id" or key == "to_emp_id":
                 employee_id = value
@@ -318,6 +318,7 @@ def transaction_update():
 
     asset_id = form.get("asset_id")
     asset_type = form.get("asset_type")
+    status = form.get("approve_status")
     if not asset_id or not asset_type:
         flash.set("Missing asset_id or asset_type", "danger")
         redirect(URL("transaction/index", vars=dict(type=trans_type)))
@@ -335,7 +336,7 @@ def transaction_update():
         value = form.get(key)
 
         if str(trans_type).lower() in ("allocation", "transfer"):
-            if key in ("allocation_status", "approval_status") and value == "approved":
+            if key in ("allocation_status", "approve_status") and value == "approved":
                 approval_flag = True
             if key == "emp_id" or key == "to_emp_id":
                 employee_id = value
@@ -355,7 +356,7 @@ def transaction_update():
         "trans_type": trans_type,
         "asset_id": asset_id,
         "asset_type": asset_type,
-        "status": "pending",
+        "status": status,
         "tr_date": str(date.today())
     }
     for key, value in tr_head_fields.items():

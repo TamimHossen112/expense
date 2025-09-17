@@ -83,6 +83,18 @@
                             </div>
 
                             <div class="mb-2 custom_input">
+                                <label for="asset_color_display" class="form-label">
+                                    <strong>Asset Color <span class="is_required">*</span></strong>
+                                </label>
+                                <select class="form-select form-select-sm select_custom" id="asset_color" name="asset_color">
+                                    <option value="">Asset Color</option>
+                                    [[for asset_color in asset_color_list:]]
+                                        <option value="[[=asset_color]]" [[if str(asset_color) == str(selected_asset_color):]]selected[[pass]]>[[=asset_color]]</option>
+                                    [[pass]]
+                                </select>
+                            </div>
+
+                            <div class="mb-2 custom_input">
                                 <label for="purchase_price_display" class="form-label">
                                     <strong>Purchase Price</strong>
                                 </label>
@@ -106,6 +118,34 @@
                             </div>
 
                             <div class="mb-2 custom_input">
+                                <label for="registration_no" class="form-label"><strong>Registration No</strong></label>
+                                <input type="text" class="form-control form-control-sm" id="registration_no" name="registration_no" value="[[=record['reg_number']]]">
+                            </div>
+
+                            <div class="mb-2 custom_input">
+                                <label for="engine_no" class="form-label"><strong>Engine No</strong></label>
+                                <input type="text" class="form-control form-control-sm" id="engine_no" name="engine_no" value="[[=record['engine_number']]]">
+                            </div>
+
+                            <div class="mb-2 custom_input">
+                                <label for="engine_info" class="form-label"><strong>Engine Info</strong></label>
+                                <input type="text" class="form-control form-control-sm" id="engine_info" name="engine_info" value="[[=record['engine_info']]]">
+                            </div>
+                            
+                        </div>
+                    </div>
+
+                    <!-- Third column -->
+                    <div class="col-md-3">
+                        <div class="row">
+                            
+
+                            <div class="mb-2 custom_input">
+                                <label for="chasis_no" class="form-label"><strong>Chasis No</strong></label>
+                                <input type="text" class="form-control form-control-sm" id="chasis_no" name="chasis_no" value="[[=record['chassis_number']]]">
+                            </div>
+
+                            <div class="mb-2 custom_input">
                                 <label for="asset_condition" class="form-label"><strong>Asset Condition <span class="is_required">*</span></strong></label>
                                 <select class="form-select form-select-sm select_custom" id="asset_condition" name="asset_condition">
                                     <option value="">Asset Condition</option>
@@ -124,48 +164,8 @@
                                     [[pass]]
                                 </select>
                             </div>
-                        </div>
-                    </div>
 
-                    <!-- Third column -->
-                    <div class="col-md-3">
-                        <div class="row">
-                            <div class="mb-2 custom_input">
-                                <label for="registration_no" class="form-label"><strong>Registration No</strong></label>
-                                <input type="text" class="form-control form-control-sm" id="registration_no" name="registration_no" value="[[=record['reg_number']]]">
-                            </div>
-
-                            <div class="mb-2 custom_input">
-                                <label for="engine_no" class="form-label"><strong>Engine No</strong></label>
-                                <input type="text" class="form-control form-control-sm" id="engine_no" name="engine_no" value="[[=record['engine_number']]]">
-                            </div>
-
-                            <div class="mb-2 custom_input">
-                                <label for="engine_info" class="form-label"><strong>Engine Info</strong></label>
-                                <input type="text" class="form-control form-control-sm" id="engine_info" name="engine_info" value="[[=record['engine_info']]]">
-                            </div>
-
-                            <div class="mb-2 custom_input">
-                                <label for="chasis_no" class="form-label"><strong>Chasis No</strong></label>
-                                <input type="text" class="form-control form-control-sm" id="chasis_no" name="chasis_no" value="[[=record['chassis_number']]]">
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Fourth column -->
-                    <div class="col-md-3">
-                        <div class="row">
-                            <!-- ✅ User field as readonly input -->
-                            <div class="mb-2">
-                                <label for="emp_id_display" class="form-label"><strong>User</strong></label>
-                                <input type="text" 
-                                    class="form-control form-control-sm readonly-input" 
-                                    id="emp_id_display" 
-                                    value="[[=selected_emp]]" 
-                                    readonly>
-                                <input type="hidden" id="emp_id" name="emp_id" value="[[=selected_emp]]">
-                            </div>
-
+                            
 
                             <div class="mb-2 custom_input">
                                 <label for="current_location" class="form-label"><strong>Current Location</strong></label>
@@ -179,6 +179,24 @@
                                     <i class="fa fa-calendar calendar-icon text-secondary calendar-toggle"></i>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- Fourth column -->
+                    <div class="col-md-3">
+                        <div class="row">
+                            <!-- ✅ User field as readonly input -->
+
+                            <div class="mb-2">
+                                <label for="emp_id_display" class="form-label"><strong>Assigned Employee</strong></label>
+                                <input type="text" 
+                                    class="form-control form-control-sm readonly-input" 
+                                    id="emp_id_display" 
+                                    value="[[=selected_emp]]" 
+                                    readonly>
+                                <input type="hidden" id="emp_id" name="emp_id" value="[[=selected_emp]]">
+                            </div>
+
 
                             <div class=" mb-2 custom_input">
                                 <label for="owner" class="form-label"><strong>Owner <span class="is_required">*</span></strong></label>

@@ -175,6 +175,7 @@
                                 <th class="text-truncate" style="width: 100px;">Requisition Details</th>
                                 <th class="text-truncate" style="width: 120px;">Asset Brand</th>
                                 <th class="text-truncate" style="width: 100px;">Asset Model</th>
+                                <th class="text-truncate" style="width: 100px;">Asset Color</th>
                                 <th class="text-truncate" style="width: 80px;">Purchase Date</th>
                                 <th class="text-truncate" style="width: 80px;">Status</th>
                                 <th class="text-truncate" style="width: 40px;">Quantity</th>
@@ -276,6 +277,7 @@ $(document).ready(async function(){
                     asset_type: item.asset_type,
                     asset_brand: item.asset_brand,
                     asset_model: item.asset_model,
+                    asset_color: item.asset_color,
                     max_quantity: parseInt(item.max_quantity, 10) || 0
                 };
             });
@@ -363,6 +365,14 @@ $(document).ready(async function(){
                         [[pass]]
                     </select>
                 </td>
+                <td class="${inputClass}">
+                    <select class="form-select form-select-sm select_custom no-border-select2 asset_color_select" name="asset_color[]" required ${islocked}>
+                        <option value=""></option>
+                        [[for asset_color in asset_colors:]]
+                            <option value="[[=asset_color['text']]]">[[=asset_color['text']]]</option>
+                        [[pass]]
+                    </select>
+                </td>
                 <td class="${inputClass}"><input type="text" class="form-control form-control-sm datepicker no-border-input purchase_date_input" name="purchase_date[]" required ${islocked}></td>
                 <td class="${inputClass}">
                     <select class="form-select form-select-sm select_custom no-border-select2 receive_status" required ${islocked}>
@@ -392,6 +402,7 @@ $(document).ready(async function(){
             $row.find(".asset_type_select").val(data.asset_type).trigger('change');
             $row.find(".asset_brand_select").val(data.asset_brand).trigger('change');
             $row.find(".asset_model_select").val(data.asset_model).trigger('change');
+            $row.find(".asset_color_select").val(data.asset_color).trigger('change');
             $row.find(".receive_status").val(data.receive_status).trigger('change');
             $row.find("input.purchase_date_input").flatpickr().setDate(data.purchase_date, true);
             if(data.received_date) $row.find("input.received_date_input").flatpickr().setDate(data.received_date, true);
@@ -462,6 +473,22 @@ $(document).ready(async function(){
                 } catch(err) { console.error("Failed to fetch models:", err); }
             }
         }); 
+
+        $row.find(".asset_model_select").on("change", async function() {
+            const $tr = $(this).closest("tr");
+            const asset_type = $tr.find(".asset_type_select").val();
+            const asset_brand = $tr.find(".asset_brand_select").val();
+            const asset_model = $(this).val();
+            $tr.find(".asset_color_select").empty().append('<option value=""></option>');
+            if(asset_type && asset_brand && asset_model) {
+                try {
+                    const res = await $.getJSON("/expense/asset/get_colors_by_model", { asset_type, asset_brand, asset_model });
+                    res.results.forEach(color => {
+                        $tr.find(".asset_color_select").append(`<option value="${color}">${color}</option>`);
+                    });
+                } catch(err) { console.error("Failed to fetch models:", err); }
+            }
+        }); 
     }
 
     const style = document.createElement('style');
@@ -501,6 +528,7 @@ $(document).ready(async function(){
                 asset_type: $tr.find(".asset_type_select").val() || "",
                 asset_brand: $tr.find(".asset_brand_select").val() || "",
                 asset_model: $tr.find(".asset_model_select").val() || "",
+                asset_color: $tr.find(".asset_color_select").val() || "",
                 purchase_date: $tr.find("input.purchase_date_input").val() || "",
                 receive_status: $tr.find("select.receive_status").val() || "",
                 received_date: $tr.find("input.received_date_input").val() || "",

@@ -28,7 +28,7 @@
                 <div class="row">
 
                     <!-- Asset Type -->
-                    <div class="col-md-4 mb-3">
+                    <div class="col-md-3 mb-3">
                         <label for="asset_type" class="form-label">
                             <strong>Asset Type <span class="is_required">*</span></strong>
                         </label>
@@ -41,7 +41,7 @@
                     </div>
 
                     <!-- Asset Brand -->
-                    <div class="col-md-4 mb-3">
+                    <div class="col-md-3 mb-3">
                         <label for="asset_brand" class="form-label">
                             <strong>Asset Brand <span class="is_required">*</span></strong>
                         </label>
@@ -54,7 +54,7 @@
                     </div>
 
                     <!-- Asset Model -->
-                    <div class="col-md-4 mb-3">
+                    <div class="col-md-3 mb-3">
                         <label for="asset_model" class="form-label">
                             <strong>Asset Model <span class="is_required">*</span></strong>
                         </label>
@@ -66,8 +66,20 @@
                         </select>
                     </div>
 
+                    <div class="col-md-3 mb-3">
+                        <label for="asset_model" class="form-label">
+                            <strong>Asset Color <span class="is_required">*</span></strong>
+                        </label>
+                        <select class="form-select form-select-sm select_custom" id="asset_color" name="asset_color">
+                            <option value="">Select Asset Color</option>
+                            [[for asset_color in asset_colors:]]
+                                <option value="[[=asset_color]]">[[=asset_color]]</option>
+                            [[pass]]
+                        </select>
+                    </div>
+
                     <!-- Description -->
-                    <div class="col-md-4 mb-3">
+                    <div class="col-md-3 mb-3">
                         <label for="asset_desc" class="form-label">
                             <strong>Description (Max 1000 Characters)</strong>
                         </label>
@@ -77,7 +89,7 @@
                     </div>
 
                     <!-- Status -->
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <div class="mb-3">
                             <label for="status" class="form-label">Status</label>
                             <div class="form-check">
@@ -119,7 +131,7 @@
 <script>
 $(document).ready(function () {
     // Enable Select2 with tags:true
-    $('#asset_type, #asset_brand, #asset_model').select2({
+    $('#asset_type, #asset_brand, #asset_model, #asset_color').select2({
         tags: true,
         width: '100%',
         placeholder: "Select or add new"

@@ -31,7 +31,7 @@
                         <select class="form-select form-select-sm select_custom" id="org_name" name="org_name" required>
                             <option value="">Select Organization</option>
                             [[for org in organizations:]]
-                                <option value="[[=org]]">[[=org]]</option>
+                                <option value="[[=org]]" [[if org==cid:]] selected [[pass]]>[[=org]]</option>
                             [[pass]]
                         </select>
 

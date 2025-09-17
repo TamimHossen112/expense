@@ -51,6 +51,7 @@ def check_user():
                 res_data = response.json()
                 if res_data.get('status') == 'success':
                     session['status'] = "success"
+                    session['cid'] = res_data.get('cid')
                     session['user_id'] = res_data.get('user_id')
                     session['username'] = res_data.get('username')
                     session['email'] = res_data.get('email')

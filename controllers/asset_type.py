@@ -26,12 +26,13 @@ def asset_type_create():
     asset_types = [row.asset_type for row in db(db.asset_master).select(db.asset_master.asset_type, distinct=True)]
     asset_brands = [row.asset_brand for row in db(db.asset_master).select(db.asset_master.asset_brand, distinct=True)]
     asset_models = [row.asset_model for row in db(db.asset_master).select(db.asset_master.asset_model, distinct=True)]
-
+    asset_colors = [row.asset_color for row in db(db.asset_master).select(db.asset_master.asset_color, distinct=True)]                 
     # Pass them to template
     return dict(
         asset_types=asset_types,
         asset_brands=asset_brands,
-        asset_models=asset_models
+        asset_models=asset_models,
+        asset_colors = asset_colors
     )
 
 
@@ -47,6 +48,7 @@ def asset_type_submit():
     asset_type = (request.forms.get('asset_type') or '').strip()
     asset_brand = (request.forms.get('asset_brand') or '').strip()
     asset_model = (request.forms.get('asset_model') or '').strip()
+    asset_color = (request.forms.get('asset_color') or '').strip()
     asset_desc = (request.forms.get('asset_desc') or '').strip()
     asset_status = request.forms.get('status')
     asset_status = 'active' if asset_status == 'active' else 'inactive'
@@ -60,22 +62,27 @@ def asset_type_submit():
     if not asset_model:
         flash.set("Asset Model is required.", 'warning')
         redirect(URL('asset_type/create'))
+    if not asset_color:
+        flash.set("Asset Color is required.", 'warning')
+        redirect(URL('asset_type/create'))
 
     try:
         exists = db(
             (db.asset_master.asset_type == asset_type) &
             (db.asset_master.asset_brand == asset_brand) &
-            (db.asset_master.asset_model == asset_model)
+            (db.asset_master.asset_model == asset_model) &
+            (db.asset_master.asset_color == asset_color)
         ).select().first()
 
         if exists:
-            flash.set("This Asset Type + Brand + Model already exists.", 'warning')
+            flash.set("This Asset Type + Brand + Model + Color already exists.", 'warning')
             redirect(URL('asset_type/create'))
 
         db.asset_master.insert(
             asset_type=asset_type.upper(),
             asset_brand=asset_brand,
             asset_model=asset_model,
+            asset_color= asset_color,
             asset_desc=asset_desc,
             status=asset_status
         )
@@ -99,14 +106,16 @@ def get_asset_type_data():
         redirect (URL('dashboard','index'))
     asset_type = request.query.get('asset_type', '').strip()
     asset_brand = request.query.get('asset_brand', '').strip()
-
+    asset_color = request.query.get('asset_color', '').strip()
 
     where_clauses = ["1=1"]
     if asset_type:
         where_clauses.append("asset_type LIKE '%{}%'".format(asset_type.replace("'", "''")))
     if asset_brand:
         where_clauses.append("asset_brand LIKE '%{}%'".format(asset_brand.replace("'", "''")))
-
+    if asset_color:
+        where_clauses.append("asset_color LIKE '%{}%'".format(asset_color.replace("'", "''")))
+        
     where_sql = " AND ".join(where_clauses)
 
     start = int(request.query.get('start') or 0)
@@ -122,7 +131,7 @@ def get_asset_type_data():
     total_rows = db.executesql(total_sql, as_dict=True)[0]['total']
 
     base_sql = f"""
-        SELECT id, status, asset_type, asset_brand, asset_model, asset_desc
+        SELECT id, status, asset_type, asset_brand, asset_model, asset_color, asset_desc
         FROM asset_master
         WHERE {where_sql}
         ORDER BY {sort_col_name} {sort_dir}
@@ -173,11 +182,12 @@ def asset_edit():
 @action('asset_type/update', method=['POST'])
 @action.uses(db, session, flash)
 def asset_update():
-    task_id='asset_type_edit'
-    access_permission=check_role(task_id)  
-    if ((access_permission==False)):
+    task_id = 'asset_type_edit'
+    access_permission = check_role(task_id)
+    if not access_permission:
         flash.set("Access is Denied !", 'warning')
-        redirect (URL('dashboard','index'))
+        redirect(URL('dashboard', 'index'))
+
     record_id = request.query.get('id')
     if not record_id:
         flash.set('Missing ID', 'danger')
@@ -185,16 +195,37 @@ def asset_update():
 
     form_data = request.forms
 
+    asset_type = (form_data.get('asset_type') or '').strip()
+    asset_brand = (form_data.get('asset_brand') or '').strip()
+    asset_model = (form_data.get('asset_model') or '').strip()
+    asset_color = (form_data.get('asset_color') or '').strip()
+    asset_desc = (form_data.get('asset_desc') or '').strip()
+
     # Get status from form (default to 'inactive' if not provided)
-    asset_type_status = request.forms.get('status', 'inactive').strip()
+    asset_type_status = form_data.get('status', 'inactive').strip()
     if asset_type_status not in ['active', 'inactive']:
         asset_type_status = 'inactive'
 
+    # ✅ Duplicate check (exclude current record)
+    exists = db(
+        (db.asset_master.asset_type == asset_type) &
+        (db.asset_master.asset_brand == asset_brand) &
+        (db.asset_master.asset_model == asset_model) &
+        (db.asset_master.asset_color == asset_color) &
+        (db.asset_master.id != record_id)   # <-- Exclude current record
+    ).select().first()
+
+    if exists:
+        flash.set("This Asset Type + Brand + Model + Color already exists.", 'warning')
+        redirect(URL('asset_type/edit', vars=dict(id=record_id)))
+
+    # ✅ Perform update
     db(db.asset_master.id == record_id).update(
-        asset_type=form_data.get('asset_type'),
-        asset_brand=form_data.get('asset_brand'),
-        asset_model=form_data.get('asset_model'),
-        asset_desc=form_data.get('asset_desc'),
+        asset_type=asset_type.upper(),
+        asset_brand=asset_brand,
+        asset_model=asset_model,
+        asset_color=asset_color,
+        asset_desc=asset_desc,
         status=asset_type_status
     )
 
@@ -225,12 +256,13 @@ def asset_delete():
         used_count = db(
             (db.purchase_details.asset_type == record.asset_type) &
             (db.purchase_details.asset_brand == record.asset_brand) &
-            (db.purchase_details.asset_model == record.asset_model)
+            (db.purchase_details.asset_model == record.asset_model) &
+            (db.purchase_details.asset_color == record.asset_color) 
         ).count()
 
         if used_count > 0:
             flash.set(
-                f"Cannot delete '{record.asset_type} | {record.asset_brand} | {record.asset_model}' "
+                f"Cannot delete '{record.asset_type} | {record.asset_brand} | {record.asset_model} | {record.asset_color}' "
                 f"because it is used in {used_count} purchase.",
                 'warning'
             )

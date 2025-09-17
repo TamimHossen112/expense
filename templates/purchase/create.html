@@ -138,6 +138,7 @@
                                 <th class="text-truncate" style="width: 100px;">Requisition Details</th>
                                 <th class="text-truncate" style="width: 120px;">Asset Brand</th>
                                 <th class="text-truncate" style="width: 100px;">Asset Model</th>
+                                <th class="text-truncate" style="width: 100px;">Asset Color</th>
                                 <th class="text-truncate" style="width: 80px;">Purchase Date</th>
                                 <th class="text-truncate" style="width: 80px;">Status</th>
                                 <th class="text-truncate" style="width: 40px;">Quantity</th>
@@ -304,6 +305,11 @@ $(document).ready(async function () {
                         <option value="">Select</option>
                     </select>
                 </td>
+                <td>
+                    <select class="form-select form-select-sm select_custom asset_color_select" required>
+                        <option value="">Select</option>
+                    </select>
+                </td>
                 <td><input type="text" class="form-control form-control-sm datepicker purchase_date_input"></td>
                 <td>
                     <select class="form-select form-select-sm select_custom receive_status" required>
@@ -387,6 +393,23 @@ $(document).ready(async function () {
                 $modelSelect.val(null).trigger('change');
             } catch(e) { console.error(e); }
         });
+
+
+        $row.find(".asset_model_select").on("change", async function() {
+            const $tr = $(this).closest("tr");
+            const type = $tr.find(".asset_type_select").val();
+            const brand = $tr.find(".asset_brand_select").val();
+            const model = $(this).val();
+            if(!type || !brand || !model) return;
+
+            try {
+                const res = await $.getJSON("/expense/asset/get_colors_by_model", { asset_type: type, asset_brand: brand, asset_model : model });
+                const $colorSelect = $tr.find(".asset_color_select");
+                $colorSelect.empty().append('<option value="">Select</option>');
+                res.results.forEach(m => $colorSelect.append(`<option value="${m}">${m}</option>`));
+                $colorSelect.val(null).trigger('change');
+            } catch(e) { console.error(e); }
+        });
     }
 
     $("<style>")
@@ -424,6 +447,7 @@ $(document).ready(async function () {
                 asset_type: $tr.find(".asset_type_select").val(),
                 asset_brand: $tr.find(".asset_brand_select").val(),
                 asset_model: $tr.find(".asset_model_select").val(),
+                asset_color: $tr.find(".asset_color_select").val(),
                 purchase_date: $tr.find("input.purchase_date_input").val(),
                 receive_status: $tr.find(".receive_status").val(),
                 quantity: $tr.find("input.quantity_input").val(),

@@ -217,4 +217,3 @@ auth.enable(uses=(session, T, db), env=dict(T=T))
 unauthenticated = ActionFactory(db, session, T, flash, auth)
 authenticated = ActionFactory(db, session, T, flash, auth.user)
 
-

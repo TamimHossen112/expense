@@ -110,7 +110,8 @@ def purchase_create():
         receive_status=get_combo_list("receive_status"),
         asset_types=get_distinct_field_list(db.asset_master.asset_type),
         asset_brands=get_distinct_field_list(db.asset_master.asset_brand),
-        asset_models=get_distinct_field_list(db.asset_master.asset_model)
+        asset_models=get_distinct_field_list(db.asset_master.asset_model),
+
     )
 
 # ---------- Submit ----------
@@ -244,6 +245,7 @@ def purchase_submit():
                 'asset_type': item.get('asset_type'),
                 'asset_brand': item.get('asset_brand'),
                 'asset_model': item.get('asset_model'),
+                'asset_color' : item.get('asset_color'),
                 'receive_status': status,
                 'purchase_date': parse_date(item.get('purchase_date')),
                 'received_date': parse_date(item.get('received_date')),
@@ -317,6 +319,7 @@ def purchase_edit():
             asset_type=pi.asset_type,
             asset_brand=pi.asset_brand,
             asset_model=pi.asset_model,
+            asset_color=getattr(pi, 'asset_color', ' '), 
             purchase_date=pi.purchase_date.isoformat() if pi.purchase_date else None,
             receive_status=pi.receive_status,
             received_date=pi.received_date.isoformat() if pi.received_date else None,
@@ -336,6 +339,7 @@ def purchase_edit():
         asset_types=get_distinct_field_list(db.asset_master.asset_type),
         asset_brands=get_distinct_field_list(db.asset_master.asset_brand),
         asset_models=get_distinct_field_list(db.asset_master.asset_model),
+        asset_colors=get_distinct_field_list(db.asset_master.asset_color),
         payment_type_combos=get_combo_list("payment_type"),
         payment_status_combos=get_combo_list("payment_status"),
         receive_status=get_combo_list("purchase_status"),
@@ -462,6 +466,7 @@ def purchase_update():
                 'asset_type': item.get('asset_type'),
                 'asset_brand': item.get('asset_brand'),
                 'asset_model': item.get('asset_model'),
+                'asset_color' : item.get('asset_color'),
                 'receive_status': status,
                 'purchase_date': parse_date(item.get('purchase_date')),
                 'received_date': parse_date(item.get('received_date')),

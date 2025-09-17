@@ -53,7 +53,7 @@
                                     </select>
                                 </div>
                                 <div class="col-md-6 mb-2">
-                                    <label for="purchase_details_import" class="form-label"><strong>Purchase Detail ID | Type | Brand | Model | Available</strong></label>
+                                    <label for="purchase_details_import" class="form-label"><strong>Purchase Detail ID | Type | Brand | Model | Color | Available</strong></label>
                                     <select id="purchase_details_import" class="form-select form-select-sm select_custom text-primary custom-select-primary">
                                         <option value="" selected disabled hidden>Click to load assets</option>
                                     </select>
@@ -108,6 +108,18 @@
                             </div>
 
                             <div class="mb-2">
+                                <label for="asset_color" class="form-label"><strong>Asset Color <span class="is_required">*</span></strong></label>
+                                <select class="form-select form-select-sm select_custom" id="asset_color" name="asset_color">
+                                    <option value="">Select Asset Color</option>
+                                    [[for asset_color in asset_color_list:]]
+                                        <option value="[[=asset_color]]">
+                                            [[=asset_color]]
+                                        </option>
+                                    [[pass]]
+                                </select>
+                            </div>
+
+                            <div class="mb-2">
                                 <label for="purchase_price" class="form-label"><strong>Purchase Price <span class="is_required">*</span></strong></label>
                                 <input type="number" class="form-control form-control-sm" id="purchase_price" name="purchase_price">
                             </div>
@@ -125,6 +137,45 @@
                             <div class="mb-2">
                                 <label for="asset_model_year" class="form-label"><strong>Asset Model Year</strong></label>
                                 <input type="text" class="form-control form-control-sm" id="asset_model_year" name="asset_model_year">
+                            </div>
+
+                            <div class="mb-2">
+                                <label for="registration_no" class="form-label"><strong>Registration No</strong></label>
+                                <input type="text" class="form-control form-control-sm" id="registration_no" name="registration_no">
+                            </div>
+
+                            <div class="mb-2">
+                                <label for="engine_no" class="form-label"><strong>Engine No</strong></label>
+                                <input type="text" class="form-control form-control-sm" id="engine_no" name="engine_no">
+                            </div>
+
+                            <div class=" mb-2">
+                                <label for="engine_info" class="form-label"><strong>Engine Info</strong></label>
+                                <input type="text" class="form-control form-control-sm" id="engine_info" name="engine_info">
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <div class="row">
+                            
+                            <div class="mb-2">
+                                <label for="chasis_no" class="form-label"><strong>Chasis No</strong></label>
+                                <input type="text" class="form-control form-control-sm" id="chasis_no" name="chasis_no">
+                            </div>
+
+                            <div class="mb-2">
+                                <label for="current_location" class="form-label"><strong>Current Location</strong></label>
+                                <input type="text" class="form-control form-control-sm" id="current_location" name="current_location">
+                            </div>
+
+                            <div class="mb-2">
+                                <label for="first_issue_date" class="form-label"><strong>First Issue Date</strong></label>
+                                <div class="flatpickr-wrapper">
+                                    <input type="text" class="date-picker" id="first_issue_date" name="first_issue_date" placeholder="First Issue Date">
+                                    <i class="fa fa-calendar calendar-icon text-secondary calendar-toggle"></i>
+                                </div>
                             </div>
 
                             <div class="mb-2">
@@ -150,50 +201,12 @@
                                     [[pass]]
                                 </select>
                             </div>
-
                         </div>
                     </div>
 
                     <div class="col-md-3">
                         <div class="row">
-                            <div class="mb-2">
-                                <label for="registration_no" class="form-label"><strong>Registration No</strong></label>
-                                <input type="text" class="form-control form-control-sm" id="registration_no" name="registration_no">
-                            </div>
-
-                            <div class="mb-2">
-                                <label for="engine_no" class="form-label"><strong>Engine No</strong></label>
-                                <input type="text" class="form-control form-control-sm" id="engine_no" name="engine_no">
-                            </div>
-
-                            <div class=" mb-2">
-                                <label for="engine_info" class="form-label"><strong>Engine Info</strong></label>
-                                <input type="text" class="form-control form-control-sm" id="engine_info" name="engine_info">
-                            </div>
-
-                            <div class="mb-2">
-                                <label for="chasis_no" class="form-label"><strong>Chasis No</strong></label>
-                                <input type="text" class="form-control form-control-sm" id="chasis_no" name="chasis_no">
-                            </div>
-
-                        </div>
-                    </div>
-
-                    <div class="col-md-3">
-                        <div class="row">
-                            <div class="mb-2">
-                                <label for="current_location" class="form-label"><strong>Current Location</strong></label>
-                                <input type="text" class="form-control form-control-sm" id="current_location" name="current_location">
-                            </div>
-
-                            <div class="mb-2">
-                                <label for="first_issue_date" class="form-label"><strong>First Issue Date</strong></label>
-                                <div class="flatpickr-wrapper">
-                                    <input type="text" class="date-picker" id="first_issue_date" name="first_issue_date" placeholder="First Issue Date">
-                                    <i class="fa fa-calendar calendar-icon text-secondary calendar-toggle"></i>
-                                </div>
-                            </div>
-
+                            
                             <div class="mb-2">
                                 <label for="owner" class="form-label"><strong>Owner</strong></label>
                                 <select class="form-select form-select-sm select_custom" id="owner" name="owner">
@@ -279,7 +292,7 @@ $(document).ready(function() {
                 resp.results.forEach(function(item) {
                     $detailsDropdown.append($('<option>', { 
                         value: item.purchase_details_id, 
-                        text: `${item.purchase_details_id ?? ''} | ${item.asset_type ?? ''} | ${item.asset_brand ?? ''} | ${item.asset_model ?? ''} | ${item.available_to_create ?? ''}` 
+                        text: `${item.purchase_details_id ?? ''} | ${item.asset_type ?? ''} | ${item.asset_brand ?? ''} | ${item.asset_model ?? ''} | ${item.asset_color ?? ''} | ${item.available_to_create ?? ''}` 
                     }));
                 });
             });
@@ -302,6 +315,9 @@ $(document).ready(function() {
 
             $('#asset_model').html(`<option value="${selectedItem.asset_model}">${selectedItem.asset_model}</option>`)
                 .val(selectedItem.asset_model);
+
+            $('#asset_color').html(`<option value="${selectedItem.asset_color}">${selectedItem.asset_color}</option>`)
+                .val(selectedItem.asset_color);
 
             $('#purchase_price').val(selectedItem.item_price);
 

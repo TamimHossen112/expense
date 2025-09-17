@@ -74,13 +74,15 @@ def asset_create():
     distinct_fields = get_distinct_master_fields([
         db.asset_master.asset_type, 
         db.asset_master.asset_brand, 
-        db.asset_master.asset_model
+        db.asset_master.asset_model,
+        db.asset_master.asset_color
     ])
     
     return dict(
         asset_type_list=distinct_fields.get('asset_type', []),
         asset_brand_list=distinct_fields.get('asset_brand', []),
         asset_model_list=distinct_fields.get('asset_model', []),
+        asset_color_list = distinct_fields.get('asset_color',[]),
         asset_status_list=get_combo_values("asset_status"),
         asset_condition_list=get_combo_values("asset_condition"),
         owner_list=get_combo_values("organizations")
@@ -101,6 +103,7 @@ def asset_submit():
         asset_type = (form.get("asset_type") or "").strip()
         asset_brand = (form.get("asset_brand") or "").strip()
         asset_model = (form.get("asset_model") or "").strip()
+        asset_color = (form.get("asset_color") or "").strip()
         purchase_price_raw = (form.get("purchase_price") or "").strip()
         asset_model_year = (form.get("asset_model_year") or "").strip()
         asset_status = (form.get("asset_status") or "").strip()
@@ -122,6 +125,7 @@ def asset_submit():
         if not asset_type: errors.append("Asset Type is required")
         if not asset_brand: errors.append("Asset Brand is required")
         if not asset_model: errors.append("Asset Model is required")
+        if not asset_color: errors.append("Asset Color is required")
         if not purchase_price_raw: errors.append("Purchase Price is required")
         if errors:
             flash.set(" | ".join(errors), "warning", sanitize=True)
@@ -157,6 +161,7 @@ def asset_submit():
             asset_type=asset_type,
             asset_brand=asset_brand,
             asset_model=asset_model,
+            asset_color= asset_color,
             purchase_price=purchase_price,
             asset_name=asset_name,
             asset_id=asset_code,
@@ -205,7 +210,7 @@ def asset_edit():
         redirect(URL('asset/index'))
 
     sql_asset = f"""
-        SELECT asset_type, asset_brand, asset_model, purchase_price,
+        SELECT asset_type, asset_brand, asset_model, asset_color, purchase_price,
                asset_name, asset_desc, model_year, asset_status, asset_condition,
                owner, reg_number, engine_number, engine_info, chassis_number,
                first_issue_date, current_location, user_id, user_name
@@ -224,11 +229,13 @@ def asset_edit():
     asset_type_list = [r['asset_type'] for r in db.executesql("SELECT DISTINCT asset_type FROM asset_master WHERE asset_type IS NOT NULL", as_dict=True)]
     asset_brand_list = [r['asset_brand'] for r in db.executesql("SELECT DISTINCT asset_brand FROM asset_master WHERE asset_brand IS NOT NULL", as_dict=True)]
     asset_model_list = [r['asset_model'] for r in db.executesql("SELECT DISTINCT asset_model FROM asset_master WHERE asset_model IS NOT NULL", as_dict=True)]
-
+    asset_color_list = [r['asset_color'] for r in db.executesql("SELECT DISTINCT asset_color FROM asset_master WHERE asset_color IS NOT NULL", as_dict=True)]
+    
     return dict(
         selected_asset_type = main_row['asset_type'] or "",
         selected_asset_brand = main_row['asset_brand'] or "",
         selected_asset_model = main_row['asset_model'] or "",
+        selected_asset_color = main_row['asset_color'] or "",
         selected_emp = selected_emp,
         selected_asset_status = main_row['asset_status'] or "",
         selected_asset_condition = main_row['asset_condition'] or "",
@@ -236,6 +243,7 @@ def asset_edit():
         asset_type_list = asset_type_list,
         asset_brand_list = asset_brand_list,
         asset_model_list = asset_model_list,
+        asset_color_list = asset_color_list,
         asset_status_list = get_combo_values("asset_status"),
         asset_condition_list = get_combo_values("asset_condition"),
         owner_list = get_combo_values("organizations"),
@@ -288,6 +296,9 @@ def asset_update():
         errors.append("Asset Model is required.")
     if not get_text('purchase_price'):
         errors.append("Purchase Price is required.")    
+    
+    if not get_text('asset_color'):
+        errors.append("Asset Color is required.")
 
     if errors:
         flash.set(' | '.join(errors), "warning")
@@ -299,6 +310,7 @@ def asset_update():
         asset_brand=get_text('asset_brand'),
         asset_model=get_text('asset_model'),
         asset_name=get_text('asset_name'),
+        asset_color = get_text('asset_color'),
         asset_desc=get_text('asset_desc'),
         model_year=get_text('asset_model_year'),
         reg_number=get_text('registration_no'),
@@ -318,6 +330,8 @@ def asset_update():
 
     flash.set("Asset updated successfully!", "success")
     redirect(URL('asset/index'))
+
+
 @action('asset/get_data', method=['GET'])
 @action.uses(db, session, flash)
 def asset_get_data():
@@ -425,6 +439,7 @@ def get_purchase_details_map():
             pd.asset_type,
             pd.asset_brand,
             pd.asset_model,
+            pd.asset_color,
             pd.item_price,
             pd.quantity
         FROM purchase_details pd
@@ -464,6 +479,7 @@ def get_purchase_details_map():
                 'purchase_head_id': row['purchase_head_id'],
                 'asset_type': row['asset_type'],
                 'asset_brand': row['asset_brand'],
+                'asset_color': row['asset_color'],
                 'asset_model': row['asset_model'],
                 'item_price': row['item_price'],
                 'available_to_create': available_to_create
@@ -506,5 +522,25 @@ def get_models_by_brand():
 
     models = [row.asset_model for row in rows if row.asset_model]
     return {"results": models}
+
+
+@action('asset/get_colors_by_model')
+@action.uses(db,session,flash)
+def get_colors_by_model():
+
+    asset_type = request.query.get('asset_type')
+    asset_brand = request.query.get('asset_brand')
+    asset_model = request.query.get('asset_model')
+    if not asset_type or not asset_brand or not asset_model:
+        return {"results": []}
+
+    rows = db(
+        (db.asset_master.asset_type == asset_type) &
+        (db.asset_master.asset_brand == asset_brand)&
+        (db.asset_master.asset_model == asset_model) 
+    ).select(db.asset_master.asset_color, distinct=True)
+
+    colors = [row.asset_color for row in rows if row.asset_color]
+    return {"results": colors}
 
 

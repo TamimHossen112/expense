@@ -65,10 +65,18 @@ def requisition_org_create():
     if ((access_permission==False)):
         flash.set("Access is Denied !", 'warning')
         redirect (URL('dashboard','index'))
+
+    organizations=get_combo_values("organizations")
+    organization_list=organizations
+    cid = str(session.get('cid'))
+    if session.get('role') not in ['sysadmin']:        
+        organization_list = [org for org in organizations if org == cid]
+
     return dict(
         requisition_status_combos=get_combo_values("requisition_status"),
         asset_types=get_asset_types(),
-        organizations=get_combo_values("organizations"),
+        organizations=organization_list,
+        cid=cid
     )
 
 
@@ -203,15 +211,20 @@ def requisition_org_edit():
 
     requisition = rows[0]
 
+    organizations=get_combo_values("organizations")
+    organization_list=organizations
+    cid = str(session.get('cid'))
+    if session.get('role') not in ['sysadmin']:        
+        organization_list = [org for org in organizations if org == cid]
+
     return dict(
         status="success",
         requisition=requisition,
-        organizations=get_combo_values("organizations"),
         asset_type_list=[r['text'] for r in get_asset_types()],
         requisition_status_combos=get_combo_values("requisition_status"),
         selected_asset_type=requisition['asset_type'],
         selected_org=requisition['org_name'],
-        org_list=get_combo_values("organizations"),
+        org_list=organization_list,
         selected_requisition_status=requisition['req_status']
     )
 

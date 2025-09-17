@@ -78,7 +78,7 @@ def requisition_individual_create():
         IMAGE_DOWNLOAD_API=IMAGE_DOWNLOAD_API,
         doc_type_combos=get_combo_values("requisition_doc_type"),
         requisition_status_combos=get_combo_values("requisition_status"),
-        asset_types=get_asset_types()
+        asset_types=get_asset_types(),
     )
 
 

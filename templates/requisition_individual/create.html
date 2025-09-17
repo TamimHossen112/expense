@@ -48,8 +48,14 @@
                                     </select>
                                 </div>
 
-                                    <input type="hidden" class="form-control form-control-sm" id="emp_name" name="emp_name" readonly>
+                                <input type="hidden" class="form-control form-control-sm" id="emp_name" name="emp_name" readonly>
 
+                                <div class="mb-2">
+                                    <label for="emp_category" class="form-label">Employee Category</label>
+                                    <input type="text" class="form-control form-control-sm" id="emp_category" name="emp_category" readonly>
+                                </div>
+
+                                
                                 <div class="mb-2">
                                     <label for="designation" class="form-label">Designation</label>
                                     <input type="text" class="form-control form-control-sm" id="designation" name="designation" readonly>
@@ -61,7 +67,7 @@
                                 </div>
 
                                 <div class="mb-2">
-                                    <label for="head_office" class="form-label">Head Office</label>
+                                    <label for="head_office" class="form-label">Location</label>
                                     <input type="text" class="form-control form-control-sm" id="head_office" name="head_office" readonly>
                                 </div>
 
@@ -227,6 +233,7 @@
                     );
                     $(option).data({
                         empName: emp.employee_name,
+                        empCategory: emp.employee_category,
                         designation: emp.designation,
                         territoryCode: emp.territory_code,
                         headOffice: emp.head_office,
@@ -246,13 +253,11 @@
             });
 
 
-        
-
-
         // ✅ On Employee change -> Fill fields
         $('#emp_id').on('change', function () {
             const $option = $(this).find(':selected');
             $('#emp_name').val($option.data('empName') || '');
+            $('#emp_category').val($option.data('empCategory') || '');
             $('#designation').val($option.data('designation') || '');
             $('#tr_code').val($option.data('territoryCode') || '');
             $('#head_office').val($option.data('headOffice') || '');

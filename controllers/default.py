@@ -157,6 +157,13 @@ def get_asset_master_brands():
     return dict(results=results)
 
 
+@action("default/get_asset_master_colors")
+@action.uses(db)
+def get_asset_master_colors():
+    colors = db(db.asset_master.asset_color != None).select(db.asset_master.asset_color, distinct=True).as_list()
+    results = [{"id": row["asset_color"], "text": row["asset_color"]} for row in colors if row["asset_color"]]
+    return dict(results=results)
+
 
 
 
@@ -203,7 +210,8 @@ def get_transfer_asset_details(asset_id=None):
     placeholders = ",".join(["%s"] * len(asset_ids))
     rows = db.executesql(
         f"""
-        SELECT asset_id, asset_type, asset_model, asset_brand, asset_name, user_id, first_issue_date
+        SELECT asset_id, asset_type, asset_model, asset_brand, asset_name, user_id, 
+            first_issue_date,asset_color,reg_number, engine_number, chassis_number
         FROM asset
         WHERE asset_id IN ({placeholders})
         """,
@@ -222,6 +230,10 @@ def get_transfer_asset_details(asset_id=None):
         "asset_name": row.get("asset_name") or "",
         "asset_model": row.get("asset_model") or "",
         "asset_brand": row.get("asset_brand") or "",
+        "asset_color": row.get("asset_color") or "",
+        "asset_eng_no": row.get("engine_number") or "",
+        "asset_chassis_no": row.get("chassis_number") or "",
+        "asset_reg_no": row.get("reg_number") or "",
         "first_issue_date": safe_date(row.get("first_issue_date")),
         "using_from": row.get("using_from") or "",
         "from_emp_id": "",
@@ -253,11 +265,6 @@ def get_transfer_asset_details(asset_id=None):
 
 @action("default/get_transaction_assets")
 def get_transaction_assets():
-    """
-    Unified endpoint:
-    - ?id=XYZ → return single asset details (existing internal format)
-    - no id → return list for Select2 [{id, text}, ...]
-    """
     asset_id = request.query.get("id")
 
     if asset_id:

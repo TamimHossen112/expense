@@ -35,9 +35,14 @@
                     </div>
                 </div>
 
-                <div class="col-md-2">
-
+                <div class="col-md-2 mb-2">
+                    <div class="">
+                        <select class="form-select form-select-sm select_custom" name="asset_color" placeholder="Select Color">
+                            <option value="">Select Asset Color</option>
+                        </select>    
+                    </div>
                 </div>
+
                 <div class="col-md-2">
 
                 </div>
@@ -118,6 +123,17 @@ $(document).ready(function() {
         });
     });
 
+    $("[name='asset_color']").one('select2:open', function() {
+        $.getJSON('/expense/default/get_asset_master_colors', function(data) {
+            $("[name='asset_color']").select2({
+                data: data.results,
+                placeholder: "Select Color",
+                allowClear: true,
+                tags: true
+            }).select2('open');
+        });
+    });
+
     var table = $('#myTable').DataTable({
         dom: "Bfrt<'d-flex justify-content-between'<l><i><p>>",
         buttons: [{
@@ -145,6 +161,7 @@ $(document).ready(function() {
             data: function (d) {
                 d.asset_type = $("select[name='asset_type']").val();
                 d.asset_brand = $("select[name='asset_brand']").val();
+                d.asset_color = $("select[name='asset_color']").val();
             },
             dataSrc: 'data'
         },
@@ -171,6 +188,7 @@ $(document).ready(function() {
             { title: 'Asset Type', data: 'asset_type', render: d => d ?? '-' },
             { title: 'Asset Brand', data: 'asset_brand', render: d => d ?? '-' },
             { title: 'Asset Model', data: 'asset_model', render: d => d ?? '-' },
+            { title: 'Asset Color', data: 'asset_color', render: d => d ?? '-'},
             { 
                 title: 'Description', 
                 data: 'asset_desc', 
@@ -198,6 +216,7 @@ $(document).ready(function() {
         e.preventDefault();
         $("select[name='asset_type']").val(null).trigger('change');
         $("select[name='asset_brand']").val(null).trigger('change');
+        $("select[color='asset_color']").val(null).trigger('change');
         table.ajax.reload();
     });
 });

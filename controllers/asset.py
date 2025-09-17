@@ -109,6 +109,7 @@ def asset_submit():
         asset_status = (form.get("asset_status") or "").strip()
         asset_condition = (form.get("asset_condition") or "").strip()
         reg_number = (form.get("registration_no") or "").strip()
+        reg_date = (form.get("registration_date") or "").strip()
         engine_number = (form.get("engine_no") or "").strip()
         engine_info = (form.get("engine_info") or "").strip()
         chassis_number = (form.get("chasis_no") or "").strip()
@@ -169,6 +170,7 @@ def asset_submit():
             asset_status=asset_status,
             asset_condition=asset_condition,
             reg_number=reg_number,
+            registration_date = reg_date,
             engine_number=engine_number,
             engine_info=engine_info,
             chassis_number=chassis_number,
@@ -213,7 +215,7 @@ def asset_edit():
         SELECT asset_type, asset_brand, asset_model, asset_color, purchase_price,
                asset_name, asset_desc, model_year, asset_status, asset_condition,
                owner, reg_number, engine_number, engine_info, chassis_number,
-               first_issue_date, current_location, user_id, user_name
+               first_issue_date, current_location, user_id, user_name, registration_date
         FROM asset
         WHERE id = {asset_id}
     """
@@ -251,14 +253,16 @@ def asset_edit():
     )
 
 
+from datetime import datetime
+
 @action('asset/update', method=['POST'])
 @action.uses(db, session, flash)
 def asset_update():
     task_id='asset_edit'
     access_permission=check_role(task_id)  
-    if ((access_permission==False)):
+    if not access_permission:
         flash.set("Access is Denied !", 'warning')
-        redirect (URL('dashboard','index'))
+        redirect(URL('dashboard','index'))
 
     asset_id_code = request.forms.get('id')
     if not asset_id_code:
@@ -283,6 +287,7 @@ def asset_update():
         except ValueError:
             return None
 
+
     # Extract employee ID and name
     emp_id, user_name = parse_employee(get_text('emp_id'))
 
@@ -296,7 +301,6 @@ def asset_update():
         errors.append("Asset Model is required.")
     if not get_text('purchase_price'):
         errors.append("Purchase Price is required.")    
-    
     if not get_text('asset_color'):
         errors.append("Asset Color is required.")
 
@@ -310,10 +314,11 @@ def asset_update():
         asset_brand=get_text('asset_brand'),
         asset_model=get_text('asset_model'),
         asset_name=get_text('asset_name'),
-        asset_color = get_text('asset_color'),
+        asset_color=get_text('asset_color'),
         asset_desc=get_text('asset_desc'),
         model_year=get_text('asset_model_year'),
         reg_number=get_text('registration_no'),
+        registration_date=get_date('registration_date'),
         engine_number=get_text('engine_no'),
         engine_info=get_text('engine_info'),
         chassis_number=get_text('chasis_no'),
@@ -330,6 +335,7 @@ def asset_update():
 
     flash.set("Asset updated successfully!", "success")
     redirect(URL('asset/index'))
+
 
 
 @action('asset/get_data', method=['GET'])
@@ -383,7 +389,8 @@ def asset_get_data():
     base_sql = f"""
         SELECT id, asset_id, asset_type, asset_brand, asset_model,
                user_id, user_name, purchase_price, current_location,
-               asset_condition, first_issue_date, asset_status
+               asset_condition, first_issue_date, asset_status,
+               registration_date,asset_color
         FROM asset
         WHERE {where_sql}
         ORDER BY {sort_col_name} {sort_dir}

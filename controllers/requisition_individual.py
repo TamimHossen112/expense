@@ -145,11 +145,12 @@ def parse_uploaded_files():
 @action('requisition_individual/submit', method=['POST'])
 @action.uses(db, session, flash)
 def requisition_individual_submit():
-    task_id='requisition_individual_create'
-    access_permission=check_role(task_id)  
-    if ((access_permission==False)):
+    task_id = 'requisition_individual_create'
+    access_permission = check_role(task_id)  
+    if not access_permission:
         flash.set("Access is Denied !", 'warning')
-        redirect (URL('dashboard','index'))
+        redirect(URL('dashboard', 'index'))
+
     asset_type = request.forms.get('asset_type')
     emp_id = request.forms.get('emp_id')
     emp_name = request.forms.get('emp_name')
@@ -164,7 +165,7 @@ def requisition_individual_submit():
 
     uploaded_files = parse_uploaded_files()
 
-    # Validation (quantity is NOT required, always set to 1)
+    # ---------- Validation ----------
     required_fields = {
         "Asset Type": asset_type,
         "Employee ID": emp_id,
@@ -178,6 +179,13 @@ def requisition_individual_submit():
     if missing_fields:
         flash.set("The following fields are required: " + ", ".join(missing_fields), 'warning')
         redirect(URL('requisition_individual/create'))
+
+    # ---------- Extra Validation (if approved) ----------
+    if requisition_status.strip().lower() == "approved":
+        existing_asset = db(db.asset.user_id == emp_id).select().first()
+        if existing_asset:
+            flash.set(f"{emp_name} already has an assigned Vehicle. Cannot create approved requisition.", "warning")
+            redirect(URL('requisition_individual/create'))
 
     try:
         req_code = generate_requisition_code(asset_type)
@@ -218,14 +226,15 @@ def requisition_individual_submit():
         redirect(URL('requisition_individual/create'))
 
 
+
 @action('requisition_individual/update', method=["POST"])
 @action.uses(db, session, flash)
 def requisition_individual_update():
-    task_id='requisition_individual_edit'
-    access_permission=check_role(task_id)  
-    if ((access_permission==False)):
+    task_id = 'requisition_individual_edit'
+    if not check_role(task_id):
         flash.set("Access is Denied !", 'warning')
-        redirect (URL('dashboard','index'))
+        redirect(URL('dashboard', 'index'))
+
     req_id = request.query.get('id') or request.forms.get('id')
     if not req_id:
         flash.set("Missing requisition ID.", 'danger')
@@ -237,11 +246,13 @@ def requisition_individual_update():
         flash.set("Invalid requisition ID.", 'danger')
         redirect(URL('requisition_individual/index'))
 
+    emp_id = request.forms.get('emp_id')
+    emp_name = request.forms.get('emp_name')
     requisition_status = request.forms.get('requisition_status')
 
-    # Validate required fields (quantity excluded)
+    # ---------- Validation ----------
     required_fields = {
-        "Employee ID": request.forms.get('emp_id'),
+        "Employee ID": emp_id,
         "Asset Type": request.forms.get('asset_type'),
         "Joining Date": request.forms.get('joining_date'),
         "License Issue Date": request.forms.get('license_issue_date'),
@@ -259,9 +270,19 @@ def requisition_individual_update():
         flash.set("Requisition ID not found.", 'danger')
         redirect(URL('requisition_individual/index'))
 
-    # Update requisition
+    # ---------- Extra Validation (if approved) ----------
+    if requisition_status.strip().lower() == "approved":
+        existing_asset = db(db.asset.user_id == emp_id).select().first()
+        if existing_asset:
+            flash.set(
+                f"{emp_name} already has an assigned Vehicle. Cannot approve requisition.",
+                "warning"
+            )
+            redirect(URL('requisition_individual/index'))
+
+    # ---------- Update ----------
     db(db.requisition.id == req_id).update(
-        emp_id=request.forms.get('emp_id'),
+        emp_id=emp_id,
         emp_name=request.forms.get('emp_name'),
         designation=request.forms.get('designation'),
         tr_code=request.forms.get('tr_code'),
@@ -272,7 +293,7 @@ def requisition_individual_update():
         license_expire_date=request.forms.get('license_expire_date'),
         asset_type=request.forms.get('asset_type'),
         req_status=requisition_status,
-        quantity=1 
+        quantity=1
     )
 
     # Replace uploaded files
@@ -284,7 +305,7 @@ def requisition_individual_update():
             doc_type=f.get('doc_type'),
             file_name=f.get('file_name'),
             file_path=f.get('file_path'),
-            ref_emp_id=request.forms.get('emp_id')
+            ref_emp_id=emp_id
         )
 
     flash.set("Requisition updated successfully.", "success")

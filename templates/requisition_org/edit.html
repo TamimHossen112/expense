@@ -74,11 +74,35 @@
 
                     <div class="col-md-3 col-sm-12">
                         <div class="mb-2 custom_input">
-                            <label for="asset_type" class="form-label">Asset Type <span class="is_required">*</span></label>
-                            <select class="form-select form-select-sm select_custom" name="asset_type" style="width: 200px;" placeholder="Select Asset" required>
-                                <option value="">Select Asset Type</option>
+                            <label for="asset_type" class="form-label">Vehicle Type <span class="is_required">*</span></label>
+                            <select class="form-select form-select-sm select_custom" name="asset_type" style="width: 200px;" placeholder="Select Asset Type" required>
+                                <option value="">Select Vehicle Type</option>
                                 [[for asset_type in asset_type_list:]]
                                     <option value="[[=asset_type]]" [[if str(asset_type) ==str(selected_asset_type):]]Selected[[pass]]> [[=asset_type]] </option>
+                                [[pass]]
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="col-md-3 col-sm-12">
+                        <div class="mb-2 custom_input">
+                            <label for="asset_brand" class="form-label">Vehicle Brand <span class="is_required">*</span></label>
+                            <select class="form-select form-select-sm select_custom" name="asset_brand" style="width: 200px;" placeholder="Select Asset Brand" required>
+                                <option value="">Select Vehicle Brand</option>
+                                [[for asset_brand in asset_brand_list:]]
+                                    <option value="[[=asset_brand]]" [[if str(asset_brand) ==str(selected_asset_brand):]]Selected[[pass]]> [[=asset_brand]] </option>
+                                [[pass]]
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="col-md-3 col-sm-12">
+                        <div class="mb-2 custom_input">
+                            <label for="asset_model" class="form-label">Vehicle Model <span class="is_required">*</span></label>
+                            <select class="form-select form-select-sm select_custom" name="asset_model" style="width: 200px;" placeholder="Select Asset Model" required>
+                                <option value="">Select Vehicle Brand</option>
+                                [[for asset_model in asset_model_list:]]
+                                    <option value="[[=asset_model]]" [[if str(asset_model) ==str(selected_asset_model):]]Selected[[pass]]> [[=asset_model]] </option>
                                 [[pass]]
                             </select>
                         </div>

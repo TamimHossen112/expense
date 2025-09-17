@@ -48,10 +48,10 @@
                         <div class="row">
                             <div class="mb-2 custom_input">
                                 <label for="asset_type_display" class="form-label">
-                                    <strong>Asset Type <span class="is_required">*</span></strong>
+                                    <strong>Vehicle Type <span class="is_required">*</span></strong>
                                 </label>
                                 <select class="form-select form-select-sm select_custom" id="asset_type" name="asset_type">
-                                    <option value="">Asset Type</option>
+                                    <option value="">Vehicle Type</option>
                                     [[for asset_type in asset_type_list:]]
                                         <option value="[[=asset_type]]" [[if str(asset_type) == str(selected_asset_type):]]selected[[pass]]>[[=asset_type]]</option>
                                     [[pass]]
@@ -60,10 +60,10 @@
 
                             <div class="mb-2 custom_input">
                                 <label for="asset_brand_display" class="form-label">
-                                    <strong>Asset Brand <span class="is_required">*</span></strong>
+                                    <strong>Vehicle Brand <span class="is_required">*</span></strong>
                                 </label>
                                 <select class="form-select form-select-sm select_custom" id="asset_brand" name="asset_brand">
-                                    <option value="">Asset Brand</option>
+                                    <option value="">Vehicle Brand</option>
                                     [[for asset_brand in asset_brand_list:]]
                                         <option value="[[=asset_brand]]" [[if str(asset_brand) == str(selected_asset_brand):]]selected[[pass]]>[[=asset_brand]]</option>
                                     [[pass]]
@@ -72,10 +72,10 @@
 
                             <div class="mb-2 custom_input">
                                 <label for="asset_model_display" class="form-label">
-                                    <strong>Asset Model <span class="is_required">*</span></strong>
+                                    <strong>Vehicle Model <span class="is_required">*</span></strong>
                                 </label>
                                 <select class="form-select form-select-sm select_custom" id="asset_model" name="asset_model">
-                                    <option value="">Asset Model</option>
+                                    <option value="">Vehicle Model</option>
                                     [[for asset_model in asset_model_list:]]
                                         <option value="[[=asset_model]]" [[if str(asset_model) == str(selected_asset_model):]]selected[[pass]]>[[=asset_model]]</option>
                                     [[pass]]
@@ -84,10 +84,10 @@
 
                             <div class="mb-2 custom_input">
                                 <label for="asset_color_display" class="form-label">
-                                    <strong>Asset Color <span class="is_required">*</span></strong>
+                                    <strong>Vehicle Color <span class="is_required">*</span></strong>
                                 </label>
                                 <select class="form-select form-select-sm select_custom" id="asset_color" name="asset_color">
-                                    <option value="">Asset Color</option>
+                                    <option value="">Vehicle Color</option>
                                     [[for asset_color in asset_color_list:]]
                                         <option value="[[=asset_color]]" [[if str(asset_color) == str(selected_asset_color):]]selected[[pass]]>[[=asset_color]]</option>
                                     [[pass]]
@@ -108,12 +108,12 @@
                     <div class="col-md-3">
                         <div class="row">
                             <div class="mb-2 custom_input">
-                                <label for="asset_name" class="form-label"><strong>Asset Name</strong></label>
+                                <label for="asset_name" class="form-label"><strong>Vehicle Name</strong></label>
                                 <input type="text" class="form-control form-control-sm" id="asset_name" name="asset_name" value="[[=record['asset_name']]]">
                             </div>
 
                             <div class="mb-2 custom_input">
-                                <label for="asset_model_year" class="form-label"><strong>Asset Model Year</strong></label>
+                                <label for="asset_model_year" class="form-label"><strong>Vehicle Model Year</strong></label>
                                 <input type="text" class="form-control form-control-sm" id="asset_model_year" name="asset_model_year" value="[[=record['model_year']]]">
                             </div>
 
@@ -145,31 +145,13 @@
                                 <input type="text" class="form-control form-control-sm" id="chasis_no" name="chasis_no" value="[[=record['chassis_number']]]">
                             </div>
 
-                            <div class="mb-2 custom_input">
-                                <label for="asset_condition" class="form-label"><strong>Asset Condition <span class="is_required">*</span></strong></label>
-                                <select class="form-select form-select-sm select_custom" id="asset_condition" name="asset_condition">
-                                    <option value="">Asset Condition</option>
-                                    [[for asset_condition in asset_condition_list:]]
-                                        <option value="[[=asset_condition]]" [[if str(asset_condition) ==str(selected_asset_condition):]]Selected[[pass]]> [[=asset_condition]] </option>
-                                    [[pass]]
-                                </select>
-                            </div>
-
-                            <div class=" mb-2 custom_input">
-                                <label for="asset_status" class="form-label"><strong>Asset Status <span class="is_required">*</span></strong></label>
-                                <select class="form-select form-select-sm select_custom" id="asset_status" name="asset_status">
-                                    <option value="">Asset Status</option>
-                                    [[for asset_status in asset_status_list:]]
-                                        <option value="[[=asset_status]]" [[if str(asset_status) ==str(selected_asset_status):]]Selected[[pass]]> [[=asset_status]] </option>
-                                    [[pass]]
-                                </select>
-                            </div>
-
-                            
 
                             <div class="mb-2 custom_input">
-                                <label for="current_location" class="form-label"><strong>Current Location</strong></label>
-                                <input type="text" class="form-control form-control-sm" id="current_location" name="current_location" value="[[=record['current_location']]]">
+                                <label for="registration_date" class="form-label"><strong>Registration Date <span class="is_required">*</span></strong></label>
+                                <div class="flatpickr-wrapper">
+                                    <input type="text" class="date-picker" id="registration_date" name="registration_date" placeholder="Registration Date" value="[[=record['registration_date']]]">
+                                    <i class="fa fa-calendar calendar-icon text-secondary calendar-toggle"></i>
+                                </div>
                             </div>
 
                             <div class="mb-2 custom_input">
@@ -179,6 +161,26 @@
                                     <i class="fa fa-calendar calendar-icon text-secondary calendar-toggle"></i>
                                 </div>
                             </div>
+
+                            <div class=" mb-2 custom_input">
+                                <label for="asset_status" class="form-label"><strong>Vehicle Status <span class="is_required">*</span></strong></label>
+                                <select class="form-select form-select-sm select_custom" id="asset_status" name="asset_status">
+                                    <option value="">Asset Status</option>
+                                    [[for asset_status in asset_status_list:]]
+                                        <option value="[[=asset_status]]" [[if str(asset_status) ==str(selected_asset_status):]]Selected[[pass]]> [[=asset_status]] </option>
+                                    [[pass]]
+                                </select>
+                            </div>
+
+                            <div class="mb-2 custom_input">
+                                <label for="asset_condition" class="form-label"><strong>Vehicle Condition <span class="is_required">*</span></strong></label>
+                                <select class="form-select form-select-sm select_custom" id="asset_condition" name="asset_condition">
+                                    <option value="">Asset Condition</option>
+                                    [[for asset_condition in asset_condition_list:]]
+                                        <option value="[[=asset_condition]]" [[if str(asset_condition) ==str(selected_asset_condition):]]Selected[[pass]]> [[=asset_condition]] </option>
+                                    [[pass]]
+                                </select>
+                            </div>
                         </div>
                     </div>
 
@@ -186,6 +188,11 @@
                     <div class="col-md-3">
                         <div class="row">
                             <!-- ✅ User field as readonly input -->
+                            
+                            <div class="mb-2 custom_input">
+                                <label for="current_location" class="form-label"><strong>Current Location</strong></label>
+                                <input type="text" class="form-control form-control-sm" id="current_location" name="current_location" value="[[=record['current_location']]]">
+                            </div>
 
                             <div class="mb-2">
                                 <label for="emp_id_display" class="form-label"><strong>Assigned Employee</strong></label>

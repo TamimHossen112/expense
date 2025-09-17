@@ -168,6 +168,7 @@ db.define_table('asset',
     Field('current_location', 'string', length=255),
     Field('asset_condition', 'string', length=100),
     Field('first_issue_date', 'date'),
+    Field('registration_date','date'),
     Field('asset_status', 'string', length=100),
     signature,
     migrate=False

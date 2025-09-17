@@ -72,9 +72,9 @@
                      <div class="col-md-3">
                         <div class="row">
                             <div class="mb-2">
-                                <label for="asset_type" class="form-label"><strong>Asset Type <span class="is_required">*</span></strong></label>
+                                <label for="asset_type" class="form-label"><strong>Vehicle Type <span class="is_required">*</span></strong></label>
                                 <select class="form-select form-select-sm select_custom" id="asset_type" name="asset_type">
-                                    <option value="">Select Asset Type</option>
+                                    <option value="">Select Vehicle Type</option>
                                     [[for asset_type in asset_type_list:]]
                                         <option value="[[=asset_type]]">
                                             [[=asset_type]]
@@ -84,9 +84,9 @@
                             </div>
 
                             <div class="mb-2">
-                                <label for="asset_brand" class="form-label"><strong>Asset Brand <span class="is_required">*</span></strong></label>
+                                <label for="asset_brand" class="form-label"><strong>Vehicle Brand <span class="is_required">*</span></strong></label>
                                 <select class="form-select form-select-sm select_custom" id="asset_brand" name="asset_brand">
-                                    <option value="">Select Asset Brand</option>
+                                    <option value="">Select Vehicle Brand</option>
                                     [[for asset_brand in asset_brand_list:]]
                                         <option value="[[=asset_brand]]">
                                             [[=asset_brand]]
@@ -96,9 +96,9 @@
                             </div>
 
                             <div class="mb-2">
-                                <label for="asset_model" class="form-label"><strong>Asset Model <span class="is_required">*</span></strong></label>
+                                <label for="asset_model" class="form-label"><strong>Vehicle Model <span class="is_required">*</span></strong></label>
                                 <select class="form-select form-select-sm select_custom" id="asset_model" name="asset_model">
-                                    <option value="">Select Asset Model</option>
+                                    <option value="">Select Vehicle Model</option>
                                     [[for asset_model in asset_model_list:]]
                                         <option value="[[=asset_model]]">
                                             [[=asset_model]]
@@ -108,9 +108,9 @@
                             </div>
 
                             <div class="mb-2">
-                                <label for="asset_color" class="form-label"><strong>Asset Color <span class="is_required">*</span></strong></label>
+                                <label for="asset_color" class="form-label"><strong>Vehicle Color <span class="is_required">*</span></strong></label>
                                 <select class="form-select form-select-sm select_custom" id="asset_color" name="asset_color">
-                                    <option value="">Select Asset Color</option>
+                                    <option value="">Select Vehicle Color</option>
                                     [[for asset_color in asset_color_list:]]
                                         <option value="[[=asset_color]]">
                                             [[=asset_color]]
@@ -130,12 +130,12 @@
                         <div class="row">
 
                             <div class="mb-2">
-                                <label for="asset_name" class="form-label"><strong>Asset Name</strong></label>
+                                <label for="asset_name" class="form-label"><strong>Vehicle Name</strong></label>
                                 <input type="text" class="form-control form-control-sm" id="asset_name" name="asset_name">
                             </div>
 
                             <div class="mb-2">
-                                <label for="asset_model_year" class="form-label"><strong>Asset Model Year</strong></label>
+                                <label for="asset_model_year" class="form-label"><strong>Vehicle Model Year</strong></label>
                                 <input type="text" class="form-control form-control-sm" id="asset_model_year" name="asset_model_year">
                             </div>
 
@@ -165,9 +165,13 @@
                                 <input type="text" class="form-control form-control-sm" id="chasis_no" name="chasis_no">
                             </div>
 
+
                             <div class="mb-2">
-                                <label for="current_location" class="form-label"><strong>Current Location</strong></label>
-                                <input type="text" class="form-control form-control-sm" id="current_location" name="current_location">
+                                <label for="registration_date" class="form-label"><strong>Registration Date</strong></label>
+                                <div class="flatpickr-wrapper">
+                                    <input type="text" class="date-picker" id="registration_date" name="registration_date" placeholder="Registration Date">
+                                    <i class="fa fa-calendar calendar-icon text-secondary calendar-toggle"></i>
+                                </div>
                             </div>
 
                             <div class="mb-2">
@@ -179,7 +183,7 @@
                             </div>
 
                             <div class="mb-2">
-                                <label for="asset_status" class="form-label"><strong>Asset Status</strong></label>
+                                <label for="asset_status" class="form-label"><strong>Vehicle Status</strong></label>
                                 <select class="form-select form-select-sm select_custom" id="asset_status" name="asset_status">
                                     <option value="">Select Asset Status</option>
                                     [[for asset_status in asset_status_list:]]
@@ -191,7 +195,7 @@
                             </div>
 
                             <div class="mb-2">
-                                <label for="asset_condition" class="form-label"><strong>Asset Condition</strong></label>
+                                <label for="asset_condition" class="form-label"><strong>Vehicle Condition</strong></label>
                                 <select class="form-select form-select-sm select_custom" id="asset_condition" name="asset_condition">
                                     <option value="">Select Asset Condition</option>
                                     [[for asset_condition in asset_condition_list:]]
@@ -207,6 +211,11 @@
                     <div class="col-md-3">
                         <div class="row">
                             
+                            <div class="mb-2">
+                                <label for="current_location" class="form-label"><strong>Current Location</strong></label>
+                                <input type="text" class="form-control form-control-sm" id="current_location" name="current_location">
+                            </div>
+
                             <div class="mb-2">
                                 <label for="owner" class="form-label"><strong>Owner</strong></label>
                                 <select class="form-select form-select-sm select_custom" id="owner" name="owner">
@@ -333,41 +342,41 @@ $(document).ready(function() {
         }
     });
 
-    $('#asset_type').on('change', function() {
-        if (!manualAssetChange) return;
-        const type = $(this).val();
-        if (type) {
-            $.getJSON("[[=URL('asset','get_brands_by_type')]]", { asset_type: type })
-                .done(function(resp) {
-                    const $brand = $('#asset_brand');
-                    $brand.empty().append('<option value="">Select Asset Brand</option>');
-                    resp.results.forEach(b => $brand.append($('<option>', { value: b, text: b })));
-                    $brand.val('').prop('disabled', false);
-                    $('#asset_model').empty().append('<option value="">Select Asset Model</option>').prop('disabled', false);
-                });
-        } else {
-            $('#asset_brand').empty().append('<option value="">Select Asset Brand</option>').prop('disabled', false);
-            $('#asset_model').empty().append('<option value="">Select Asset Model</option>').prop('disabled', false);
-        }
-    });
+    // $('#asset_type').on('change', function() {
+    //     if (!manualAssetChange) return;
+    //     const type = $(this).val();
+    //     if (type) {
+    //         $.getJSON("[[=URL('asset','get_brands_by_type')]]", { asset_type: type })
+    //             .done(function(resp) {
+    //                 const $brand = $('#asset_brand');
+    //                 $brand.empty().append('<option value="">Select Asset Brand</option>');
+    //                 resp.results.forEach(b => $brand.append($('<option>', { value: b, text: b })));
+    //                 $brand.val('').prop('disabled', false);
+    //                 $('#asset_model').empty().append('<option value="">Select Asset Model</option>').prop('disabled', false);
+    //             });
+    //     } else {
+    //         $('#asset_brand').empty().append('<option value="">Select Asset Brand</option>').prop('disabled', false);
+    //         $('#asset_model').empty().append('<option value="">Select Asset Model</option>').prop('disabled', false);
+    //     }
+    // });
 
-    // Asset brand → load models
-    $('#asset_brand').on('change', function() {
-        if (!manualAssetChange) return;
-        const type = $('#asset_type').val();
-        const brand = $(this).val();
-        if (type && brand) {
-            $.getJSON("[[=URL('asset','get_models_by_brand')]]", { asset_type: type, asset_brand: brand })
-                .done(function(resp) {
-                    const $model = $('#asset_model');
-                    $model.empty().append('<option value="">Select Asset Model</option>');
-                    resp.results.forEach(m => $model.append($('<option>', { value: m, text: m })));
-                    $model.val('').prop('disabled', false);
-                });
-        } else {
-            $('#asset_model').empty().append('<option value="">Select Asset Model</option>').prop('disabled', false);
-        }
-    });
+    // // Asset brand → load models
+    // $('#asset_brand').on('change', function() {
+    //     if (!manualAssetChange) return;
+    //     const type = $('#asset_type').val();
+    //     const brand = $(this).val();
+    //     if (type && brand) {
+    //         $.getJSON("[[=URL('asset','get_models_by_brand')]]", { asset_type: type, asset_brand: brand })
+    //             .done(function(resp) {
+    //                 const $model = $('#asset_model');
+    //                 $model.empty().append('<option value="">Select Asset Model</option>');
+    //                 resp.results.forEach(m => $model.append($('<option>', { value: m, text: m })));
+    //                 $model.val('').prop('disabled', false);
+    //             });
+    //     } else {
+    //         $('#asset_model').empty().append('<option value="">Select Asset Model</option>').prop('disabled', false);
+    //     }
+    // });
 
 });
 </script>

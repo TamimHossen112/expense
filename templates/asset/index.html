@@ -168,14 +168,15 @@
                 },
                 { title: 'ID', data: 'asset_id', render: d => d ?? '-' },
                 {
-                    title: 'Asset Type',
+                    title: 'Vehicle Type',
                     data: null,
                     render: function(data, type, row) {
                         const asset_type = row.asset_type ?? '';
                         const asset_brand = row.asset_brand ?? '';
                         const asset_model = row.asset_model ?? '';
-                        if (!asset_type && !asset_brand && !asset_model) return '-';
-                        return `${asset_type} | ${asset_brand} | ${asset_model}`;
+                        const asset_color = row.asset_color ?? '';
+                        if (!asset_type && !asset_brand && !asset_model && !asset_color) return '-';
+                        return `${asset_type} | ${asset_brand} | ${asset_model} | ${asset_color}`;
                     }
                 },
                 {
@@ -193,6 +194,7 @@
                 { title: 'Condition', data: 'asset_condition', render: d => d ?? '-' },
                 { title: 'Location', data: 'current_location', render: d => d ?? '-' },
                 { title: 'First Issue', data: 'first_issue_date', render: d => d ?? '-' },
+                { title: 'Registration Date', data:'registration_date', render: d => d ?? '-'},
                 {
                     title: '', data: 'id', render: function (data) {
                         return `

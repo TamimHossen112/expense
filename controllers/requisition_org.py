@@ -43,6 +43,20 @@ def get_asset_types():
     return [{"id": r.asset_type, "text": r.asset_type} for r in rows if r.asset_type]
 
 
+def get_asset_brands():
+    rows = db(db.asset_master.asset_brand != None).select(
+        db.asset_master.asset_brand,
+        distinct=True
+    )
+    return [{"id": r.asset_brand, "text": r.asset_brand} for r in rows if r.asset_brand]
+
+def get_asset_models():
+    rows = db(db.asset_master.asset_model != None).select(
+        db.asset_master.asset_model,
+        distinct=True
+    )
+    return [{"id": r.asset_model, "text": r.asset_model} for r in rows if r.asset_model]
+
 # -----------------------------
 # Views
 # -----------------------------
@@ -75,49 +89,80 @@ def requisition_org_create():
     return dict(
         requisition_status_combos=get_combo_values("requisition_status"),
         asset_types=get_asset_types(),
+        asset_brands=get_asset_brands(),
+        asset_models=get_asset_models(),
         organizations=organization_list,
         cid=cid
     )
 
 
-# -----------------------------
-# Submit Endpoint
-# -----------------------------
 @action('requisition_org/submit', method=['POST'])
 @action.uses(db, session, flash)
 def requisition_org_submit():
-    task_id='requisition_org_create'
-    access_permission=check_role(task_id)  
-    if ((access_permission==False)):
-        flash.set("Access is Denied !", 'warning')
-        redirect (URL('dashboard','index'))
+    task_id = 'requisition_org_create'
+    access_permission = check_role(task_id)  
+    if not access_permission:
+        flash.set("Access is Denied!", 'warning')
+        redirect(URL('dashboard','index'))
+
     form = request.forms
 
-    org_name = form.get('org_name')
-    asset_type = form.get('asset_type')
-    quantity = form.get('quantity')
-    requisition_status = form.get('requisition_status')
+    org_name = (form.get('org_name') or "").strip()
+    asset_type = (form.get('asset_type') or "").strip()
+    asset_brand = (form.get('asset_brand') or "").strip()
+    asset_model = (form.get('asset_model') or "").strip()
+    quantity = (form.get('quantity') or "").strip()
+    requisition_status = (form.get('requisition_status') or "").strip()
 
-    if not org_name or not asset_type or not requisition_status or not quantity:
-        return dict(status="error", message="All required fields must be filled.")
+    # ---------- Validation ----------
+    errors = []
+    if not org_name:
+        errors.append("Organization Name is required.")
+    if not asset_type:
+        errors.append("Asset Type is required.")
+    if not asset_brand:
+        errors.append("Asset Brand is required.")
+    if not asset_model:
+        errors.append("Asset Model is required.")
+    if not quantity:
+        errors.append("Quantity is required.")
+    else:
+        try:
+            quantity = int(quantity)
+            if quantity <= 0:
+                errors.append("Quantity must be a positive number.")
+        except ValueError:
+            errors.append("Quantity must be a valid number.")
 
+    if not requisition_status:
+        errors.append("Requisition Status is required.")
+
+    if errors:
+        flash.set(" | ".join(errors), "warning")
+        redirect(URL('requisition_org', 'create'))
+
+    # ---------- Insert into DB ----------
     try:
         req_id = generate_requisition_code(asset_type)
 
         db.requisition.insert(
             req_id=req_id,
-            org_name=org_name.strip(),
-            asset_type=asset_type.strip(),
-            quantity=int(quantity),
-            req_status=requisition_status.strip()
+            org_name=org_name,
+            asset_type=asset_type,
+            asset_brand=asset_brand,
+            asset_model=asset_model,
+            quantity=quantity,
+            req_status=requisition_status
         )
         db.commit()
 
         flash.set(f"Requisition {req_id} created successfully.", "success")
         redirect(URL('requisition_org', 'index'))
+
     except Exception as e:
         flash.set(f"Error creating requisition: {str(e)}", "error")
         redirect(URL('requisition_org', 'create'))
+
 
 
 # -----------------------------
@@ -160,7 +205,7 @@ def requisition_org_get_data():
     )[0]['total']
 
     base_sql = f"""
-        SELECT id, req_id, req_status, org_name, asset_type, quantity
+        SELECT id, req_id, req_status, org_name, asset_type, quantity, asset_brand, asset_model
         FROM requisition
         WHERE {where_sql} AND org_name IS NOT NULL
         ORDER BY {sort_col} {sort_dir}
@@ -187,7 +232,7 @@ def requisition_org_edit():
     task_id = 'requisition_org_edit'
     access_permission = check_role(task_id)  
     if not access_permission:
-        flash.set("Access is Denied !", 'warning')
+        flash.set("Access is Denied!", 'warning')
         redirect(URL('dashboard', 'index'))
 
     req_id = request.query.get('id')
@@ -196,36 +241,33 @@ def requisition_org_edit():
         redirect(URL('requisition_org', 'index'))
 
     try:
-        req_id = int(req_id)  # ✅ ensure it's safe
+        req_id = int(req_id)
     except ValueError:
         flash.set("Invalid requisition id!", 'warning')
         redirect(URL('requisition_org', 'index'))
 
-    rows = db.executesql(
-        f"""SELECT * FROM requisition WHERE id = {req_id}""",
-        as_dict=True
-    )
-    if not rows:
+    row = db(db.requisition.id == req_id).select().first()
+    if not row:
         flash.set("Requisition not found!", 'warning')
         redirect(URL('requisition_org', 'index'))
 
-    requisition = rows[0]
-
-    organizations=get_combo_values("organizations")
-    organization_list=organizations
+    organizations = get_combo_values("organizations")
     cid = str(session.get('cid'))
-    if session.get('role') not in ['sysadmin']:        
-        organization_list = [org for org in organizations if org == cid]
+    organization_list = organizations if session.get('role') in ['sysadmin'] else [org for org in organizations if org == cid]
 
     return dict(
         status="success",
-        requisition=requisition,
+        requisition=row,
         asset_type_list=[r['text'] for r in get_asset_types()],
+        asset_brand_list=[r['text'] for r in get_asset_brands()],
+        asset_model_list=[r['text'] for r in get_asset_models()],
         requisition_status_combos=get_combo_values("requisition_status"),
-        selected_asset_type=requisition['asset_type'],
-        selected_org=requisition['org_name'],
+        selected_asset_type=row.asset_type,
+        selected_asset_brand=row.asset_brand,
+        selected_asset_model=row.asset_model,
+        selected_org=row.org_name,
         org_list=organization_list,
-        selected_requisition_status=requisition['req_status']
+        selected_requisition_status=row.req_status
     )
 
 
@@ -233,44 +275,71 @@ def requisition_org_edit():
 # Update Endpoint (POST)
 # -----------------------------
 @action('requisition_org/update', method=['POST'])
-@action.uses(db, session, flash)  
+@action.uses(db, session, flash)
 def requisition_org_update():
-
-    task_id='requisition_org_edit'
-    access_permission=check_role(task_id)  
-    if ((access_permission==False)):
-        flash.set("Access is Denied !", 'warning')
-        redirect (URL('dashboard','index'))
+    task_id = 'requisition_org_edit'
+    access_permission = check_role(task_id)
+    if not access_permission:
+        flash.set("Access is Denied!", 'warning')
+        redirect(URL('dashboard','index'))
 
     form = request.forms
 
     req_id = form.get('id')
-    org_name = form.get('org_name')
-    asset_type = form.get('asset_type')
-    quantity = form.get('quantity')
-    requisition_status = form.get('requisition_status')
+    org_name = (form.get('org_name') or "").strip()
+    asset_type = (form.get('asset_type') or "").strip()
+    asset_brand = (form.get('asset_brand') or "").strip()
+    asset_model = (form.get('asset_model') or "").strip()
+    quantity = (form.get('quantity') or "").strip()
+    requisition_status = (form.get('requisition_status') or "").strip()
 
-    # Validation
-    if not req_id or not org_name or not asset_type or not requisition_status or not quantity:
-        flash.set("All required fields must be filled.", "error")
+    # ---------- Validation ----------
+    errors = []
+    if not req_id:
+        errors.append("Requisition ID is missing.")
+    if not org_name:
+        errors.append("Organization Name is required.")
+    if not asset_type:
+        errors.append("Asset Type is required.")
+    if not asset_brand:
+        errors.append("Asset Brand is required.")
+    if not asset_model:
+        errors.append("Asset Model is required.")
+    if not quantity:
+        errors.append("Quantity is required.")
+    else:
+        try:
+            quantity = int(quantity)
+            if quantity <= 0:
+                errors.append("Quantity must be a positive number.")
+        except ValueError:
+            errors.append("Quantity must be a valid number.")
+    if not requisition_status:
+        errors.append("Requisition Status is required.")
+
+    if errors:
+        flash.set(" | ".join(errors), "warning")
         redirect(URL('requisition_org', 'edit', vars=dict(id=req_id)))
 
+    # ---------- Update DB ----------
     try:
         db(db.requisition.id == int(req_id)).update(
-            org_name=org_name.strip(),
-            asset_type=asset_type.strip(),
-            quantity=int(quantity),
-            req_status=requisition_status.strip()
+            org_name=org_name,
+            asset_type=asset_type,
+            asset_brand=asset_brand,
+            asset_model=asset_model,
+            quantity=quantity,
+            req_status=requisition_status
         )
         db.commit()
-
-        flash.set(f"Requisition {req_id} updated successfully.", "success")
+        flash.set(f"Requisition updated successfully.", "success")
         redirect(URL('requisition_org', 'index'))
 
     except Exception as e:
         db.rollback()
         flash.set(f"Error updating requisition: {str(e)}", "error")
         redirect(URL('requisition_org', 'edit', vars=dict(id=req_id)))
+
 
 
 @action('requisition_org/delete', method=['GET', 'POST'])

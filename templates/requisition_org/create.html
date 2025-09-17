@@ -40,10 +40,39 @@
 
                 <div class="col-md-3 col-sm-12">
                     <div class="mb-2">
-                        <label for="asset_type" class="form-label">Asset Type <span class="is_required">*</span></label>
+                        <label for="asset_type" class="form-label">Vehicle Type <span class="is_required">*</span></label>
                         <select class="form-select form-select-sm select_custom" id="asset_type" name="asset_type" required>
-                            <option value="">Select Asset Type</option>
+                            <option value="">Select Vehicle Type</option>
                             [[for asset_detail in asset_types:]]
+                                <option value="[[=asset_detail['id']]]">
+                                    [[=asset_detail['text']]]
+                                </option>
+                            [[pass]]
+                        </select>
+                    </div>
+                </div>
+
+                <div class="col-md-3 col-sm-12">
+                    <div class="mb-2">
+                        <label for="asset_brand" class="form-label">Vehicle Brand<span class="is_required">*</span></label>
+                        <select class="form-select form-select-sm select_custom" id="asset_brand" name="asset_brand" required>
+                            <option value="">Select Vehicle Brand</option>
+                            [[for asset_detail in asset_brands:]]
+                                <option value="[[=asset_detail['id']]]">
+                                    [[=asset_detail['text']]]
+                                </option>
+                            [[pass]]
+                        </select>
+                    </div>
+                </div>
+
+
+                <div class="col-md-3 col-sm-12">
+                    <div class="mb-2">
+                        <label for="asset_model" class="form-label">Vehicle Model<span class="is_required">*</span></label>
+                        <select class="form-select form-select-sm select_custom" id="asset_model" name="asset_model" required>
+                            <option value="">Select Vehicle Model</option>
+                            [[for asset_detail in asset_models:]]
                                 <option value="[[=asset_detail['id']]]">
                                     [[=asset_detail['text']]]
                                 </option>

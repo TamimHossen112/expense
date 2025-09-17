@@ -26,7 +26,8 @@ def get_vendors_filter():
 @action.uses(db)
 def get_requisition_details_with_asset_details():
     sql = """
-        SELECT r.req_id, 
+        SELECT r.id,
+               r.req_id, 
                r.asset_type, 
                r.quantity,
                COALESCE(SUM(p.quantity), 0) AS purchased_quantity
@@ -34,6 +35,7 @@ def get_requisition_details_with_asset_details():
         LEFT JOIN purchase_details p ON r.req_id = p.req_id
         WHERE LOWER(r.req_status) = 'approved'
         GROUP BY r.req_id
+        ORDER BY id DESC
     """
     rows = db.executesql(sql, as_dict=True)
 

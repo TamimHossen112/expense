@@ -275,13 +275,13 @@ def get_transaction_assets():
         return json.dumps(details, default=str)
 
     rows = db.executesql(
-        "SELECT asset_id, asset_type, asset_name FROM asset ORDER BY asset_id",
+        "SELECT asset_id, asset_type, asset_brand, asset_model, asset_color FROM asset ORDER BY asset_id",
         as_dict=True
     )
     assets = [
         {
             "id": row['asset_id'],
-            "text": f"{row['asset_id']} | {row['asset_type'] or ''} | {row['asset_name'] or ''}"
+            "text": f"{row['asset_id']} | {row['asset_type'] or ''} | {row['asset_brand'] or ''} | {row['asset_model'] or ''} | {row['asset_color'] or ''}"
         }
         for row in rows
     ]

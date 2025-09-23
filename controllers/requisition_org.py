@@ -113,6 +113,7 @@ def requisition_org_submit():
     asset_model = (form.get('asset_model') or "").strip()
     quantity = (form.get('quantity') or "").strip()
     requisition_status = (form.get('requisition_status') or "").strip()
+    req_org_desc = (form.get('req_org_desc') or "").strip()   # <-- new field
 
     # ---------- Validation ----------
     errors = []
@@ -152,7 +153,8 @@ def requisition_org_submit():
             asset_brand=asset_brand,
             asset_model=asset_model,
             quantity=quantity,
-            req_status=requisition_status
+            req_status=requisition_status,
+            req_desc=req_org_desc       # <-- mapped to DB column
         )
         db.commit()
 
@@ -162,6 +164,7 @@ def requisition_org_submit():
     except Exception as e:
         flash.set(f"Error creating requisition: {str(e)}", "error")
         redirect(URL('requisition_org', 'create'))
+
 
 
 
@@ -267,7 +270,8 @@ def requisition_org_edit():
         selected_asset_model=row.asset_model,
         selected_org=row.org_name,
         org_list=organization_list,
-        selected_requisition_status=row.req_status
+        selected_requisition_status=row.req_status,
+        selected_req_desc=row.req_desc   # <-- pass description to template
     )
 
 
@@ -292,6 +296,7 @@ def requisition_org_update():
     asset_model = (form.get('asset_model') or "").strip()
     quantity = (form.get('quantity') or "").strip()
     requisition_status = (form.get('requisition_status') or "").strip()
+    req_org_desc = (form.get('req_org_desc') or "").strip()  # <-- new field
 
     # ---------- Validation ----------
     errors = []
@@ -329,7 +334,8 @@ def requisition_org_update():
             asset_brand=asset_brand,
             asset_model=asset_model,
             quantity=quantity,
-            req_status=requisition_status
+            req_status=requisition_status,
+            req_desc=req_org_desc   # <-- update DB column
         )
         db.commit()
         flash.set(f"Requisition updated successfully.", "success")
@@ -339,6 +345,7 @@ def requisition_org_update():
         db.rollback()
         flash.set(f"Error updating requisition: {str(e)}", "error")
         redirect(URL('requisition_org', 'edit', vars=dict(id=req_id)))
+
 
 
 

@@ -98,7 +98,7 @@ pass
             <span> Operations </span>
           </li>
 
-          [[if check_role("requisition_individual_view") and check_role("requisition_org_view") :]]
+          <!-- [[if check_role("requisition_individual_view") or check_role("requisition_org_view") :]] -->
           <li class="menu-item sub-menu [[if _controller_name in ['requisition_individual','requisition_org']:]]open[[pass]]">
             <a href="#">
               <span class="menu-icon">
@@ -131,7 +131,7 @@ pass
               </ul>
             </div>
           </li>
-          [[pass]]
+          <!-- [[pass]] -->
 
           [[if check_role("purchase_view")==True:]]
           <li class="menu-item [[if _controller_name=='purchase':]]active_link[[pass]]">

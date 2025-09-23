@@ -321,6 +321,8 @@ def requisition_individual_get_data():
     if ((access_permission==False)):
         flash.set("Access is Denied !", 'warning')
         redirect (URL('dashboard','index'))
+
+    
     q = request.query
     start, length = int(q.get('start', 0)), int(q.get('length', 15))
     sort_col_index = q.get('order[0][column]')

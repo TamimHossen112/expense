@@ -108,6 +108,13 @@
                         </div>
                     </div>
 
+                    <div class="col-md-3 col-sm-12">
+                        <div class="mb-2 custom_input">
+                            <label for="quantity" class="form-label">Quantity</label>
+                            <input type="number" class="form-control form-control-sm" id="quantity" name="quantity" value="[[=requisition['quantity']]]" required>
+                        </div>
+                    </div>
+
                     <div class="col-md-3">
                         <div class="mb-2 custom_input">
                             <label for="requisition_status" class="form-label">Requisition Status <span class="is_required">*</span></label>
@@ -120,12 +127,14 @@
                         </div>
                     </div>
                     
-                    <div class="col-md-3 col-sm-12">
-                        <div class="mb-2 custom_input">
-                            <label for="quantity" class="form-label">Quantity</label>
-                            <input type="number" class="form-control form-control-sm" id="quantity" name="quantity" value="[[=requisition['quantity']]]" required>
+                    <div class="col-md-3">
+                        <div class="mb-3 custom_input">
+                            <label for="req_org_desc" class="form-label">Description (Max 500 Characters)</label>
+                            <input type="text" id="req_org_desc" name="req_org_desc" value="[[=selected_req_desc or '']]" class="form-control form-control-sm" required>
                         </div>
                     </div>
+
+
                 </div>
             </div>
 

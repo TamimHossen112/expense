@@ -390,37 +390,69 @@ def transaction_update():
 # Get Distinct Transactions for Datatable
 # ------------------------------
 
-@action('transfer/get_data', method=['GET'])
-@action.uses(db,session,flash)
-def transfer_get_data():
-    task_id='transaction_view'
-    access_permission=check_role(task_id)  
-    if ((access_permission==False)):
+@action('transaction/get_data', method=['GET'])
+@action.uses(db, session, flash)
+def transaction_get_data():
+    task_id = 'transaction_view'
+    access_permission = check_role(task_id)
+    if access_permission is False:
         flash.set("Access is Denied !", 'warning')
-        redirect (URL('dashboard','index'))
-    q = request.query
-    type = q.get('type')
-    start, length = int(q.get('start', 0)), int(q.get('length', 15))
-    sort_dir = q.get('order[0][dir]', 'desc').lower()
-    sort_dir = sort_dir if sort_dir in ['asc', 'desc'] else 'desc'
+        redirect(URL('dashboard', 'index'))
 
-    type_filter = f"WHERE trans_type = '{type}'" if type else ""
-    total_rows = db.executesql(f"""SELECT COUNT(*) AS total FROM tr_head {type_filter}""", as_dict=True)[0]['total']
+    # Collect filters from query
+    filters = {
+        'trans_type': request.query.get('type', '').strip(),
+        'asset_type': request.query.get('asset_type', '').strip(),
+        'asset_id': request.query.get('asset_id', '').strip()
+    }
 
-    sql = f"""
+    # Build WHERE conditions safely
+    where_clauses = ["1=1"]
+    params = []
+    for k, v in filters.items():
+        if v:
+            where_clauses.append(f"{k} = %s")
+            params.append(v)
+
+    where_sql = " AND ".join(where_clauses)
+
+    # Pagination
+    start = int(request.query.get('start') or 0)
+    length = int(request.query.get('length') or 15)
+
+    # Sorting
+    sort_col_index = request.query.get('order[0][column]')
+    if sort_col_index is None:
+        sort_col_name, sort_dir = 'tr_date', 'desc'
+    else:
+        sort_col_index = int(sort_col_index)
+        sort_col_name = request.query.get(f'columns[{sort_col_index}][data]') or 'tr_date'
+        sort_dir = request.query.get('order[0][dir]', 'desc').lower()
+        sort_dir = sort_dir if sort_dir in ['asc', 'desc'] else 'desc'
+
+    # Count total
+    total_sql = f"SELECT COUNT(*) AS total FROM tr_head WHERE {where_sql}"
+    total_rows = db.executesql(total_sql, params, as_dict=True)[0]['total']
+
+    # Main data query
+    base_sql = f"""
         SELECT id, asset_id, asset_type, trans_type, status, tr_date
         FROM tr_head
-        {type_filter}
-        ORDER BY tr_date {sort_dir}
+        WHERE {where_sql}
+        ORDER BY {sort_col_name} {sort_dir}
+        {"LIMIT %s OFFSET %s" if length != -1 else ""}
     """
-    if length != -1:
-        sql += f" LIMIT {length} OFFSET {start}"
 
-    data = db.executesql(sql, as_dict=True)
+    # Add pagination params if needed
+    if length != -1:
+        params += [length, start]
+
+    data = db.executesql(base_sql, params, as_dict=True)
 
     return dict(
         data=data,
         recordsTotal=total_rows,
         recordsFiltered=total_rows,
-        draw=int(q.get('draw', 1))
+        draw=int(request.query.get('draw') or 1)
     )
+

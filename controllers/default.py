@@ -159,6 +159,15 @@ def get_asset_master_brands():
     return dict(results=results)
 
 
+
+@action("default/get_distinct_asset_ids")
+@action.uses(db)
+def get_distinct_asset_ids():
+    rows = db(db.asset.asset_id != None).select(db.asset.asset_id, distinct=True).as_list()
+    results = [{"id": row["asset_id"], "text": row["asset_id"]} for row in rows if row["asset_id"]]
+    return dict(results=results)
+
+
 @action("default/get_asset_master_colors")
 @action.uses(db)
 def get_asset_master_colors():

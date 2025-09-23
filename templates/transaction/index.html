@@ -16,13 +16,36 @@
             </span>
         </div>
 
-        <div class="col-md-9 mt-2">
-            <div class="row" id="custom_form" style="display: none;">
-                <div class="col-md-8">
+        <div class="col-md-10 mt-2">
+            <div class="row" id="custom_form">
+                <div class="col-md-2 mb-2">
+                    <div class="">
+                        <select id="asset_type" class="form-select form-select-sm select_custom" 
+                                name="asset_type" placeholder="Vehicle Type">
+                            <option value="">Vehicle Type</option>
+                        </select>
+                    </div>   
+                </div>
+
+                <div class="col-md-2 mb-2">
+                    <div class="">
+                        <select id="asset_id" class="form-select form-select-sm select_custom" 
+                                name="asset_id" placeholder="Vehicle Id">
+                            <option value="">Vehicle Id</option>
+                        </select>
+                    </div>   
+                </div>
+
+
+                <div class="col-md-2 mb-2">
+
+                </div>
+
+                <div class="col-md-2 mb-2">
 
                 </div>
                 <div class="col-md-4 mb-2 d-flex justify-content-end">
-                    <div class="me-2">
+                    <div class="me-3">
                         <button type="submit" id="submit" class="btn btn-sm btn-primary">
                             <i class="fa-solid fa-magnifying-glass"></i> <span class="ms-2">Search</span>
                         </button>
@@ -36,13 +59,8 @@
             </div>
         </div>
 
-        <div class="col-md-2 mt-2 mb-2">
+        <div class="col-md-1 mt-2 mb-2">
             <div class="d-flex justify-content-end">
-                <div class="me-2">
-                    <button type="button" id="filter" class="btn btn-sm btn-light" style="width:90px;">
-                        <i class="fa-solid fa-filter"></i> <span class="ms-2">Filter</span>
-                    </button>
-                </div>
                 <div class="dropdown">
                     <button class="btn btn-primary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown"
                         aria-expanded="false" style="width:90px;">
@@ -77,6 +95,44 @@
 [[block scripts]]
 <script>
 $(document).ready(function() {
+    $("[name='asset_type']").one('select2:open', function (e) {
+            $.ajax({
+                url: '[[=URL("default", "get_asset_master_types")]]',
+                method: 'GET',
+                dataType: 'json',
+                success: function (data) {
+                    const $select = $("[name='asset_type']");
+                    $select.empty();
+
+                    $select.select2({
+                        data: data.results, // already in correct {id, text} format
+                        placeholder: "Select Asset Type",
+                        allowClear: true
+                    }).select2('open');
+                }
+
+            });
+        });
+
+    $("[name='asset_id']").one('select2:open', function (e) {
+            $.ajax({
+                url: '[[=URL("default", "get_distinct_asset_ids")]]',
+                method: 'GET',
+                dataType: 'json',
+                success: function (data) {
+                    const $select = $("[name='asset_id']");
+                    $select.empty();
+
+                    $select.select2({
+                        data: data.results, // already in correct {id, text} format
+                        placeholder: "Select Asset Id",
+                        allowClear: true
+                    }).select2('open');
+                }
+
+            });
+        });
+
     $("#filter").click(function() {
         $("#custom_form").fadeToggle("slow");
     });
@@ -104,9 +160,11 @@ $(document).ready(function() {
         ajax: {
             async: true,
             type: 'GET',
-            url: '[[=URL("transfer","get_data")]]',
+            url: '[[=URL("transaction","get_data")]]',
             data: function(d) {
                 d.type = $("#tr_type").val();
+                d.asset_type = $("#asset_type").val();
+                d.asset_id = $("#asset_id").val();
             },
             dataSrc: 'data'
         },
@@ -164,6 +222,8 @@ $(document).ready(function() {
     // Reset button
     $("#reset").click(function(e){
         e.preventDefault();
+        $("select[name='asset_id']").val(null).trigger('change');
+        $("select[name='asset_type']").val(null).trigger('change');
         table.ajax.reload();
     });
 });

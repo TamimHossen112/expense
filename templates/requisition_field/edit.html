@@ -1,0 +1,357 @@
+[[extend 'layout_mobile.html']]
+
+[[block content]]
+<style>
+    #uploadedFilesTable td, #uploadedFilesTable th {
+        padding-top: 2px;
+        padding-bottom: 2px;
+        font-size: 13px;
+        height: 28px; /* You can adjust this value */
+    }
+    
+</style>
+
+
+<div id="formContainer">
+    <div class="container-section">
+        <div class="d-flex justify-content-between align-items-center border-bottom mx-2">
+            <span class="icon-text icon-text-bold">
+                <i class="fa-solid fa-plus"></i>
+                <span>Edit</span>
+            </span>
+
+            <div class="d-flex justify-content-end">
+                
+                <div class="p-1">
+                    [[if record['req_status'].lower() == 'draft':]]
+                        <button type="button" class="btn btn-sm btn-light d-none" id="btn_view">
+                            <i class="fa-regular fa-eye"></i> <span class="ms-2">View</span>
+                        </button>
+                        <button type="button" class="btn btn-sm btn-light" id="btn_edit">
+                            <i class="fa-regular fa-pen-to-square"></i> <span class="ms-2">Edit</span>
+                        </button>
+                    [[pass]]
+                </div>
+
+                <div class="p-1">
+                    <a href="[[=URL('requisition_field/index')]]" class="btn btn-sm btn-light">
+                        <i class="fa-solid fa-arrow-left"></i> <span class="ms-2">Back</span>
+                    </a>
+                </div>
+                <div class="p-1">
+                    <div class="btn-group">
+                        <button class="btn btn-primary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown"
+                            aria-expanded="false">
+                            Action
+                        </button>
+                        <!-- [[if check_role("requisition_individual_delete")==True:]]
+                        <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                            <a class="dropdown-item" href="delete?id=[[=request.query.get('id')]]" id="delete_btn">
+                                <i class="fa-solid fa-trash-can"></i><span class="ms-2">Delete</span></a>
+                        </div>
+                        [[pass]] -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="container py-2">
+            <form id="uploadForm"
+                action="[[=URL('requisition_field','update', vars={'id': record['id']})]]"
+                method="post" enctype="multipart/form-data">
+
+                <input type="hidden" name="id" value="[[=request.query.get('id')]]">
+                <div id="custom_form">
+                    <div class="row">
+                        <div class="col-md-3 col-sm-12">
+                            <div class="row">
+                                <div class="mb-2">
+                                    <label for="emp_category" class="form-label">Employee Id | Employee Name</label>
+                                    <input type="text" class="form-control form-control-sm" id="emp_id" name="emp_id" value="[[=record['emp_id']]]" readonly>
+                                </div>
+
+
+                                <div class="mb-2">
+                                    <label for="emp_category" class="form-label">Employee Category</label>
+                                    <input type="text" class="form-control form-control-sm" id="emp_category" name="emp_category" value="[[=record['emp_category']]]" readonly>
+                                </div>
+
+                                <div class="mb-2">
+                                    <label for="designation" class="form-label">Designation</label>
+                                    <input type="text" class="form-control form-control-sm" id="designation" name="designation" value="[[=record['designation']]]" readonly>
+                                </div>
+
+                                <div class="mb-2">
+                                    <label for="tr_code" class="form-label">Territory Code</label>
+                                    <input type="text" class="form-control form-control-sm" id="tr_code" name="tr_code" value="[[=record['tr_code']]]" readonly>
+                                </div>
+
+                                <div class="mb-2">
+                                    <label for="head_office" class="form-label">Location</label>
+                                    <input type="text" class="form-control form-control-sm" id="head_office" name="head_office" value="[[=record['head_office']]]" readonly>
+                                </div>
+
+                                <div class="mb-2">
+                                    <label for="joining_date_display" class="form-label">Joining Date <span class="is_required">*</span></label>
+                                    <input type="text" class="form-control form-control-sm" id="joining_date_display" value="[[=record['joining_date']]]" readonly>
+                                    <input type="hidden" id="joining_date" name="joining_date" value="[[=record['joining_date']]]" >
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <div class="col-md-9 col-sm-12">
+                            <div class="row">
+                                <div class="col-md-4 col-sm-12">
+                                    <div class="mb-2 custom_input">
+                                        <label for="asset_type" class="form-label">Vehicle Type <span class="is_required">*</span></label>
+                                        <select class="form-select form-select-sm select_custom" name="asset_type" style="width: 200px;" placeholder="Select Asset" required>
+                                            <option value="">Select Asset Type</option>
+                                            [[for asset_type in asset_type_list:]]
+                                                <option value="[[=asset_type]]" [[if str(asset_type) ==str(selected_asset_type):]]Selected[[pass]]> [[=asset_type]] </option>
+                                            [[pass]]
+                                        </select>
+                                    </div>
+
+                                    <div class="mb-2 custom_input">
+                                        <label for="license_number" class="form-label">Driving License No</label>
+                                        <input type="text" class="form-control form-control-sm" id="license_number" name="license_number" value="[[=record['license_number']]]" required>
+                                    </div> 
+                                </div>
+
+                                <div class="col-md-4 col-sm-12">
+                                    <div class="mb-2 custom_input">
+                                        <label for="license_issue_date" class="form-label">Driving License Issue Date <span class="is_required">*</span></label>
+                                        <div class="flatpickr-wrapper">
+                                            <input type="text" class="date-picker" id="license_issue_date" name="license_issue_date" value="[[=record['license_issue_date']]]" placeholder=" License Issue Date" required>
+                                            <i class="fa fa-calendar calendar-icon text-secondary calendar-toggle"></i>                            
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-2 custom_input">
+                                        <label for="license_expire_date" class="form-label">License Expire Date <span class="is_required">*</span></label>
+                                        <div class="flatpickr-wrapper">
+                                            <input type="text" class="date-picker" id="license_expire_date" name="license_expire_date" value="[[=record['license_expire_date']]]" placeholder="License Expire Date" required>
+                                            <i class="fa fa-calendar calendar-icon text-secondary calendar-toggle"></i>
+                                        </div>
+                                    </div>
+                                </div>
+
+
+                                <div class="col-md-12 col-sm-12">
+                                    <div class="mb-2">
+                                        <strong>File Attachment Section</strong>
+                                    </div>
+                                    <div class="border border-primary p-2 rounded custom_input">
+                                        <div class="row g-2 align-items-end">
+                                            <div class="col-md-4 col-sm-12 mb-1">
+                                                <label for="doc_type" class="form-label">Doc Type <span class="is_required">*</span></label>
+                                                <select class="form-select form-select-sm select_custom" id="doc_type" name="doc_type">
+                                                    <option value="">Select Document Type</option>
+                                                    [[for doc_type in doc_type_combos:]]
+                                                        <option value="[[=doc_type]]">
+                                                            [[=doc_type]]
+                                                        </option>
+                                                    [[pass]]
+                                                </select>
+                                            </div>
+
+                                            <div class="col-md-6 col-sm-12 mb-1">
+                                                <label for="formFile" class="form-label">Choose File <span class="is_required">*</span></label>
+                                                <input type="file" class="form-control form-control-sm" id="formFile" name="upload_file">
+                                            </div>
+
+                                            <div class="col-md-2 col-sm-12 d-flex align-items-end mb-1">
+                                                <button id="uploadBtn" type="button" class="btn btn-sm btn-primary w-100" title="Upload">
+                                                    <i class="fa-solid fa-upload"></i>
+                                                    <span class="d-lg-inline d-sm-inline d-md-none"> Upload</span>
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <div id="uploadStatus"></div>
+
+                                        <div>
+                                            <div class="fw-semibold">Uploaded Files</div>
+                                            <div class="table-responsive">
+                                                <table class="table table-bordered table-sm mb-0" id="uploadedFilesTable">
+                                                    <thead class="table-light">
+                                                        <tr>
+                                                            <th>Doc Type</th>
+                                                            <th>File Name</th>
+                                                            <th style="width: 70px;">Action</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="uploadedFilesData"></div>
+
+                <!-- Hidden input to track submit type -->
+                <input type="hidden" name="submit_type" id="submit_type" value="pending">
+
+                <div id="edit_view_section" class="d-none d-flex justify-content-between gap-2 mt-2">
+                    <!-- Draft button -->
+                    <button type="button" class="btn btn-sm btn-light" id="btn_save_draft">
+                        <i class="fa-solid fa-file"></i> <span class="ms-2">Update</span>
+                    </button>
+
+                    <!-- Submit button -->
+                    <button type="submit" class="btn btn-sm btn-primary" id="btn_update">
+                        <i class="fa-regular fa-floppy-disk"></i> <span class="ms-2">Submit</span>
+                    </button>
+                </div>
+
+
+
+            </form>
+        </div>
+    </div>
+</div>
+
+
+[[end]]
+
+[[block scripts]]
+<script>
+    const IMAGE_UPLOAD_API = "[[=IMAGE_UPLOAD_API]]";
+    const IMAGE_DOWNLOAD_API = "[[=IMAGE_DOWNLOAD_API]]";
+
+    // Pre-filled docs from backend
+    const existingDocs = JSON.parse('[[=XML(docs_json or "[]")]]'); 
+    let uploadedFiles = JSON.parse(JSON.stringify(existingDocs));
+
+    // Populate table
+    function populateTable(files) {
+        const $tbody = $('#uploadedFilesTable tbody').empty();
+        $.each(files, function (i, file) {
+            const $row = $('<tr>').append(
+                $('<td>').text(file.doc_type),
+                $('<td>').text(file.file_name)
+            );
+
+            // Add action buttons only if draft
+            [[if record['req_status'].lower() == 'draft':]]
+            $row.append(
+                $('<td>').append(
+                    $('<button class="btn btn-sm btn-info me-1"><i class="fa-solid fa-download"></i></button>')
+                        .click(() => { window.open(`${IMAGE_DOWNLOAD_API}/expense/${file.file_path}`, '_blank'); }),
+                    $('<button class="btn btn-sm btn-danger"><i class="fa-solid fa-trash"></i></button>')
+                        .click(() => {
+                            uploadedFiles.splice(i, 1);
+                            populateTable(uploadedFiles);
+                        })
+                )
+            );
+            [[pass]]
+
+            $tbody.append($row);
+        });
+    }
+
+    $(function () {
+        populateTable(uploadedFiles);
+
+        // Handle upload button
+        $('#uploadBtn').on('click', function () {
+            if ("[[=record['req_status'].lower()]]" != "draft") return;
+
+            const $fileInput = $('#formFile');
+            const docType = $('#doc_type').val();
+            const $uploadStatus = $('#uploadStatus');
+            const $tableBody = $('#uploadedFilesTable tbody');
+
+            $uploadStatus.text('').removeClass('text-danger text-success');
+
+            if (!docType || !$fileInput[0].files.length) {
+                alert(!docType ? 'Select a document type.' : 'Choose a file.');
+                return;
+            }
+
+            const file = $fileInput[0].files[0];
+            const formData = new FormData();
+            formData.append('upload_file', file);
+
+            $.ajax({
+                url: "[[=URL('requisition_field','upload_expense_proxy')]]",
+                method: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                dataType: 'json'
+            })
+            .done(function (data) {
+                if (data.res_data) {
+                    const uploadedFileData = {
+                        doc_type: docType,
+                        file_name: file.name,
+                        file_path: data.res_data.ret_str
+                    };
+                    uploadedFiles.push(uploadedFileData);
+                    populateTable(uploadedFiles);
+                    $fileInput.val('');
+                    $('#doc_type').val('');
+                } else {
+                    $uploadStatus.text('Upload failed: ' + (data.detail || 'Unknown error')).addClass('text-danger');
+                }
+            })
+            .fail(function (xhr, status, error) {
+                $uploadStatus.text('Upload error: ' + error).addClass('text-danger');
+            });
+        });
+
+        // Handle Draft / Submit buttons
+        $('#btn_save_draft').click(function() {
+            $('#submit_type').val('draft');
+            $('#uploadForm').submit();
+        });
+
+        $('#btn_update').click(function() {
+            $('#submit_type').val('pending');
+        });
+
+        // Reset form
+        $('#uploadForm').on('reset', function () {
+            setTimeout(() => {
+                uploadedFiles = JSON.parse(JSON.stringify(existingDocs));
+                populateTable(uploadedFiles);
+            }, 50);
+        });
+
+        // On form submit: include uploaded files
+        $('#uploadForm').submit(function () {
+            const $container = $('#uploadedFilesData').empty();
+            $.each(uploadedFiles, function (i, file) {
+                $.each(file, function (key, val) {
+                    $('<input>', {
+                        type: 'hidden',
+                        name: `uploaded_files[${i}][${key}]`,
+                        value: val
+                    }).appendTo($container);
+                });
+            });
+        });
+    });
+</script>
+
+<style>
+    .emp-highlighted-option {
+        color: #7b67ee;
+        font-weight: bold;
+    }
+</style>
+[[end]]
+
+
+
+
+

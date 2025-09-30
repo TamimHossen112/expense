@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Excel Upload</title>
+</head>
+<body>
+    <h2>Upload Excel File</h2>
+    <input type="file" id="fileInput" />
+    <button onclick="uploadFile()">Upload</button>
+
+    <h3>Excel Data:</h3>
+    <table border="1" id="excelTable">
+        <thead id="tableHead"></thead>
+        <tbody id="tableBody"></tbody>
+    </table>
+
+    <script>
+        async function uploadFile() {
+            const fileInput = document.getElementById("fileInput");
+            if (!fileInput.files.length) {
+                alert("Please select a file");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("file", fileInput.files[0]);
+
+            const response = await fetch("xceltest/upload", {
+                method: "POST",
+                body: formData
+            });
+
+            const data = await response.json();
+            
+            if (data.error) {
+                alert("Error: " + data.error);
+                return;
+            }
+
+            const tableHead = document.getElementById("tableHead");
+            const tableBody = document.getElementById("tableBody");
+
+            tableHead.innerHTML = "";
+            tableBody.innerHTML = "";
+
+            if (data.length === 0) return;
+
+            // Create table headers dynamically
+            const headers = Object.keys(data[0]);
+            let headerRow = "<tr>";
+            headers.forEach(h => headerRow += `<th>${h}</th>`);
+            headerRow += "</tr>";
+            tableHead.innerHTML = headerRow;
+
+            // Fill table body
+            data.forEach(row => {
+                let rowHtml = "<tr>";
+                headers.forEach(h => rowHtml += `<td>${row[h]}</td>`);
+                rowHtml += "</tr>";
+                tableBody.innerHTML += rowHtml;
+            });
+        }
+    </script>
+</body>
+</html>

@@ -221,7 +221,7 @@
                                 <select class="form-select form-select-sm select_custom" id="owner" name="owner">
                                     <option value="">Select Owner</option>
                                     [[for owner in owner_list:]]
-                                        <option value="[[=owner]]">
+                                        <option value="[[=owner]]" [[if owner==cid:]] selected [[pass]]>
                                             [[=owner]]
                                         </option>
                                     [[pass]]

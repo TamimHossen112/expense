@@ -78,6 +78,12 @@ def asset_create():
         db.asset_master.asset_color
     ])
     
+    organizations=get_combo_values("organizations")
+    organization_list=organizations
+    cid = str(session.get('cid'))
+    if session.get('role') not in ['sysadmin']:        
+        organization_list = [org for org in organizations if org == cid]
+    
     return dict(
         asset_type_list=distinct_fields.get('asset_type', []),
         asset_brand_list=distinct_fields.get('asset_brand', []),
@@ -85,7 +91,8 @@ def asset_create():
         asset_color_list = distinct_fields.get('asset_color',[]),
         asset_status_list=get_combo_values("asset_status"),
         asset_condition_list=get_combo_values("asset_condition"),
-        owner_list=get_combo_values("organizations")
+        owner_list=organization_list,
+         cid=cid,
     )
 
 @action('asset/submit', method=["POST"])
@@ -233,6 +240,12 @@ def asset_edit():
     asset_model_list = [r['asset_model'] for r in db.executesql("SELECT DISTINCT asset_model FROM asset_master WHERE asset_model IS NOT NULL", as_dict=True)]
     asset_color_list = [r['asset_color'] for r in db.executesql("SELECT DISTINCT asset_color FROM asset_master WHERE asset_color IS NOT NULL", as_dict=True)]
     
+    organizations=get_combo_values("organizations")
+    organization_list=organizations
+    cid = str(session.get('cid'))
+    if session.get('role') not in ['sysadmin']:        
+        organization_list = [org for org in organizations if org == cid]
+    
     return dict(
         selected_asset_type = main_row['asset_type'] or "",
         selected_asset_brand = main_row['asset_brand'] or "",
@@ -248,7 +261,7 @@ def asset_edit():
         asset_color_list = asset_color_list,
         asset_status_list = get_combo_values("asset_status"),
         asset_condition_list = get_combo_values("asset_condition"),
-        owner_list = get_combo_values("organizations"),
+        owner_list = organization_list,
         selected_owner = main_row['owner'] or ""
     )
 

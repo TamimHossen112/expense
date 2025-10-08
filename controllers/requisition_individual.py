@@ -122,7 +122,8 @@ def requisition_individual_edit():
         selected_requisition_status=row.req_status,
         doc_type_combos=combo_results,
         asset_type_list=asset_type_list,
-        selected_asset_type=row.asset_type
+        selected_asset_type=row.asset_type,
+        asset_types=get_asset_types(),
     )
 
 # -----------------------------

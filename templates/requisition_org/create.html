@@ -4,8 +4,14 @@
 [[icon='fa fa-file-pen']]
 [[breadcamp = 'Create Organization Requisition']]
 [[end]]
+
  
 [[block content]]
+<style>
+    .is_required {
+        color: red;
+    }
+</style>
 <div class="container-section">
     <div class="d-flex justify-content-between align-items-center border-bottom mx-2">
         <span class="icon-text icon-text-bold">
@@ -102,7 +108,7 @@
                     </div>
                 </div>
                 <div class="col-md-3 mb-3">
-                    <label for="req_org_desc" class="form-label"><strong>Description(Max 500 Words) <span class="is_required">*</span></strong></label>
+                    <label for="req_org_desc" class="form-label">Description(Max 500 Words) <span class="is_required">*</span></label>
                     <input type="text" class="form-control form-control-sm" id="req_org_desc" name="req_org_desc" required>
                 </div>
             </div>

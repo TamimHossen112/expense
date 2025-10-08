@@ -1,0 +1,266 @@
+[[extend 'layout_mobile.html']]
+
+[[block content]]
+<style>
+    .card-status {
+        padding: 0.15rem 0.4rem;  /* smaller badge */
+        border-radius: 0.25rem;
+        font-weight: 600;
+        font-size: 0.65rem;  /* smaller text */
+        color: white;
+    }
+
+    .status-approved {
+        background-color: #28a745;
+    }
+
+    .status-pending {
+        background-color: #ffc107;
+        color: black;
+    }
+
+    .status-draft {
+        background-color: #6c757d; /* grey/ash */
+    }
+
+    .edit-icon {
+        color: #7b68ee; /* Bootstrap 3 primary color */
+        font-size: 1.3rem; /* slightly bigger for visibility */
+        transition: transform 0.2s;
+    }
+
+
+    .edit-icon:hover {
+        transform: scale(1.2);
+        text-decoration: none;
+    }
+
+
+</style>
+
+<div class="container-section mx-2">
+    <!-- Filters -->
+    <div class="row mb-3" id="custom_form">
+        <div class="col-md-2 col-sm-12 mb-2">
+            <select class="form-select form-select-sm select_custom" name="req_status" placeholder="Req Status">
+                <option value="">Req Status</option>
+            </select>
+        </div>
+        <div class="col-md-2 col-sm-12 mb-2">
+            <select class="form-select form-select-sm select_custom" name="asset_type" placeholder="Vehicle Type">
+                <option value="">Select Asset</option>
+            </select>
+        </div>
+        <div class="col-md-6"></div>
+
+        <div class="col-md-2 col-sm-12 d-flex justify-content-end mb-2">
+            <button id="submit" class="btn btn-sm btn-primary me-2">
+                <i class="fa-solid fa-magnifying-glass"></i> Search
+            </button>
+            <button id="reset" class="btn btn-sm btn-light">
+                <i class="fa-solid fa-retweet"></i> Reset
+            </button>
+        </div>
+    </div>
+
+    <!-- Create Requisition Button -->
+    <div class="row mb-3">
+        <div class="col-12 d-flex justify-content-md-end">
+            <a href="[[=URL('requisition_field/create')]]" class="btn btn-primary btn-create-requisition w-100 w-md-auto">
+                <i class="fa-solid fa-plus"></i> New Requisition
+            </a>
+        </div>
+    </div>
+
+
+    <!-- Cards Container -->
+    <div class="row row-cols-1 row-cols-md-3 g-3" id="cardContainer"></div>
+
+    <!-- Pagination + Page Size -->
+    <div class="d-flex justify-content-between align-items-center mt-3">
+        <!-- Page Size Selector -->
+        <div class="col-auto">
+            <select class="form-select form-select-sm" id="pageSizeSelector">
+                <option value="6">6</option>
+                <option value="12">12</option>
+                <option value="24">24</option>
+            </select>
+        </div>
+
+        <!-- Pagination -->
+        <nav aria-label="Page navigation">
+            <ul class="pagination mb-0" id="pagination"></ul>
+        </nav>
+    </div>
+</div>
+[[end]]
+
+
+[[block scripts]]
+<script>
+let currentPage = 1;
+let pageSize = parseInt($("#pageSizeSelector").val()) || 5;
+
+// Render cards
+function renderCards(data) {
+    const $container = $("#cardContainer");
+    $container.empty();
+
+    if (!data || data.length === 0) {
+        $container.append('<div class="col"><p class="text-center">No records found</p></div>');
+        return;
+    }
+
+    data.forEach(record => {
+        let statusClass = '';
+        let statusText = '';
+        let statusColor = ''; // background color
+
+        switch ((record.req_status || '').toLowerCase()) {
+            case 'approved':
+                statusClass = 'status-approved';
+                statusText = 'APPROVED';
+                statusColor = '#5cb85c'; // green
+                break;
+            case 'pending':
+                statusClass = 'status-pending';
+                statusText = 'PENDING';
+                statusColor = '#f0ad4e'; // orange
+                break;
+            case 'draft':
+                statusClass = 'status-draft';
+                statusText = 'DRAFT';
+                statusColor = '#6c757d'; // grey
+                break;
+            default:
+                statusClass = 'status-unknown';
+                statusText = record.req_status || 'UNKNOWN';
+                statusColor = '#777'; // dark grey
+        }
+
+        // Edit icon for all cards
+        const editIcon = `<a href="[[=URL('requisition_field/edit')]]?id=${record.id}" class="edit-icon">
+                            <i class="fa-solid fa-pencil"></i>
+                          </a>`;
+
+        const card = `
+            <div class="col">
+                <div class="card shadow-sm h-100 position-relative overflow-hidden">
+                    <div class="card-body d-flex justify-content-between align-items-start">
+                        <h5 class="card-title mb-0">${record.req_id}</h5>
+                        <span class="card-status ${statusClass}" 
+                              style="
+                                  font-size: 0.75rem; 
+                                  padding: 0.15rem 0.5rem; 
+                                  border-radius: 0.25rem; 
+                                  font-weight: 600;
+                                  text-transform: uppercase;
+                                  letter-spacing: 0.5px;
+                                  color: #fff;
+                                  background-color: ${statusColor};
+                              ">
+                              ${statusText}
+                        </span>
+                    </div>
+                    <div class="card-body pt-2">
+                        <p class="card-text mb-0">
+                            <strong>Employee:</strong> ${record.emp_id || '-'} | ${record.emp_name || '-'}<br>
+                            <strong>Vehicle Type:</strong> ${record.asset_type || '-'}<br>
+                        </p>
+                    </div>
+                    <div class="position-absolute bottom-0 end-0 mb-2 me-3">
+                        ${editIcon}
+                    </div>
+                </div>
+            </div>
+        `;
+        $container.append(card);
+    });
+}
+
+
+// Render pagination
+function renderPagination(totalRecords) {
+    const totalPages = totalRecords > 0 ? Math.ceil(totalRecords / pageSize) : 1;
+    const $pagination = $("#pagination");
+    $pagination.empty();
+
+    for (let i = 1; i <= totalPages; i++) {
+        const active = i === currentPage ? 'active' : '';
+        $pagination.append(`<li class="page-item ${active}"><a class="page-link" href="#">${i}</a></li>`);
+    }
+
+    $(".page-link").click(function(e) {
+        e.preventDefault();
+        const pageNum = parseInt($(this).text());
+        if (!isNaN(pageNum) && pageNum <= totalPages) {
+            currentPage = pageNum;
+            loadCards();
+        }
+    });
+}
+
+// Load cards with AJAX
+function loadCards() {
+    const start = (currentPage - 1) * pageSize;
+
+    $.ajax({
+        url: '[[=URL("requisition_field", "get_data")]]',
+        type: 'GET',
+        data: {
+            start: start,
+            length: pageSize,
+            req_status: $("select[name='req_status']").val(),
+            asset_type: $("select[name='asset_type']").val()
+        },
+        dataType: 'json',
+        success: function(res) {
+            renderCards(res.data);
+            renderPagination(res.recordsFiltered);
+        }
+    });
+}
+
+$(document).ready(function() {
+    // Initialize select2 for filters
+    $("[name='req_status']").one('select2:open', function() {
+        $.getJSON('[[=URL("default", "get_combo_values")]]?key=requisition_status', function(data){
+            const formatted = data.results.map(r=>({id:r.id,text:r.text}));
+            $("[name='req_status']").empty().select2({data:formatted,placeholder:"Req Status",allowClear:true}).select2('open');
+        });
+    });
+
+    $("[name='asset_type']").one('select2:open', function() {
+        $.getJSON('[[=URL("default", "get_asset_master_types")]]', function(data){
+            $("[name='asset_type']").empty().select2({data:data.results,placeholder:"Select Asset",allowClear:true}).select2('open');
+        });
+    });
+
+    // Change page size
+    $("#pageSizeSelector").change(function(){
+        pageSize = parseInt($(this).val());
+        currentPage = 1;
+        loadCards();
+    });
+
+    // Submit filters
+    $("#submit").click(function(e){
+        e.preventDefault();
+        currentPage = 1;
+        loadCards();
+    });
+
+    // Reset filters
+    $("#reset").click(function(e){
+        e.preventDefault();
+        $("select[name='req_status'], select[name='asset_type']").val(null).trigger('change');
+        currentPage = 1;
+        loadCards();
+    });
+
+    // Initial load
+    loadCards();
+});
+</script>
+[[end]]
+

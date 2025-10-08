@@ -249,6 +249,7 @@ def requisition_individual_update():
 
     emp_id = request.forms.get('emp_id')
     emp_name = request.forms.get('emp_name')
+    requisition_status = request.forms.get('requisition_status')
 
     # ---------- Validation ----------
     required_fields = {
@@ -258,6 +259,7 @@ def requisition_individual_update():
         "License Issue Date": request.forms.get('license_issue_date'),
         "License Expire Date": request.forms.get('license_expire_date'),
         "Driving License Number": request.forms.get('license_number'),
+        "Requisition Status": requisition_status
     }
     missing_fields = [name for name, val in required_fields.items() if not val]
     if missing_fields:
@@ -269,6 +271,15 @@ def requisition_individual_update():
         flash.set("Requisition ID not found.", 'danger')
         redirect(URL('requisition_individual/index'))
 
+    # ---------- Extra Validation (if approved) ----------
+    if requisition_status.strip().lower() == "approved":
+        existing_asset = db(db.asset.user_id == emp_id).select().first()
+        if existing_asset:
+            flash.set(
+                f"{emp_name} already has an assigned Vehicle. Cannot approve requisition.",
+                "warning"
+            )
+            redirect(URL('requisition_individual/index'))
 
     # ---------- Update ----------
     db(db.requisition.id == req_id).update(
@@ -282,6 +293,7 @@ def requisition_individual_update():
         license_issue_date=request.forms.get('license_issue_date'),
         license_expire_date=request.forms.get('license_expire_date'),
         asset_type=request.forms.get('asset_type'),
+        req_status=requisition_status,
         quantity=1
     )
 

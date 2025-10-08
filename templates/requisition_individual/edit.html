@@ -141,6 +141,18 @@
                                     </div>
                                 </div>
 
+                                <div class="col-md-4 col-sm-12">
+                                    <div class="mb-2 custom_input">
+                                        <label for="requisition_status" class="form-label">Requisition Status <span class="is_required">*</span></label>
+                                        <select class="form-select form-select-sm select_custom" name="requisition_status" style="width: 200px;" placeholder="Select Requisition Status" required>
+                                            <option value="">Select Requisition Status</option>
+                                            [[for requisition_status in requisition_status_combos:]]
+                                                <option value=[[=requisition_status]] [[if str(requisition_status) == str(selected_requisition_status):]]Selected[[pass]]> [[=requisition_status]] </option>
+                                            [[pass]]
+                                        </select>
+                                    </div>
+                                </div>
+
                                 <div class="col-md-12 col-sm-12">
                                     <div class="mb-2">
                                         <strong>File Attachment Section</strong>

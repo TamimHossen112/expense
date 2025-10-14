@@ -47,76 +47,81 @@
 
             <div class="row g-3">
               [[for field in section_fields:]]
-                [[readonly_attr = 'readonly' if str(field.get('readonly','')).lower()=='yes' else '']]
+                [[# Skip rendering if field depends on another field ]]
+                [[if field.get('dependent_on') == "no" or (field.get('dependent_on') == "yes" and field.get('dependent_fields')):]]
 
-                [[if field['value_type'] == 'hidden':]]
-                  <!-- Hidden field goes directly without column wrapper -->
-                  <input type="hidden" 
-                        id="[[=field['key']]]" 
-                        name="[[=field['key']]]" 
-                        value="[[=field['default_value'] or '']]" >
-                [[else:]]
-                  <div class="col-md-3 col-sm-12">
-                    <label for="[[=field['key']]]" class="form-label fw-bold">
-                      [[=field['caption']]]
-                    </label>
+                  [[readonly_attr = 'readonly' if str(field.get('readonly','')).lower()=='yes' else '']]
 
-                    [[if field['value_type'] in ('string','integer'):]]
-                      <input type="[[='number' if field['value_type']=='integer' else 'text']]" 
-                            class="form-control form-control-sm"
-                            id="[[=field['key']]]" 
-                            name="[[=field['key']]]" 
-                            value="[[=field['default_value'] or '']]" 
-                            [[=readonly_attr]]>
+                  [[if field['value_type'] == 'hidden':]]
+                    <!-- Hidden field goes directly without column wrapper -->
+                    <input type="hidden" 
+                          id="[[=field['key']]]" 
+                          name="[[=field['key']]]" 
+                          value="[[=field['default_value'] or '']]" >
+                  [[else:]]
+                    <div class="col-md-3 col-sm-12">
+                      <label for="[[=field['key']]]" class="form-label fw-bold">
+                        [[=field['caption']]]
+                      </label>
 
-                    [[elif field['value_type'] == 'date':]]
-                      <div class="flatpickr-wrapper ">
-                        <input type="text" 
-                              class="form-control form-control-sm date-picker"
+                      [[if field['value_type'] in ('string','integer'):]]
+                        <input type="[[='number' if field['value_type']=='integer' else 'text']]" 
+                              class="form-control form-control-sm"
+                              id="[[=field['key']]]" 
+                              name="[[=field['key']]]" 
+                              value="[[=field['default_value'] or '']]" 
+                              [[=readonly_attr]]>
+
+                      [[elif field['value_type'] == 'date':]]
+                        <div class="flatpickr-wrapper ">
+                          <input type="text" 
+                                class="form-control form-control-sm date-picker"
+                                id="[[=field['key']]]"
+                                name="[[=field['key']]]"
+                                value="[[=field['default_value'] or '']]" 
+                                placeholder="Select Date"
+                                [[=readonly_attr]]>
+                          <i class="fa fa-calendar calendar-icon text-secondary calendar-toggle"></i>
+                        </div>
+
+                      [[elif field['value_type'] == 'dropdown':]]
+                        <select class="form-select form-select-sm select_custom"
+                                id="[[=field['key']]]"
+                                name="[[=field['key']]]"
+                                [[=readonly_attr]]>
+                          <option value="">Select [[=field['caption']]]</option>
+
+                          [[if field.get('dependency_fields'):]]
+                            [[for k in (field['value_list'] or {}).keys():]]
+                              <option value="[[=k]]" [[='selected' if k==field['default_value'] else '' ]]>
+                                [[=k]]
+                              </option>
+                            [[pass]]
+                          [[else:]]
+                            [[for val in (field['value_list'] or []):]]
+                              [[if isinstance(val, dict):]]
+                                <option value="[[=val['value']]]" [[='selected' if val['value']==field['default_value'] else '' ]]>
+                                  [[=val['label']]]
+                                </option>
+                              [[else:]]
+                                <option value="[[=val]]" [[='selected' if val==field['default_value'] else '' ]]>
+                                  [[=val]]
+                                </option>
+                              [[pass]]
+                            [[pass]]
+                          [[pass]]
+                        </select>
+
+                      [[else:]]
+                        <input type="text" class="form-control form-control-sm"
                               id="[[=field['key']]]"
                               name="[[=field['key']]]"
                               value="[[=field['default_value'] or '']]" 
-                              placeholder="Select Date"
                               [[=readonly_attr]]>
-                        <i class="fa fa-calendar calendar-icon text-secondary calendar-toggle"></i>
-                      </div>
+                      [[pass]]
+                    </div>
+                  [[pass]]
 
-                    [[elif field['value_type'] == 'dropdown':]]
-                      <select class="form-select form-select-sm select_custom"
-                              id="[[=field['key']]]"
-                              name="[[=field['key']]]"
-                              [[=readonly_attr]]>
-                        <option value="">Select [[=field['caption']]]</option>
-
-                        [[if field.get('dependency_fields'):]]
-                          [[for k in (field['value_list'] or {}).keys():]]
-                            <option value="[[=k]]" [[='selected' if k==field['default_value'] else '' ]]>
-                              [[=k]]
-                            </option>
-                          [[pass]]
-                        [[else:]]
-                          [[for val in (field['value_list'] or []):]]
-                            [[if isinstance(val, dict):]]
-                              <option value="[[=val['value']]]" [[='selected' if val['value']==field['default_value'] else '' ]]>
-                                [[=val['label']]]
-                              </option>
-                            [[else:]]
-                              <option value="[[=val]]" [[='selected' if val==field['default_value'] else '' ]]>
-                                [[=val]]
-                              </option>
-                            [[pass]]
-                          [[pass]]
-                        [[pass]]
-                      </select>
-
-                    [[else:]]
-                      <input type="text" class="form-control form-control-sm"
-                            id="[[=field['key']]]"
-                            name="[[=field['key']]]"
-                            value="[[=field['default_value'] or '']]" 
-                            [[=readonly_attr]]>
-                    [[pass]]
-                  </div>
                 [[pass]]
               [[pass]]
             </div>
@@ -146,12 +151,14 @@
     margin-bottom: 40px;
   }
 </style>
+[[end]]
+
 
 [[block scripts]]
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script>
 const fieldsConfig = [[=XML(fields_json)]];
 console.log("fieldsConfig loaded:", fieldsConfig);
@@ -205,13 +212,105 @@ function updateDependentFields(fieldKey, value) {
     }).fail(err => console.error("Error fetching dependent fields:", err));
 }
 
+function renderDependentFields(mainKey, dependentKeys) {
+    const $mainField = $("#" + mainKey).closest(".col-md-3");
+    const $section = $mainField.closest(".form-section");
+    if (!$section.length) return;
+
+    // Remove previous dependent fields rendered by this dropdown
+    $section.find(`[data-dependent-on='${mainKey}']`).remove();
+
+    dependentKeys.forEach(key => {
+        const field = fieldsConfig.find(f => f.key === key);
+        if (!field) return;
+
+        let html = '';
+        const readonlyAttr = field.readonly?.toLowerCase() === "yes" ? "readonly" : "";
+
+        if (field.value_type === "string" || field.value_type === "integer") {
+            html = `
+                <div class="col-md-3 col-sm-12" data-dependent-on="${mainKey}">
+                    <label class="form-label fw-bold">${field.caption}</label>
+                    <input type="${field.value_type === "integer" ? "number" : "text"}"
+                           class="form-control form-control-sm"
+                           id="${field.key}" name="${field.key}"
+                           value="${field.default_value || ''}" ${readonlyAttr}>
+                </div>`;
+        } else if (field.value_type === "date") {
+            html = `
+                <div class="col-md-3 col-sm-12" data-dependent-on="${mainKey}">
+                    <label class="form-label fw-bold">${field.caption}</label>
+                    <div class="flatpickr-wrapper">
+                        <input type="text" 
+                              class="form-control form-control-sm date-picker"
+                              id="${field.key}" 
+                              name="${field.key}"
+                              value="${field.default_value || ''}" 
+                              placeholder="Select Date"
+                              ${readonlyAttr}>
+                        <i class="fa fa-calendar calendar-icon text-secondary calendar-toggle"></i>
+                    </div>
+                </div>`;
+        } else if (field.value_type === "dropdown") {
+            html = `
+                <div class="col-md-3 col-sm-12" data-dependent-on="${mainKey}">
+                    <label class="form-label fw-bold">${field.caption}</label>
+                    <select class="form-select form-select-sm select_custom"
+                            id="${field.key}" name="${field.key}" ${readonlyAttr}>
+                        <option value="">Select</option>
+                    </select>
+                </div>`;
+        }
+
+        $section.find(".row.g-3").append(html);
+
+        const $newField = $(`#${field.key}`);
+
+        // Populate dropdown options
+        if (field.value_type === "dropdown") {
+            if (Array.isArray(field.value_list) && field.value_list.length > 0) {
+                field.value_list.forEach(val => {
+                    $newField.append(new Option(val, val, false, false));
+                });
+                initSelect2($newField);
+            } else if (field.source_api) {
+                const url = `[[=URL('default')]]/${field.source_api}`;
+                $.getJSON(url, function(response) {
+                    if (Array.isArray(response)) {
+                      response.forEach(item => {
+                          // Check if item is object with id/text or just string
+                          if (typeof item === 'object' && item.id !== undefined && item.text !== undefined) {
+                              $newField.append(new Option(item.text, item.id, false, false));
+                          } else {
+                              $newField.append(new Option(item, item, false, false));
+                          }
+                      });
+                  } else if (typeof response === "object") {
+                      Object.keys(response).forEach(key => {
+                          $newField.append(new Option(key, key, false, false));
+                      });
+                  }
+
+                    initSelect2($newField);
+                }).fail(err => console.error(`Failed to load options for ${field.key}:`, err));
+            } else {
+                initSelect2($newField); // fallback
+            }
+        }
+    });
+
+    console.log(`🎯 Rendered dependent fields for '${mainKey}':`, dependentKeys);
+}
+
+
 function attachDynamicDropdown(field) {
     const $field = $("#" + field.key);
     if (!$field.length || field.value_type !== "dropdown") return;
 
     initSelect2($field);
+    let loaded = false;
 
-    let loaded = false; 
+    // Load dropdown options dynamically (once)
     $field.on("select2:open", function () {
         if (loaded) return;
         const url = `[[=URL('default')]]/${field.source_api}`;
@@ -220,16 +319,36 @@ function attachDynamicDropdown(field) {
         $.getJSON(url, function(response) {
             populateDropdown($field, response);
             loaded = true;
-
-            $field.select2('close');
-            $field.select2('open');
+            $field.select2('close').select2('open');
         }).fail(err => console.error("Failed to load options for", field.key, err));
     });
 
+    // Handle selection change
     $field.on("change", function() {
         const selectedValue = $(this).val();
         if (!selectedValue) return;
+
+        console.log(`🔸 '${field.key}' changed to:`, selectedValue);
         updateDependentFields(field.key, selectedValue);
+
+        // Dictionary-style dependent_fields
+        const depString = field.dependent_fields || "";
+        if (typeof depString === "string" && depString.includes("{") && depString.includes("}")) {
+            try {
+                const jsonMatch = depString.match(/\{[\s\S]*\}/);
+                if (!jsonMatch) return;
+                const jsonText = jsonMatch[0];
+                const depObject = JSON.parse(jsonText);
+
+                const dependentKeys = depObject[selectedValue];
+                if (dependentKeys && Array.isArray(dependentKeys)) {
+                    renderDependentFields(field.key, dependentKeys);
+                    initFlatpickr();
+                }
+            } catch (err) {
+                console.error(" Failed to parse dependent_fields JSON:", err);
+            }
+        }
     });
 }
 
@@ -238,6 +357,24 @@ function resizeSelect2() {
         $(this).css('width', '100%');
     });
 }
+// Initialize flatpickr for all existing and newly rendered date fields
+function initFlatpickr() {
+    $(".date-picker").each(function() {
+        // Avoid double initialization
+        if ($(this).hasClass("flatpickr-input")) return;
+
+        flatpickr(this, {
+            allowInput: true,
+            dateFormat: "Y-m-d"
+        });
+
+        // Click on calendar icon focuses input
+        $(this).siblings(".calendar-icon").off("click").on("click", () => {
+            $(this).focus();
+        });
+    });
+}
+
 
 $(window).on('resize', resizeSelect2);
 
@@ -252,3 +389,4 @@ $(document).ready(function () {
 });
 </script>
 [[end]]
+

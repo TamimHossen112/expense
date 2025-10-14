@@ -19,6 +19,21 @@
     background-color: #f8f9fa;
     z-index: 10;
 }
+
+/* Default (normal) placeholder color */
+textarea[name='dependent_fields[]']::placeholder {
+    color: #6c757d; /* gray like normal Bootstrap placeholder */
+    opacity: 1;
+}
+
+/* 🔴 Active red placeholder when dropdown + dependent_on = yes */
+textarea.dependent-active::placeholder {
+    color: #D9DDDC !important; /* red */
+    opacity: 1;
+    font-style: italic; /* optional, makes it clearer it’s a placeholder */
+}
+
+
 </style>
 [[end]]
 
@@ -72,6 +87,7 @@
                             <th style="width:250px;">Caption</th>
                             <th style="width:200px;">Value</th>
                             <th style="width:150px;">Value Type</th>
+                            <th style="width:90px;">Dependent On</th>
                             <th style="width:250px;">Dependent Fields</th>
                             <th style="width:90px;">Readonly</th>
                             <th style="width:200px;">Source API</th>
@@ -98,8 +114,15 @@
                                     [[pass]]
                                 </select>
                             </td>
+                            <td style="width:90px;">
+                                <select class="form-select readonly_select" name="dependent_on[]" style="width:100%;">
+                                    <option value="no" [[if row.get('dependent_on','')=='no':]]selected[[pass]]>no</option>
+                                    <option value="yes" [[if row.get('dependent_on','')=='yes':]]selected[[pass]]>yes</option>
+                                </select>
+                            </td>
                             <td style="width:250px;"><textarea class="form-control" name="dependent_fields[]" rows="2" style="width:100%;">[[=row.get('dependent_fields','') or '']]</textarea></td>
-                            <td style="width:80px;">
+                            
+                            <td style="width:90px;">
                                 <select class="form-select readonly_select" name="readonly[]" style="width:100%;">
                                     <option value="no" [[if row.get('readonly','')=='no':]]selected[[pass]]>no</option>
                                     <option value="yes" [[if row.get('readonly','')=='yes':]]selected[[pass]]>yes</option>
@@ -153,44 +176,143 @@
 
 <script>
 $(document).ready(function () {
+
+    // 🔹 Initialize Select2 dropdowns properly (Bootstrap-aligned)
     function initSelect2(context) {
-        $(context).find('.value_type_select').select2({tags:true,width:'100%',placeholder:"Select or add new"});
-        $(context).find('.readonly_select').select2({tags:true,width:'100%'});
-        $(context).find('.hidden_select').select2({tags:true,width:'100%'});
+        $(context).find('.value_type_select').select2({
+            tags: true,
+            width: 'resolve',
+            dropdownAutoWidth: true,
+            placeholder: "Select or add new"
+        });
+        $(context).find('.readonly_select').select2({
+            tags: true,
+            width: 'resolve',
+            dropdownAutoWidth: true
+        });
+        // Fix Select2 containers overlapping borders
+        $(context).find('.select2-container').css({
+            'width': '100%',
+            'min-width': '100%'
+        });
     }
 
     initSelect2(document);
 
+    // 🔹 Placeholder JSON template
+    const placeholderJSON = `data = {
+"ValueList1": ["field1","field2","field3"],
+"ValueList2": ["field4","field5","field6"]
+}`;
+
+    // 🔹 Update dependent_fields logic
+    function updateDependentFields($row) {
+        const valueType = $row.find(".value_type_select").val();
+        const dependentOn = $row.find("select[name='dependent_on[]']").val();
+        const $depFields = $row.find("textarea[name='dependent_fields[]']");
+
+        if (valueType === "dropdown" && dependentOn === "yes") {
+            // Apply placeholder, styling, and class for red placeholder
+            $depFields.attr("placeholder", `data = {
+        "ValueList1": ["field1","field2","field3"],
+        "ValueList2": ["field4","field5","field6"]
+    }`);
+            $depFields
+                .addClass("dependent-active") // this triggers red placeholder via CSS
+                .css({
+                    color: "#212529",   // normal text color for user input
+                    height: "120px",    // taller input area
+                });
+
+            // Only clear placeholder if user hasn’t typed anything valid
+            if ($depFields.val().trim() === "" || !$depFields.val().trim().startsWith("data")) {
+                $depFields.val("");
+            }
+
+            $depFields.prop("readonly", false);
+        } else {
+            // Reset placeholder and styling
+            $depFields
+                .removeClass("dependent-active") // remove red placeholder state
+                .attr("placeholder", "")
+                .css({
+                    color: "",
+                    height: "60px", // default height
+                })
+                .prop("readonly", false);
+        }
+    }
+
+
+
+    // 🔹 Apply on page load (edit mode)
+    $("#entriesTable tbody tr").each(function () {
+        updateDependentFields($(this));
+    });
+
+    // 🔹 Watch for changes to re-apply logic
+    $(document).on("change", ".value_type_select, select[name='dependent_on[]']", function () {
+        const $row = $(this).closest("tr");
+        updateDependentFields($row);
+    });
+
+    // 🔹 Add Row button handler
     $('#addRow').on('click', function () {
-        let vtOptions = `<option value="">Select or add Value Type</option>`;
+        let vtOptions = `<option value="">Select</option>`;
         [[for vt in value_type_list:]]
             vtOptions += `<option value="[[=vt]]">[[=vt]]</option>`;
         [[pass]]
 
-        let row = `<tr>
-            <td style="width:60px;"><input type="number" class="form-control" name="sl[]" style="width:100%;"></td>
-            <td style="width:150px;"><input type="text" class="form-control" name="section[]" style="width:100%;"></td>
-            <td style="width:80px;"><input type="number" class="form-control" name="order[]" style="width:100%;"></td>
-            <td style="width:250px;"><input type="text" class="form-control" name="key[]" style="width:100%;"></td>
-            <td style="width:250px;"><input type="text" class="form-control" name="caption[]" style="width:100%;"></td>
-            <td style="width:200px;"><input type="text" class="form-control" name="value[]" style="width:100%;"></td>
-            <td style="width:150px;"><select class="form-select value_type_select" name="value_type[]" style="width:100%;">` + vtOptions + `</select></td>
-            <td style="width:250px;"><textarea class="form-control" name="dependent_fields[]" rows="2" style="width:100%;"></textarea></td>
-            <td style="width:90px;"><select class="form-select readonly_select" name="readonly[]" style="width:100%;"><option value="no">no</option><option value="yes">yes</option></select></td>
-            <td style="width:200px;"><textarea class="form-control" name="source_api[]" rows="2" style="width:100%;"></textarea></td>
-            <td style="width:200px;"><textarea class="form-control" name="dependent_fields_source_api[]" rows="2" style="width:100%;"></textarea></td>
-            <td style="width:250px;"><textarea class="form-control" name="value_list[]" rows="2" style="width:100%;"></textarea></td>
-            <td style="width:150px;"><input type="text" class="form-control" name="default_value[]" style="width:100%;"></td>
-            <td style="width:100px;" class="text-center"><button type="button" class="btn btn-sm btn-danger removeRow"><i class="fa-solid fa-trash"></i></button></td>
+        const newRow = `
+        <tr>
+            <td style="width:60px;"><input type="number" class="form-control form-control-sm" name="sl[]" style="width:100%;"></td>
+            <td style="width:150px;"><input type="text" class="form-control form-control-sm" name="section[]" style="width:100%;"></td>
+            <td style="width:80px;"><input type="number" class="form-control form-control-sm" name="order[]" style="width:100%;"></td>
+            <td style="width:250px;"><input type="text" class="form-control form-control-sm" name="key[]" style="width:100%;"></td>
+            <td style="width:250px;"><input type="text" class="form-control form-control-sm" name="caption[]" style="width:100%;"></td>
+            <td style="width:200px;"><input type="text" class="form-control form-control-sm" name="value[]" style="width:100%;"></td>
+            <td style="width:150px;">
+                <select class="form-select form-select-sm value_type_select" name="value_type[]" style="width:100%;">
+                    ${vtOptions}
+                </select>
+            </td>
+            <td style="width:90px;">
+                <select class="form-select form-select-sm readonly_select" name="dependent_on[]" style="width:100%;">
+                    <option value="no">no</option>
+                    <option value="yes">yes</option>
+                </select>
+            </td>
+            <td style="width:250px;"><textarea class="form-control form-control-sm" name="dependent_fields[]" rows="2" style="width:100%;"></textarea></td>
+            <td style="width:90px;">
+                <select class="form-select form-select-sm readonly_select" name="readonly[]" style="width:100%;">
+                    <option value="no">no</option>
+                    <option value="yes">yes</option>
+                </select>
+            </td>
+            <td style="width:200px;"><textarea class="form-control form-control-sm" name="source_api[]" rows="2" style="width:100%;"></textarea></td>
+            <td style="width:200px;"><textarea class="form-control form-control-sm" name="dependent_fields_source_api[]" rows="2" style="width:100%;"></textarea></td>
+            <td style="width:250px;"><textarea class="form-control form-control-sm" name="value_list[]" rows="2" style="width:100%;"></textarea></td>
+            <td style="width:150px;"><input type="text" class="form-control form-control-sm" name="default_value[]" style="width:100%;"></td>
+            <td style="width:100px;" class="text-center">
+                <button type="button" class="btn btn-sm btn-danger removeRow">
+                    <i class="fa-solid fa-trash"></i>
+                </button>
+            </td>
         </tr>`;
 
-        $('#entriesTable tbody').append(row);
-        initSelect2($('#entriesTable tbody tr:last'));
+        const $tbody = $('#entriesTable tbody');
+        $tbody.append(newRow);
+
+        const $newRow = $tbody.find('tr:last');
+        initSelect2($newRow);
+        updateDependentFields($newRow);
     });
 
+    // 🔹 Remove Row
     $(document).on('click', '.removeRow', function () {
         $(this).closest('tr').remove();
     });
 });
 </script>
 [[end]]
+

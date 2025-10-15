@@ -32,7 +32,7 @@ def fetch_from_api(endpoint, params=None):
     return []
 
 @action("transaction/create")
-@action.uses("transaction/create.html",db, session, flash)
+@action.uses("transaction/create.html", db, session, flash)
 def transaction_create():
     task_id='transaction_create'
     access_permission=check_role(task_id)  
@@ -48,7 +48,8 @@ def transaction_create():
         f"""
         SELECT sl, section, `order`, `key`, caption, value_type, 
                value_list, source_api, default_value, readonly, 
-               hidden, dependent_fields, dependent_fields_source_api
+               hidden, dependent_fields, dependent_fields_source_api, 
+               dependent_on
         FROM tr_config
         WHERE tr_type = '{tr_type}'
         ORDER BY sl, `order`
@@ -80,6 +81,7 @@ def transaction_create():
             "readonly": row["readonly"] or "",
             "hidden": row["hidden"] or "",
             "dependent_fields": row["dependent_fields"] or "",
+            "dependent_on": row.get("dependent_on") or "",
         })
 
     return dict(
@@ -290,6 +292,7 @@ def transaction_edit():
             "readonly": row.readonly or "no",
             "hidden": "",
             "dependent_fields": row.dependent_fields or "",
+            "dependent_on": row.dependent_on or "",
         })
 
     return dict(

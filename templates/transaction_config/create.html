@@ -6,8 +6,8 @@
 <style>
 /* Highlight entire row when any input/select/textarea inside it is focused */
 #entriesTable tbody tr:focus-within {
-    border: 2px solid #750dfd !important;  /* Bootstrap blue */
-    background-color: #f0f8ff !important;  /* light highlight */
+    border: 2px solid #750dfd !important;
+    background-color: #f0f8ff !important;
 }
 .table-wrapper {
     overflow-x: auto;
@@ -29,7 +29,6 @@
             <i class="fa-solid fa-plus"></i>
             <span>Create Transaction Config</span>
         </span>
-
         <div class="d-flex justify-content-end">
             <div class="p-1">
                 <a href="[[=URL('transaction_config','index')]]" class="btn btn-sm btn-light">
@@ -64,6 +63,7 @@
                             <th style="width:250px;">Caption</th>
                             <th style="width:200px;">Value</th>
                             <th style="width:150px;">Value Type</th>
+                            <th style="width:90px;">Dependent On</th>
                             <th style="width:250px;">Dependent Fields</th>
                             <th style="width:90px;">Readonly</th>
                             <th style="width:200px;">Source API</th>
@@ -100,7 +100,6 @@
                     </div>
                 </div>
             </div>
-
         </form>
     </div>
 </div>
@@ -112,6 +111,7 @@
 
 <script>
 $(document).ready(function () {
+    // Initialize Transaction Type select2
     $('#tr_type').select2({ tags: true, width: '100%', placeholder: "Select or add new" });
 
     let valueTypeOptions = `
@@ -125,6 +125,38 @@ $(document).ready(function () {
         <option value="yes">yes</option>
     `;
 
+    // Placeholder text (will be shown as placeholder, not actual textarea value)
+    const placeholderText = `data = {
+"ValueList1": ["field1","field2","field3"],
+"ValueList2": ["field4","field5","field6"]
+}`;
+
+    // --- Function to handle dependent_fields display logic ---
+    function updateDependentFields($row) {
+        const valueType = $row.find(".value_type_select").val();
+        const dependentOn = $row.find("select[name='dependent_on[]']").val();
+        const $depFields = $row.find("textarea[name='dependent_fields[]']");
+
+        if (valueType === "dropdown" && dependentOn === "yes") {
+            // Show placeholder but do not fill value
+            $depFields.attr("placeholder", placeholderText);
+            $depFields.css({
+                color: "#D9DDDC",  // Bootstrap gray
+                height: "90px",   // <-- increase height (you can tweak)
+            });
+        } else {
+            // Reset placeholder, color, and height
+            $depFields.attr("placeholder", "");
+            $depFields.css({
+                color: "",
+                height: "60px",    // <-- revert to normal height
+            });
+            $depFields.val(""); // ensure empty if not applicable
+        }
+    }
+
+
+    // --- Add new row ---
     $('#addRow').on('click', function () {
         let row = `
         <tr>
@@ -139,7 +171,14 @@ $(document).ready(function () {
                     ${valueTypeOptions}
                 </select>
             </td>
-            <td style="width:250px;"><textarea class="form-control" name="dependent_fields[]" rows="2" style="width:100%;"></textarea></td>
+            <td style="width:90px;">
+                <select class="form-select readonly_select" name="dependent_on[]" style="width:100%;">
+                    ${yesNoOptions}
+                </select>
+            </td>
+            <td style="width:250px;">
+                <textarea class="form-control dependent_fields_textarea" name="dependent_fields[]" rows="2" style="width:100%;"></textarea>
+            </td>
             <td style="width:90px;">
                 <select class="form-select readonly_select" name="readonly[]" style="width:100%;">
                     ${yesNoOptions}
@@ -156,16 +195,45 @@ $(document).ready(function () {
             </td>
         </tr>
         `;
-
         $('#entriesTable tbody').append(row);
 
-        $('#entriesTable tbody tr:last .value_type_select').select2({tags: true, width: '100%', placeholder: "Select or add new"});
-        $('#entriesTable tbody tr:last .readonly_select').select2({tags: true, width: '100%'});
+        const $newRow = $('#entriesTable tbody tr:last');
+        $newRow.find(".value_type_select").select2({tags: true, width: '100%', placeholder: "Select or add new"});
+        $newRow.find(".readonly_select").select2({tags: true, width: '100%'});
+
+        updateDependentFields($newRow);
     });
 
+    // --- Remove row ---
     $(document).on('click', '.removeRow', function () {
         $(this).closest('tr').remove();
+    });
+
+    // --- Update Dependent Fields on value_type or dependent_on change ---
+    $(document).on("change", ".value_type_select, select[name='dependent_on[]']", function () {
+        const $row = $(this).closest("tr");
+        updateDependentFields($row);
+    });
+
+    // --- Handle placeholder behavior ---
+    $(document).on("focus", ".dependent_fields_textarea", function () {
+        // When user clicks in, clear placeholder style
+        $(this).css("color", "");
+    });
+
+    $(document).on("blur", ".dependent_fields_textarea", function () {
+        const $this = $(this);
+        const $row = $this.closest("tr");
+        const valueType = $row.find(".value_type_select").val();
+        const dependentOn = $row.find("select[name='dependent_on[]']").val();
+
+        // Restore placeholder look if still empty
+        if (valueType === "dropdown" && dependentOn === "yes" && !$this.val().trim()) {
+            $this.attr("placeholder", placeholderText);
+            $this.css("color", "#6c757d");
+        }
     });
 });
 </script>
 [[end]]
+

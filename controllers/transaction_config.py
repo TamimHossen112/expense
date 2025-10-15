@@ -65,6 +65,7 @@ def transaction_config_submit():
     sls            = request.forms.get('sl[]') or []
     readonlys      = request.forms.get('readonly[]') or []
     dependent_fields = request.forms.get('dependent_fields[]') or []
+    dependent_on = request.forms.get('dependent_on[]') or []
 
 
     wrap = lambda v: [v] if isinstance(v, str) else v
@@ -90,7 +91,8 @@ def transaction_config_submit():
                 default_value=default_values[i].strip() if default_values[i] else None,
                 sl=int(sls[i]) if i < len(sls) and sls[i] else None,
                 readonly=readonlys[i].strip() if i < len(readonlys) and readonlys[i] else None,
-                dependent_fields=dependent_fields[i].strip() if i < len(dependent_fields) and dependent_fields[i] else None
+                dependent_fields=dependent_fields[i].strip() if i < len(dependent_fields) and dependent_fields[i] else None,
+                dependent_on=dependent_on[i].strip() if i < len(dependent_on) and dependent_on[i] else None
             )
 
         db.commit()
@@ -123,8 +125,9 @@ def transaction_config_edit():
 
     rows = db.executesql(f"""
         SELECT id, tr_type, section, `order`, `key`, caption, value,
-               value_type, source_api, value_list, default_value,
-               sl, readonly, dependent_fields, dependent_fields_source_api
+            value_type, source_api, value_list, default_value,
+            sl, readonly, dependent_fields, dependent_fields_source_api,
+            dependent_on
         FROM tr_config
         WHERE tr_type = '{tr_type}'
         ORDER BY sl ASC, `order` ASC
@@ -151,7 +154,7 @@ def transaction_config_update():
         redirect(URL('transaction_config','index'))
 
     fields = ['section','order','key','caption','value','value_type','dependent_fields',
-              'readonly','source_api','dependent_fields_source_api','value_list','default_value','sl']
+              'readonly','source_api','dependent_fields_source_api','value_list','default_value','sl','dependent_on']
 
     data = {}
     for f in fields:
@@ -181,7 +184,8 @@ def transaction_config_update():
             dependent_fields_source_api=data['dependent_fields_source_api'][i].strip() if i<len(data['dependent_fields_source_api']) else '',
             value_list=data['value_list'][i].strip() if i<len(data['value_list']) else '',
             default_value=data['default_value'][i].strip() if i<len(data['default_value']) else '',
-            sl=int(data['sl'][i]) if i<len(data['sl']) and data['sl'][i] else None
+            sl=int(data['sl'][i]) if i<len(data['sl']) and data['sl'][i] else None,
+            dependent_on=data['dependent_on'][i].strip() if i<len(data['dependent_on']) else None
         )
 
     db.commit()

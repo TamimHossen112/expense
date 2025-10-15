@@ -161,7 +161,7 @@ pass
           </li>
 
           [[if check_role("transaction_view")==True:]]
-          <li class="menu-item sub-menu [[if _controller_name in ['allocation','transfer', 'ownership_transfer']:]]open[[pass]]">
+          <li class="menu-item sub-menu [[if _controller_name in ['transaction']:]]open[[pass]]">
             <a href="#">
               <span class="menu-icon">
                 <i class="fa-solid fa-network-wired"></i>
@@ -170,24 +170,22 @@ pass
             </a>
             [[
               from apps.expense.common_fn import get_tr_types
-              data = get_tr_types()
-              
-              
+              data = get_tr_types() 
             ]]
             
 
-            [[for type in data:]]
             <div class="sub-menu-list">
               <ul>
+                [[for type in data:]]
                 <li class="menu-item [[if _controller_name=='transaction' and request.query.get('type') == type['tr_type']:]]active_link[[pass]]">
                   <a href="[[=URL('transaction/index')]]?type=[[=type['tr_type']]]">
                     <span class="menu-icon"><i class="fa-solid fa-warehouse"></i></span>
                     <span class="menu-title">[[=type['tr_type']]]</span>
                   </a>
                 </li>
+                [[pass]]
               </ul>
             </div>
-            [[pass]]
 
           </li>
           [[pass]]

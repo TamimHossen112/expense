@@ -9,7 +9,7 @@ def get_tr_types():
     sql=f"""
     SELECT DISTINCT tr_type
     FROM tr_config
-    ORDER BY tr_type asc
+    ORDER BY id asc
     """
     data = db.executesql(sql, as_dict=True)
     return data

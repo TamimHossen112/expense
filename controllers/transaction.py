@@ -203,9 +203,13 @@ def transaction_view():
     details = db.executesql(f"SELECT * FROM tr_details WHERE tr_head_id = {tr_head_id}", as_dict=True)
     details_map = {d['key']: d['value'] for d in details}
 
+
     merged = []
     for cfg in configs:
         if cfg.get("hidden") in ("yes", "true", True):
+            continue
+        
+        if cfg['key'] not in details_map:
             continue
 
         value = details_map.get(cfg['key'], cfg.get('value') or cfg.get('default_value') or "")
@@ -219,6 +223,7 @@ def transaction_view():
             "sl": cfg.get('sl', 0),   
             "order": cfg.get('order', 0)
         })
+        
 
     return dict(
         status="success",

@@ -332,7 +332,9 @@ def transaction_update():
         redirect(URL("transaction/index", vars=dict(type=trans_type)))
 
     # Delete existing tr_details for this transaction
+    tr_head_record = db(db.tr_head.id == tr_head_id).select().first()
     db(db.tr_details.tr_head_id == tr_head_id).delete()
+
 
     details_list = []
     approval_flag = False
@@ -377,6 +379,9 @@ def transaction_update():
 
     # Bulk insert new details
     db.tr_details.bulk_insert(details_list)
+    tr_head_record.update_record(
+        status=status
+    )
 
     # Update asset assignment if approved
     if approval_flag and employee_id and employee_name and asset_id:

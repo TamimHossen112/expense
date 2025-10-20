@@ -183,6 +183,7 @@ $(document).ready(function() {
                     
                     if (status === 'pending') badgeClass = 'bg-warning text-dark';
                     else if (status === 'approved') badgeClass = 'bg-success';
+                    else if (status === 'rejected') badgeClass = 'bg-danger';
                     
                     return `<span class="badge ${badgeClass} d-inline-block text-center" 
                                 style="min-width:80px;">

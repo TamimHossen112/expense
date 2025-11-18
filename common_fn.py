@@ -1,6 +1,7 @@
 IMAGE_UPLOAD_API = "https://filestore.transcombd.com/upload_file_expense"
 IMAGE_DOWNLOAD_API = "https://filestore.transcombd.com/uploadimage"
 LOGIN_URL = "https://uat.alpha.transcombd.com/ams/login/api_login"
+API_URL ="https://uat.alpha.transcombd.com/mytranscom_UAT"
 
 from .common import db, session, T, cache, auth, logger, authenticated, unauthenticated, flash
 
@@ -31,3 +32,11 @@ def check_role(task_id):
         return is_valid_role
     else:
         return False
+    
+    
+EMP_CACHE = {
+    "loaded": False,
+    "timestamp": 0,
+    "data": []
+}
+

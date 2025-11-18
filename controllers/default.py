@@ -3,6 +3,7 @@ from py4web import action, request, abort, redirect, URL, response, Session
 from py4web.utils.form import Form, FormStyleDefault
 from yatl.helpers import A
 from ..common import db, session, T, auth, flash
+from ..common_fn import IMAGE_UPLOAD_API, IMAGE_DOWNLOAD_API, LOGIN_URL, API_URL,EMP_CACHE
 import json
 
 
@@ -319,40 +320,80 @@ def get_combo_values():
 
     return dict(results=results)
 
-
+import time
 import requests
 import json
 
+CACHE_EXPIRY = 600  # 10 minutes (600 sec)
+
+@action.uses(API_URL)
+def load_employee_cache():
+    now = time.time()
+
+    # refresh if not loaded OR expired
+    if (not EMP_CACHE["loaded"]) or (now - EMP_CACHE["timestamp"] > CACHE_EXPIRY):
+
+        url = f"{API_URL}/api_expense_employee_list/get_employee_data_expense"
+
+        employee_id = request.query.get("employee_id")
+
+        payload = json.dumps({
+            "cid": "SKF",
+            "emp_id": employee_id
+        })
+
+        headers = {
+            'Content-Type': 'application/json',
+            'Cookie': 'session_id_mytranscom_uat=182.16.158.70-388e4b4b-3c3b-4adb-9358-4fbe0cda140d'
+        }
+
+        response = requests.request("GET", url, headers=headers, data=payload)
+
+        EMP_CACHE["data"] = json.loads(response.text)
+        EMP_CACHE["timestamp"] = now
+        EMP_CACHE["loaded"] = True
+
+    return EMP_CACHE["data"]
+
+
 @action("default/get_employee_details")
+@action.uses(API_URL)
 def get_employee_details():
-    url = "https://uat.alpha.transcombd.com/mytranscom_UAT/test/get_employee_data_expense"
+    data = load_employee_cache()
+    return json.dumps(data)
 
-    employee_id = request.query.get("employee_id")
+# @action("default/get_employee_details")
+# @action.uses(API_URL)
+# def get_employee_details():
+#     url = f"{API_URL}/api_expense_employee_list/get_employee_data_expense"
 
-    payload = json.dumps({
-    "cid": "SKF",
-    "emp_id": employee_id
-    })
-    headers = {
-    'Content-Type': 'application/json',
-    'Cookie': 'session_id_mytranscom_uat=182.16.158.70-388e4b4b-3c3b-4adb-9358-4fbe0cda140d'
-    }
+#     employee_id = request.query.get("employee_id")
 
-    response = requests.request("GET", url, headers=headers, data=payload)
+#     payload = json.dumps({
+#     "cid": "SKF",
+#     "emp_id": employee_id
+#     })
+#     headers = {
+#     'Content-Type': 'application/json',
+#     'Cookie': 'session_id_mytranscom_uat=182.16.158.70-388e4b4b-3c3b-4adb-9358-4fbe0cda140d'
+#     }
 
-    response.headers['Content-Type'] = 'application/json'
-    return json.loads(response.text)
+#     response = requests.request("GET", url, headers=headers, data=payload)
+
+#     response.headers['Content-Type'] = 'application/json'
+#     return json.loads(response.text)
 
 
 
 
 @action("default/get_transaction_employee_details")
+@action.uses(API_URL)
 def get_transaction_employee_details():
     emp_id = request.query.get("id")
     cid = request.query.get("cid", "SKF") 
 
     try:
-        url = "https://uat.alpha.transcombd.com/mytranscom_UAT/test/get_employee_data_expense"
+        url = f"{API_URL}/api_expense_employee_list/get_employee_data_expense"
         headers = {
             "Content-Type": "application/json",
             "Cookie": "session_id_mytranscom_uat=182.16.158.70-388e4b4b-3c3b-4adb-9358-4fbe0cda140d"

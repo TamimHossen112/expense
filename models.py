@@ -170,6 +170,7 @@ db.define_table('asset',
     Field('asset_condition', 'string', length=100),
     Field('first_issue_date', 'date'),
     Field('registration_date','date'),
+    Field('using_from','date'),
     Field('asset_status', 'string', length=100),
     signature,
     migrate=False

@@ -34,9 +34,9 @@ def check_role(task_id):
         return False
     
     
-EMP_CACHE = {
-    "loaded": False,
-    "timestamp": 0,
-    "data": []
-}
+# EMP_CACHE = {
+#     "loaded": False,
+#     "timestamp": 0,
+#     "data": []
+# }
 

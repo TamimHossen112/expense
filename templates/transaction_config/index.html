@@ -99,6 +99,7 @@ $(document).ready(function() {
             { title: 'SL No.', data: null, render: function(data, type, row, meta) {
                 return meta.row + 1;
             }},
+            { title: 'Transaction Order', data: 'tr_order_sl', render: d => d ?? '-' },
             { title: 'Transaction Type', data: 'tr_type', render: d => d ?? '-' },
             {
                 title: '', data: 'tr_type', render: function(id) {

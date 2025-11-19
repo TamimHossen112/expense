@@ -3,7 +3,7 @@ from py4web import action, request, abort, redirect, URL, response, Session
 from py4web.utils.form import Form, FormStyleDefault
 from yatl.helpers import A
 from ..common import db, session, T, auth, flash
-from ..common_fn import IMAGE_UPLOAD_API, IMAGE_DOWNLOAD_API, LOGIN_URL, API_URL,EMP_CACHE
+from ..common_fn import IMAGE_UPLOAD_API, IMAGE_DOWNLOAD_API, LOGIN_URL, API_URL
 import json
 
 
@@ -222,7 +222,7 @@ def get_transfer_asset_details(asset_id=None):
     placeholders = ",".join(["%s"] * len(asset_ids))
     rows = db.executesql(
         f"""
-        SELECT asset_id, asset_type, asset_model, asset_brand, asset_name, user_id, 
+        SELECT asset_id, asset_type, asset_model, asset_brand, asset_name, user_id, using_from,
             first_issue_date,asset_color,reg_number, engine_number, chassis_number
         FROM asset
         WHERE asset_id IN ({placeholders})
@@ -257,6 +257,7 @@ def get_transfer_asset_details(asset_id=None):
     if emp_id:
         try:
             url = f"https://uat.beta.transcombd.com/expense/default/get_employee_details?employee_id={emp_id}"
+            print(f"Fetching employee data from: {url}")
             resp = requests.get(url, timeout=5)
             if resp.status_code == 200:
                 emp_data = resp.json()
@@ -324,65 +325,66 @@ import time
 import requests
 import json
 
-CACHE_EXPIRY = 600  # 10 minutes (600 sec)
+# CACHE_EXPIRY = 600  # 10 minutes (600 sec)
 
-@action.uses(API_URL)
-def load_employee_cache():
-    now = time.time()
+# @action.uses(API_URL)
+# def load_employee_cache():
+#     now = time.time()
 
-    # refresh if not loaded OR expired
-    if (not EMP_CACHE["loaded"]) or (now - EMP_CACHE["timestamp"] > CACHE_EXPIRY):
+#     # refresh if not loaded OR expired
+#     if (not EMP_CACHE["loaded"]) or (now - EMP_CACHE["timestamp"] > CACHE_EXPIRY):
 
-        url = f"{API_URL}/api_expense_employee_list/get_employee_data_expense"
+#         url = f"{API_URL}/api_expense_employee_list/get_employee_data_expense"
 
-        employee_id = request.query.get("employee_id")
+#         employee_id = request.query.get("employee_id")
 
-        payload = json.dumps({
-            "cid": "SKF",
-            "emp_id": employee_id
-        })
+#         payload = json.dumps({
+#             "cid": "SKF",
+#             "emp_id": employee_id
+#         })
 
-        headers = {
-            'Content-Type': 'application/json',
-            'Cookie': 'session_id_mytranscom_uat=182.16.158.70-388e4b4b-3c3b-4adb-9358-4fbe0cda140d'
-        }
+#         headers = {
+#             'Content-Type': 'application/json',
+#             'Cookie': 'session_id_mytranscom_uat=182.16.158.70-388e4b4b-3c3b-4adb-9358-4fbe0cda140d'
+#         }
 
-        response = requests.request("GET", url, headers=headers, data=payload)
+#         response = requests.request("GET", url, headers=headers, data=payload)
 
-        EMP_CACHE["data"] = json.loads(response.text)
-        EMP_CACHE["timestamp"] = now
-        EMP_CACHE["loaded"] = True
+#         EMP_CACHE["data"] = json.loads(response.text)
+#         EMP_CACHE["timestamp"] = now
+#         EMP_CACHE["loaded"] = True
 
-    return EMP_CACHE["data"]
-
-
-@action("default/get_employee_details")
-@action.uses(API_URL)
-def get_employee_details():
-    data = load_employee_cache()
-    return json.dumps(data)
+#     return EMP_CACHE["data"]
 
 
 # @action("default/get_employee_details")
 # @action.uses(API_URL)
 # def get_employee_details():
-#     url = f"{API_URL}/api_expense_employee_list/get_employee_data_expense"
+#     data = load_employee_cache()
+#     return json.dumps(data)
 
-#     employee_id = request.query.get("employee_id")
 
-#     payload = json.dumps({
-#     "cid": "SKF",
-#     "emp_id": employee_id
-#     })
-#     headers = {
-#     'Content-Type': 'application/json',
-#     'Cookie': 'session_id_mytranscom_uat=182.16.158.70-388e4b4b-3c3b-4adb-9358-4fbe0cda140d'
-#     }
+@action("default/get_employee_details")
+@action.uses(API_URL)
+def get_employee_details():
+    # API_URL="http://127.0.0.1:8080/expense"
+    url = f"{API_URL}/api_expense_employee_list/get_employee_data_expense"
 
-#     response = requests.request("GET", url, headers=headers, data=payload)
+    employee_id = request.query.get("employee_id")
 
-#     response.headers['Content-Type'] = 'application/json'
-#     return json.loads(response.text)
+    payload = json.dumps({
+    "cid": "SKF",
+    "emp_id": employee_id if employee_id else ""
+    })
+    headers = {
+    'Content-Type': 'application/json',
+    'Cookie': 'session_id_mytranscom_uat=182.16.158.70-388e4b4b-3c3b-4adb-9358-4fbe0cda140d'
+    }
+    # print(url)
+    response = requests.request("GET", url, headers=headers, data=payload)
+
+    response.headers['Content-Type'] = 'application/json'
+    return json.loads(response.text)
 
 
 

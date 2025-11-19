@@ -60,6 +60,10 @@ textarea.dependent-active::placeholder {
                     <label for="tr_type" class="form-label"><strong>Transaction Type</strong></label>
                     <input type="text" class="form-control" id="tr_type" name="tr_type" value="[[=tr_type]]" readonly>
                 </div>
+                <div class="col-md-4">
+                    <label for="tr_type" class="form-label"><strong>Transaction Order <span class="is_required">*</span></strong></label>
+                    <input type="number" class="form-control" id="tr_order_sl" name="tr_order_sl" value="[[=tr_order_sl]]" placeholder="Enter Transaction Order">
+                </div>
             </div>
 
             <style>

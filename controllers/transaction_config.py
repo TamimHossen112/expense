@@ -30,8 +30,9 @@ def transaction_config_create():
     # Example lists for dropdowns
     tr_type_list = ["Allocation", "Transfer", "Ownership Transfer", "Maintenance","Incident"]
     value_type_list = ["integer", "float", "string", "date", "dropdown","hidden"]
-
-    return dict(tr_type_list=tr_type_list, value_type_list=value_type_list)
+    tr_order_sl=db.executesql('SELECT MAX(tr_order_sl) AS max_order FROM tr_config',as_dict=True)[0]['max_order'] or 0
+    tr_order_sl=tr_order_sl+1
+    return dict(tr_type_list=tr_type_list, value_type_list=value_type_list, tr_order_sl=tr_order_sl)
 
 
 
@@ -48,6 +49,7 @@ def transaction_config_submit():
         flash.set("Access is Denied !", 'warning')
         redirect (URL('dashboard','index'))
     tr_type = (request.forms.get('tr_type') or '').strip()
+    tr_order_sl = (request.forms.get('tr_order_sl') or '').strip()
 
     if not tr_type:
         flash.set("Transaction Type is required.", "danger")
@@ -80,6 +82,7 @@ def transaction_config_submit():
 
             db.tr_config.insert(
                 tr_type=tr_type,
+                tr_order_sl=int(tr_order_sl) if tr_order_sl else 0,
                 section=sections[i].strip() if sections[i] else None,
                 order=int(orders[i]) if orders[i] else None,
                 key=keys[i].strip() if keys[i] else None,
@@ -124,7 +127,7 @@ def transaction_config_edit():
     value_type_list = ["integer", "float", "string", "date", "dropdown","hidden"]
 
     rows = db.executesql(f"""
-        SELECT id, tr_type, section, `order`, `key`, caption, value,
+        SELECT id, tr_type,tr_order_sl, section, `order`, `key`, caption, value,
             value_type, source_api, value_list, default_value,
             sl, readonly, dependent_fields, dependent_fields_source_api,
             dependent_on
@@ -135,6 +138,7 @@ def transaction_config_edit():
 
     return dict(
         tr_type=tr_type,
+        tr_order_sl=int(rows[0]['tr_order_sl']) if rows else 0,
         rows=rows,
         value_type_list=value_type_list
     )
@@ -149,6 +153,7 @@ def transaction_config_update():
         flash.set("Access is Denied !", 'warning')
         redirect (URL('dashboard','index'))
     tr_type = request.forms.get('tr_type','').strip()
+    tr_order_sl = request.forms.get('tr_order_sl','').strip()
     if not tr_type:
         flash.set("Transaction Type is required.", "danger")
         redirect(URL('transaction_config','index'))
@@ -172,6 +177,7 @@ def transaction_config_update():
     for i in range(len(data['key'])):
         db.tr_config.insert(
             tr_type=tr_type,
+            tr_order_sl=int(tr_order_sl) if tr_order_sl else 0,
             section=data['section'][i].strip() if i<len(data['section']) else '',
             order=int(data['order'][i]) if i<len(data['order']) and data['order'][i] else None,
             key=data['key'][i].strip() if i<len(data['key']) else '',
@@ -211,7 +217,7 @@ def transaction_config_get_data():
 
     # Fetch distinct tr_type values
     base_sql = f'''
-        SELECT DISTINCT tr_type
+        SELECT DISTINCT tr_type,tr_order_sl
         FROM tr_config
         ORDER BY tr_type {sort_dir}
     '''

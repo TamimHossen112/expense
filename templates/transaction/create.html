@@ -198,6 +198,7 @@ function updateDependentFields(fieldKey, value) {
     const url = `[[=URL('default')]]/${fieldConfig.dependent_fields_source_api}${value || ''}`;
 
     $.getJSON(url, function(response) {
+
         let data = Array.isArray(response) ? response[0] || {} : response;
         depFields.forEach(depKey => {
             const $depField = $("#" + depKey);
@@ -326,14 +327,21 @@ function attachDynamicDropdown(field) {
     // Handle selection change
     $field.on("change", function() {
         const selectedValue = $(this).val();
-        if (!selectedValue) return;
 
-        console.log(`🔸 '${field.key}' changed to:`, selectedValue);
-        updateDependentFields(field.key, selectedValue);
+        // Reset dependent fields ALWAYS
+        resetDependentFieldValues(field);
+
+
+        if (selectedValue) {
+            // Load fresh dependent values
+            updateDependentFields(field.key, selectedValue);
+        }
+
 
         // Dictionary-style dependent_fields
         const depString = field.dependent_fields || "";
         if (typeof depString === "string" && depString.includes("{") && depString.includes("}")) {
+          console.log("Parsing dependent_fields for", field.key, ":", depString);
             try {
                 const jsonMatch = depString.match(/\{[\s\S]*\}/);
                 if (!jsonMatch) return;
@@ -348,6 +356,27 @@ function attachDynamicDropdown(field) {
             } catch (err) {
                 console.error(" Failed to parse dependent_fields JSON:", err);
             }
+        }
+    });
+}
+
+function resetDependentFieldValues(fieldConfig) {
+    if (!fieldConfig.dependent_fields) return;
+
+    const depFields = fieldConfig.dependent_fields
+        .replace(/\{[\s\S]*?\}/g, "") // remove JSON block if present
+        .split(",")
+        .map(s => s.trim())
+        .filter(Boolean);
+
+    depFields.forEach(depKey => {
+        const $dep = $("#" + depKey);
+        if (!$dep.length) return;
+
+        if ($dep.is("select")) {
+            $dep.val(null).trigger("change.select2");
+        } else {
+            $dep.val("").trigger("input");
         }
     });
 }

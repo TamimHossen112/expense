@@ -119,6 +119,7 @@ def transaction_submit():
     approval_flag = False
     employee_id = ""
     employee_name = ""
+    using_from=None
 
     for key in form.keys():
         value = form.get(key)
@@ -130,6 +131,8 @@ def transaction_submit():
                 employee_id = value
             if str(key).lower() == "to_name":
                 employee_name = value
+            if str(key).lower() == "applied_date":
+                using_from=value
 
         details_list.append({
             "cid": cid,
@@ -156,12 +159,13 @@ def transaction_submit():
 
     db.tr_details.bulk_insert(details_list)
 
-    if approval_flag and employee_id and employee_name and asset_id:
+    if approval_flag and employee_id and employee_name and asset_id and using_from:
         db.executesql(
             f"""
             UPDATE asset
             SET user_id = {employee_id},
-                user_name = '{employee_name}'
+                user_name = '{employee_name}',
+                using_from='{using_from}'
             WHERE asset_id = '{asset_id}'
             """
         )
@@ -340,6 +344,7 @@ def transaction_update():
     approval_flag = False
     employee_id = ""
     employee_name = ""
+    using_from=None
 
     # Collect new details from form
     for key in form.keys():
@@ -352,6 +357,8 @@ def transaction_update():
                 employee_id = value
             if str(key).lower() == "to_name":
                 employee_name = value
+            if str(key).lower() == "applied_date":
+                using_from=value
 
         details_list.append({
             "cid": cid,
@@ -384,12 +391,13 @@ def transaction_update():
     )
 
     # Update asset assignment if approved
-    if approval_flag and employee_id and employee_name and asset_id:
+    if approval_flag and employee_id and employee_name and asset_id and using_from:
         db.executesql(
             f"""
             UPDATE asset
             SET user_id = {employee_id},
-                user_name = '{employee_name}'
+                user_name = '{employee_name}',
+                using_from = '{using_from}'
             WHERE asset_id = '{asset_id}'
             """
         )

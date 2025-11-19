@@ -194,6 +194,7 @@ db.define_table('doc_metadata',
 # Transaction Config Table
 db.define_table('tr_config',
     Field('cid', 'string', length=20, default=cid),
+    Field('tr_order_sl', 'integer'),
     Field('tr_type', 'string', length=100),
     Field('sl', 'integer'),
     Field('section', 'string', length=100),
@@ -209,7 +210,6 @@ db.define_table('tr_config',
     Field('value_list', 'string', length=500),
     Field('default_value', 'string', length=255),
     Field('readonly', 'string', length=3, default='no', requires=IS_IN_SET(['yes', 'no'])),
-
     signature,
     migrate=False
 )

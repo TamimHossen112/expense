@@ -362,6 +362,7 @@ def get_employee_details():
     data = load_employee_cache()
     return json.dumps(data)
 
+
 # @action("default/get_employee_details")
 # @action.uses(API_URL)
 # def get_employee_details():

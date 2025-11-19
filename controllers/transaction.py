@@ -124,11 +124,11 @@ def transaction_submit():
         value = form.get(key)
 
         if str(trans_type).lower() in ("allocation", "transfer"):
-            if key in ("allocation_status", "approve_status") and value == "approved":
+            if str(key).lower() in ("allocation_status", "approve_status") and str(value).lower() == "approved":
                 approval_flag = True
-            if key == "emp_id" or key == "to_emp_id":
+            if str(key).lower() == "emp_id" or str(key).lower() == "to_emp_id":
                 employee_id = value
-            if key == "to_name":
+            if str(key).lower() == "to_name":
                 employee_name = value
 
         details_list.append({
@@ -346,11 +346,11 @@ def transaction_update():
         value = form.get(key)
 
         if str(trans_type).lower() in ("allocation", "transfer"):
-            if key in ("allocation_status", "approve_status") and value == "approved":
+            if str(key).lower() in ("allocation_status", "approve_status") and str(value).lower() == "approved":
                 approval_flag = True
-            if key == "emp_id" or key == "to_emp_id":
+            if str(key).lower() == "emp_id" or str(key).lower() == "to_emp_id":
                 employee_id = value
-            if key == "to_name":
+            if str(key).lower() == "to_name":
                 employee_name = value
 
         details_list.append({

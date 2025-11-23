@@ -213,6 +213,9 @@ def transaction_view():
         if cfg.get("hidden") in ("yes", "true", True):
             continue
         
+        if str(cfg.get("value_type")) in ("hidden"):
+            continue
+        
         if cfg['key'] not in details_map:
             continue
 
